@@ -39,6 +39,26 @@ Visiting the site with **no `id`** (or an unrecognised one) shows the in-fiction
 
 Point each crew card's QR code / link at the site URL with the matching `?id=`.
 
+### QR codes / printable cards
+
+Ready-made access-card QR codes live in [`qr/`](qr/) — one per crew member as
+both PNG and SVG (e.g. `qr/reynolds-8654.png`). Each encodes the site URL with
+that member's `?id=`, so scanning drops the player straight into their
+terminal.
+
+A print-ready sheet of all nine cards is at
+[`cards/access-cards.html`](cards/access-cards.html) — open it and print
+(it switches to black-on-white for the printer), then cut out and hand round
+the table.
+
+The codes currently point at the default Pages URL above. If you move to a
+custom domain, regenerate them:
+
+```bash
+pip install segno
+python3 scripts/generate_qr.py https://your-domain.example/
+```
+
 ## Enabling GitHub Pages
 
 This repo ships a workflow at
