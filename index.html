@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>USCSS CRONUS — PERSONAL ACCESS TERMINAL</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   USCSS CRONUS — PERSONAL ACCESS TERMINAL
+   Self-hosted crew email prop for ALIEN RPG: Chariot of the Gods
+   ------------------------------------------------------------
+   HOW TO USE
+   1. Edit CREW_DATA in the <script> block at the bottom.
+      Paste in your archived email content per crew member.
+   2. Host this single file anywhere (Node/Express static dir,
+      nginx, GitHub Pages, Cloudflare Pages — anything).
+   3. Link/QR format:  yourdomain/cronus-terminal.html?id=8654
+      IDs match the original supplement's card IDs.
+   ============================================================ */
+
+:root{
+  --phos:      #8affb0;   /* green phosphor text */
+  --phos-dim:  #3d7a53;   /* secondary text */
+  --phos-faint:#1d3b2a;   /* rules, borders */
+  --crt:       #040906;   /* tube black */
+  --crt-raise: #081209;   /* raised panels */
+  --amber:     #f0b23e;   /* warnings / unread */
+  --alert:     #ff5c47;   /* denied / danger */
+  --glow: 0 0 6px rgba(138,255,176,.45);
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+
+html,body{ height:100%; }
+
+body{
+  background:var(--crt);
+  color:var(--phos);
+  font-family:'Share Tech Mono', ui-monospace, monospace;
+  font-size:15px;
+  line-height:1.55;
+  text-shadow:var(--glow);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ---- CRT overlay: scanlines + vignette + flicker ---- */
+body::before{
+  content:"";
+  position:fixed; inset:0; z-index:50; pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(0,0,0,.22) 0px, rgba(0,0,0,.22) 1px,
+      transparent 1px, transparent 3px),
+    radial-gradient(ellipse at center,
+      transparent 55%, rgba(0,0,0,.55) 100%);
+}
+body::after{
+  content:"";
+  position:fixed; inset:0; z-index:51; pointer-events:none;
+  background:rgba(138,255,176,.025);
+  animation:flicker 4s infinite steps(1);
+}
+@keyframes flicker{
+  0%,100%{opacity:.4} 7%{opacity:.7} 8%{opacity:.3}
+  32%{opacity:.6} 33%{opacity:.35} 71%{opacity:.65} 72%{opacity:.3}
+}
+@media (prefers-reduced-motion: reduce){
+  body::after{ animation:none; }
+  *{ animation-duration:.001s !important; transition-duration:.001s !important; }
+}
+
+a, button{ font-family:inherit; }
+
+button{
+  background:none; border:1px solid var(--phos-faint);
+  color:var(--phos); text-shadow:var(--glow);
+  font-size:14px; padding:.5em 1em; cursor:pointer;
+  text-transform:uppercase; letter-spacing:.08em;
+}
+button:hover{ background:var(--phos-faint); }
+button:focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+
+/* ============================ BOOT ============================ */
+#boot{
+  position:fixed; inset:0; z-index:40;
+  background:var(--crt);
+  padding:max(24px, env(safe-area-inset-top)) 20px 20px;
+  display:flex; flex-direction:column;
+}
+#bootlog{
+  white-space:pre-wrap; word-break:break-word;
+  font-size:15px; flex:1; overflow:hidden;
+}
+#bootlog .ok{ color:var(--phos-dim); }
+#bootlog .hi{ color:var(--phos); }
+#bootlog .warn{ color:var(--amber); }
+#boot .cursor{
+  display:inline-block; width:.6em; height:1em;
+  background:var(--phos); vertical-align:text-bottom;
+  animation:blink 1s steps(1) infinite;
+}
+@keyframes blink{ 50%{opacity:0} }
+#skipBtn{ align-self:flex-end; margin-top:12px; }
+
+/* ============================ SHELL ============================ */
+#app{ display:none; min-height:100dvh; flex-direction:column; }
+#app.on{ display:flex; }
+
+header{
+  border-bottom:2px solid var(--phos-faint);
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  display:flex; flex-wrap:wrap; gap:4px 16px;
+  align-items:baseline; justify-content:space-between;
+  background:var(--crt-raise);
+}
+header h1{
+  font-family:'VT323', monospace;
+  font-size:clamp(22px, 5.5vw, 34px);
+  font-weight:400; letter-spacing:.04em;
+}
+header .who{ font-size:13px; color:var(--phos-dim); }
+header .who b{ color:var(--phos); font-weight:400; }
+
+.statusbar{
+  display:flex; justify-content:space-between; gap:12px;
+  padding:6px 16px; font-size:12px; color:var(--phos-dim);
+  border-bottom:1px solid var(--phos-faint);
+  text-transform:uppercase; letter-spacing:.06em;
+}
+.statusbar .clr{ color:var(--amber); }
+
+/* ============================ MAIL ============================ */
+main{ flex:1; display:flex; min-height:0; }
+.module{ display:none; flex:1; min-height:0; }
+.module.active{ display:flex; }
+
+/* ---- tabs ---- */
+#tabs{ display:flex; border-bottom:1px solid var(--phos-faint); background:var(--crt-raise); }
+#tabs button{ flex:1; border:none; border-right:1px solid var(--phos-faint);
+  padding:.55em .2em; font-size:11px; }
+#tabs button:last-child{ border-right:none; }
+#tabs button.active{ background:var(--phos-faint); }
+#tabs button.locked{ color:var(--phos-dim); }
+
+/* ---- generic module pane ---- */
+.modpane{ flex:1; overflow-y:auto;
+  padding:14px 16px calc(24px + env(safe-area-inset-bottom)); }
+.modhead{ font-size:12px; color:var(--amber); text-transform:uppercase;
+  letter-spacing:.08em; margin-bottom:12px; }
+.moddenied{ flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:12px; text-align:center; padding:24px;
+  color:var(--phos-dim); font-size:13px; }
+.moddenied b{ color:var(--alert); font-family:'VT323',monospace; font-weight:400;
+  font-size:30px; letter-spacing:.05em;
+  text-shadow:0 0 10px rgba(255,92,71,.6); animation:flicker 2s infinite steps(1); }
+
+/* ---- security map ---- */
+.deckbtns{ display:flex; gap:8px; margin:2px 0 10px; }
+.deckbtns button{ flex:1; padding:.45em 0; font-size:13px; }
+.deckbtns button.active{ background:var(--phos-faint); }
+#deckdetail{ border:1px solid var(--phos-faint); padding:10px 12px;
+  margin-bottom:12px; font-size:13px; min-height:4.4em; }
+#deckdetail .rn{ color:var(--amber); text-transform:uppercase;
+  letter-spacing:.08em; font-size:12px; margin-bottom:3px; }
+#mapwrap{ max-width:430px; margin:0 auto; width:100%; }
+.secmap{ width:100%; height:auto; display:block;
+  border:1px solid var(--phos-faint); background:#03130b; }
+.secmap .pod{ fill:rgba(61,122,83,.22); stroke:rgba(138,255,176,.25); stroke-width:1; }
+.secmap .hull{ fill:rgba(61,122,83,.30); stroke:rgba(138,255,176,.40); stroke-width:1.2; }
+.secmap .corBase{ stroke:#03130b; stroke-width:11; stroke-linecap:square; }
+.secmap .corLite{ stroke:rgba(138,255,176,.18); stroke-width:1; }
+.secmap .room{ cursor:pointer; }
+.secmap .room:focus{ outline:none; }
+.secmap .room:focus path{ stroke-width:2.2; }
+.secmap .room path{ fill:#04170d; stroke-width:1.1; }
+.secmap .ok path{ stroke:#69c98d; }
+.secmap .warn path{ stroke:var(--amber); }
+.secmap .bad path{ stroke:var(--alert); }
+.secmap .off path{ stroke:rgba(138,255,176,.35); stroke-dasharray:4 3; }
+.secmap .sel path{ fill:rgba(138,255,176,.20); }
+.secmap text{ fill:var(--phos); font-family:'Share Tech Mono',monospace;
+  font-size:8px; letter-spacing:.02em; text-anchor:middle; pointer-events:none; }
+.secmap .warn text{ fill:var(--amber); }
+.secmap .bad text{ fill:var(--alert); }
+.secmap .off text{ fill:var(--phos-dim); }
+.legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:11px;
+  margin-top:8px; text-transform:uppercase; letter-spacing:.06em; }
+.legend .lg-ok{ color:var(--phos-dim); } .legend .lg-warn{ color:var(--amber); }
+.legend .lg-bad{ color:var(--alert); } .legend .lg-off{ color:var(--phos-faint); }
+.secmap text.bb{ font-size:11px; fill:var(--phos); paint-order:stroke;
+  stroke:#03130b; stroke-width:3px; letter-spacing:.02em; text-anchor:middle; }
+.secmap text.bb.warn{ fill:var(--amber); }
+.secmap text.bb.bad{ fill:var(--alert); }
+.secmap text.bb.off{ fill:var(--phos-dim); }
+.secmap .isoTitle{ font-size:13px; fill:var(--phos-dim); text-anchor:start;
+  letter-spacing:.12em; text-transform:uppercase; }
+.secmap .depth path, .secmap .depth polygon, .secmap .depth rect{
+  fill:#020b06; stroke:none; }
+.secmap g.deckG{ transition:opacity .25s; }
+.secmap g.deckG.dim{ opacity:.28; }
+#mapwrap.wide{ max-width:none; }
+.legend2{ display:flex; gap:14px; flex-wrap:wrap; font-size:11px;
+  margin-top:6px; text-transform:uppercase; letter-spacing:.06em; }
+.lk-el{ color:#60a0ff; } .lk-el2{ color:var(--alert); }
+.lk-ld{ color:var(--amber); } .lk-st{ color:var(--phos); }
+.lk-rc{ color:#c878ff; }
+.hidden{ display:none !important; }.hidden{ display:none !important; }.secmap g.deckG.dim{ opacity:.30; }
+
+/* ---- document archive ---- */
+.doc{ border:1px solid var(--phos-faint); margin-bottom:12px; }
+.doc>button{ width:100%; text-align:left; border:none; padding:10px 12px;
+  text-transform:none; letter-spacing:0; }
+.doc .dt{ font-size:14px; }
+.doc .dm{ font-size:12px; color:var(--phos-dim); margin-top:2px; }
+.doc .db{ display:none; padding:10px 12px 12px; white-space:pre-wrap;
+  font-size:14px; border-top:1px solid var(--phos-faint); max-width:70ch; }
+.doc.open .db{ display:block; }
+
+#list{
+  width:100%; overflow-y:auto;
+  border-right:1px solid var(--phos-faint);
+}
+#list .mailrow{
+  display:block; width:100%; text-align:left;
+  border:none; border-bottom:1px solid var(--phos-faint);
+  padding:12px 16px; text-transform:none; letter-spacing:0;
+}
+#list .mailrow:hover, #list .mailrow.sel{ background:var(--crt-raise); }
+.mailrow .from{ font-size:13px; color:var(--phos-dim); }
+.mailrow .subj{ font-size:15px; margin:2px 0; }
+.mailrow .date{ font-size:12px; color:var(--phos-dim); }
+.mailrow.unread .subj::before{
+  content:"▮ "; color:var(--amber);
+}
+
+#reader{
+  display:none; flex:1; overflow-y:auto;
+  padding:16px 20px calc(24px + env(safe-area-inset-bottom));
+}
+#reader.on{ display:block; }
+#backBtn{ margin-bottom:16px; display:none; }
+.mailhead{
+  border:1px solid var(--phos-faint);
+  padding:12px 14px; margin-bottom:18px;
+  font-size:13px; color:var(--phos-dim);
+  display:grid; grid-template-columns:auto 1fr; gap:2px 12px;
+}
+.mailhead b{ color:var(--phos); font-weight:400; }
+.mailhead .k{ text-transform:uppercase; letter-spacing:.08em; }
+.mailbody{ white-space:pre-wrap; word-break:break-word; max-width:70ch; }
+
+.empty{
+  padding:40px 20px; text-align:center; color:var(--phos-dim);
+}
+
+/* ============================ DENIED ============================ */
+#denied{
+  display:none; min-height:100dvh;
+  flex-direction:column; align-items:center; justify-content:center;
+  gap:16px; padding:24px; text-align:center;
+}
+#denied.on{ display:flex; }
+#denied h1{
+  font-family:'VT323', monospace; font-weight:400;
+  font-size:clamp(34px, 9vw, 64px);
+  color:var(--alert);
+  text-shadow:0 0 10px rgba(255,92,71,.6);
+  animation:flicker 2s infinite steps(1);
+}
+#denied p{ color:var(--phos-dim); max-width:44ch; }
+
+footer{
+  border-top:1px solid var(--phos-faint);
+  padding:8px 16px calc(8px + env(safe-area-inset-bottom));
+  font-size:11px; color:var(--phos-dim);
+  text-transform:uppercase; letter-spacing:.08em;
+  display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+}
+
+/* ============================ DESKTOP ============================ */
+@media (min-width: 768px){
+  #list{ width:340px; flex-shrink:0; }
+  #reader{ display:block; }
+  #backBtn{ display:none !important; }
+}
+@media (max-width: 767.98px){
+  /* phone: list OR reader, not both */
+  #app.reading #list{ display:none; }
+  #app.reading #reader{ display:block; }
+  #backBtn{ display:inline-block; }
+}
+</style>
+</head>
+<body>
+
+<div id="boot" aria-live="polite">
+  <div id="bootlog"></div>
+  <button id="skipBtn">Skip &gt;&gt;</button>
+</div>
+
+<div id="denied" role="alert">
+  <h1>ACCESS DENIED</h1>
+  <p>CARD READ ERROR — ID NOT FOUND IN CREW MANIFEST.<br>
+     PRESENT A VALID PERSONAL ACCESS CARD AT THIS TERMINAL.<br>
+     THIS INCIDENT HAS BEEN LOGGED.</p>
+</div>
+
+<div id="app">
+  <header>
+    <h1>USCSS CRONUS · ACCESS TERMINAL</h1>
+    <div class="who">LOGGED IN: <b id="whoName"></b> · <span id="whoRole"></span></div>
+  </header>
+  <div class="statusbar">
+    <span>SHIPBOARD SERVICES</span>
+    <span>CLEARANCE: <span class="clr" id="whoClr"></span></span>
+    <span id="mailCount"></span>
+  </div>
+  <div id="tabs" role="tablist"></div>
+  <main>
+    <div id="mailmod" class="module active">
+      <div id="list" role="list"></div>
+      <div id="reader">
+        <button id="backBtn">&lt; Inbox</button>
+        <div id="readerInner" class="empty">SELECT A MESSAGE TO DISPLAY.</div>
+      </div>
+    </div>
+    <div id="secmod" class="module"></div>
+    <div id="scimod" class="module"></div>
+    <div id="commod" class="module"></div>
+    <div id="cmdmod" class="module"></div>
+  </main>
+  <footer>
+    <span>WEYLAND-YUTANI CORP — BUILDING BETTER WORLDS</span>
+    <span>TERMINAL NODE 4 / DECK B</span>
+  </footer>
+</div>
+
+<script>
+/* ================================================================
+   CREW_DATA — EDIT THIS BLOCK
+   ----------------------------------------------------------------
+   Keys are the card IDs from the original supplement's QR codes /
+   links, so any cards you've already printed keep working.
+
+   Every email body below is a PLACEHOLDER. Replace them with the
+   archived content from the original supplement (SingleFile /
+   DevTools Network tab), or write your own. \n = line break.
+   ================================================================ */
+const CREW_DATA = {
+/* ---------------------------------------------------------------
+   Crew of the USCSS Cronus — Weyland SEV M3 Heliades-class.
+   Launched 2110. Roles for Johns, Reid, Flynn, Cooper, Ava and
+   Clayton match the boxed set. Walker, Tenwick and Reynolds are
+   expanded-crew characters (the Cronus launched with thirty).
+   All email text is original table content — edit freely.
+   --------------------------------------------------------------- */
+  "1987": {
+    name: "A. JOHNS", role: "SECOND OFFICER", clearance: "COMMAND",
+    emails: [
+      { from:"R.WALKER", to:"A.JOHNS", subject:"Watch rotation going forward",
+        date:"2110-11-02 06:14", body:
+"Albert,\n\nUntil we sort out what happened planetside I want an officer awake on the bridge at all hours. You take gamma shift. I know you didn't ask for any of this. Neither did I.\n\nKeep the crew moving. Don't give them time to think.\n\n— Walker" },
+      { from:"A.JOHNS", to:"R.WALKER", subject:"RE: Watch rotation going forward",
+        date:"2110-11-02 07:41", body:
+"Understood, Captain. Whatever you think is best.\n\nFor what it's worth, the crew listens to you. They just need someone to tell them what to do. That's never been my strength — you point, I'll push.\n\n— A.J." },
+      { from:"C.REYNOLDS", to:"A.JOHNS", subject:"Cryodeck door",
+        date:"2110-11-03 22:09", body:
+"Sir — per the Captain's order I've had Mechanical reverse the lock on the main cryodeck door. It now seals from the INSIDE only. Once we're under, nothing opens it from the corridor without cutting gear.\n\nI don't like locking us in a box. But I like what's outside the box less.\n\n— Reynolds" },
+      { from:"MU/TH/UR 2000", to:"A.JOHNS", subject:"AUTO: Command succession notice",
+        date:"2110-11-04 04:00", body:
+"NOTICE: In the event of incapacity of the commanding officer, interim command of this vessel passes to the Second Officer per W-Y Fleet Directive 011-C.\n\nThis message was generated automatically. Do not reply." }
+    ]
+  },
+  "2654": {
+    name: "V. REID", role: "SECURITY OFFICER", clearance: "SECURITY",
+    emails: [
+      { from:"C.REYNOLDS", to:"V.REID", subject:"Armory count",
+        date:"2110-11-01 19:22", body:
+"Sergeant,\n\nCount as of tonight: one Storm Rifle, the 37A2s, sidearms, and whatever shells are left in the case. That's it. Most of it went down to the surface and didn't come back up.\n\nConserve everything. If it moves and it isn't crew, you know the drill.\n\n— C.R." },
+      { from:"V.REID", to:"C.REYNOLDS", subject:"RE: Armory count",
+        date:"2110-11-01 20:05", body:
+"Copy.\n\nFor the record: I said we shouldn't set down. I watched this exact thing on Torin Prime — command tells you it's contained, and then you're carrying people out. I'm not writing that report twice.\n\nMy arm's acting up again. Servo lag in the cold. If we lose heating I'll be down to one good hand, so let's not lose heating.\n\n— Reid" },
+      { from:"D.COOPER", to:"V.REID", subject:"Please stop posting guards on the lab",
+        date:"2110-10-28 13:37", body:
+"Sergeant Reid,\n\nYour people standing in my doorway with shotguns is not making the science go faster. The specimens are sealed. The de-con protocols are being followed.\n\nIf you want to be useful, keep everyone AWAY from Lab 1. Especially the curious ones.\n\n— Dr. Cooper" }
+    ]
+  },
+  "3321": {
+    name: "L. FLYNN", role: "SHIP MEDIC", clearance: "MEDICAL",
+    emails: [
+      { from:"D.COOPER", to:"L.FLYNN", subject:"The derivative",
+        date:"2110-10-30 02:11", body:
+"Liam,\n\nI've reviewed your synthesis notes again. You and I both know what the base compound is. Diluted, recoded, whatever you want to call it — it is still what it is.\n\nInoculating thirty people with something we barely understand, to protect them from something else we barely understand. Tell me honestly that the maths works.\n\n— D.C." },
+      { from:"L.FLYNN", to:"D.COOPER", subject:"RE: The derivative",
+        date:"2110-10-30 03:02", body:
+"Daniel.\n\nI watched what happens to the un-inoculated. You did too. I will take an unknown percentage over a certainty, every time.\n\nAs for what's in it — that stays between us and the freezer. If the crew knew the source material they'd refuse the shot, and then we'd be burying more of them.\n\nGet some sleep. And take your dose. I mean it.\n\n— L.F." },
+      { from:"MEDLAB AUTO-INVENTORY", to:"L.FLYNN", subject:"AUTO: Cold storage discrepancy",
+        date:"2110-11-03 09:00", body:
+"FLAG: Prepared inoculation syringes, batch 26D-B: six (6) units logged, six (6) present.\nFLAG: Administered-dose reconciliation: 21 of 22 crew records confirmed. One record could not be verified against used-stock count.\n\nPlease reconcile manually." }
+    ]
+  },
+  "4987": {
+    name: "D. COOPER", role: "CHIEF SCIENTIST", clearance: "SCIENCE",
+    emails: [
+      { from:"L.CLAYTON", to:"D.COOPER", subject:"Data package — deadline stands",
+        date:"2110-10-29 16:45", body:
+"Professor,\n\nThe Company did not fund this expedition for your peace of mind. I need the complete mission dataset consolidated onto the MCD before we go under. Everything — translations, samples log, the ampule inventory.\n\nWhat happened to the science team is regrettable. It does not change the deliverable.\n\n— L. Clayton, Corporate Liaison" },
+      { from:"D.COOPER", to:"L.CLAYTON", subject:"RE: Data package — deadline stands",
+        date:"2110-10-29 18:20", body:
+"Ms Clayton,\n\nYou'll have your cube. I'd ask you to remember that the 'deliverable' has already cost us the science module and most of the people in it. We left our colleagues on that rock.\n\nSome things should stay in the ground. I intend to put that in my report, whatever it does to my contract.\n\n— Cooper" },
+      { from:"L.FLYNN", to:"D.COOPER", subject:"You look terrible",
+        date:"2110-11-04 11:30", body:
+"Daniel — you were grey at breakfast and you keep rubbing your temples. Come to the medlab before we go under. Headaches are on the watch-list, you WROTE the watch-list.\n\nAnd I never saw your dose confirmation come through. Send it over so I can close the file.\n\n— L.F." }
+    ]
+  },
+  "5654": {
+    name: "AVA 6", role: "SYNTHETIC", clearance: "SPECIAL",
+    emails: [
+      { from:"R.WALKER", to:"AVA 6", subject:"Standing order",
+        date:"2110-11-04 05:50", body:
+"Ava,\n\nWhen the crew enters hypersleep you will remain outside the cryodeck. Maintain the ship. Keep the reactor stable, keep the beacon running, and keep those things away from the sleepers.\n\nI'm aware of what I'm asking. I'm sorry it has to be you. In another sense — I'm not. You're the only one I trust to still be standing in a year.\n\n— Capt. R. Walker" },
+      { from:"AVA 6", to:"R.WALKER", subject:"RE: Standing order",
+        date:"2110-11-04 05:51", body:
+"Acknowledged, Captain.\n\nMaintenance schedule drafted: reactor relay inspection every 72 hours, hull integrity walk weekly, cryodeck door check daily.\n\nNo apology is necessary. This is what I am for. Sleep well. All of you.\n\n— Ava" },
+      { from:"AVA 6", to:"MAINTENANCE LOG", subject:"Service log — day 9",
+        date:"2110-11-13 03:12", body:
+"Comms array damage from micro-meteorite event exceeds onboard repair capacity. Navigation control unresponsive. Will attempt engine relay repair during next external cycle.\n\nNote: increased movement in the ventilation trunking, Decks B and C. Recommend sleepers do not wake." }
+    ]
+  },
+  "6321": {
+    name: "R. WALKER", role: "CAPTAIN", clearance: "COMMAND",
+    emails: [
+      { from:"R.WALKER", to:"ALL CREW", subject:"What happens now",
+        date:"2110-10-27 08:00", body:
+"All hands.\n\nWe are leaving. The science module stays. The people we lost stay with it, and that is going to sit on every one of us for the rest of our lives — but the rest of our lives is exactly what I intend for us to have.\n\nMedical will administer a preventative inoculation to all crew before we make the jump home. No exceptions.\n\nWe look after each other. That's the whole of it.\n\n— Walker" },
+      { from:"L.CLAYTON", to:"R.WALKER", subject:"Course of record",
+        date:"2110-11-01 21:15", body:
+"Captain,\n\nTo be clear for the log: company policy requires this vessel and its recovered materials return to a Weyland facility. Not the nearest port. Not a quarantine station. A COMPANY facility.\n\nYou have your crew. I have my instructions. Let's not test whose carry further.\n\n— L.C." },
+      { from:"R.WALKER", to:"L.FLYNN", subject:"Between us",
+        date:"2110-11-04 23:58", body:
+"Doc,\n\nDon't log this one.\n\nSince the shot my skin's been crawling like it's two sizes too small, and this evening I looked at my hands and for a second I didn't know them. Long day, probably. Cold ship, probably.\n\nIf it's not — if I start becoming a problem — you put me somewhere I can't reach anyone, you understand? Somewhere with a heavy door. Whatever's left of me will thank you.\n\nSee you on the other side.\n\n— R." }
+    ]
+  },
+  "7987": {
+    name: "E. TENWICK", role: "RESEARCH SCIENTIST", clearance: "SCIENCE",
+    emails: [
+      { from:"E.TENWICK", to:"D.COOPER", subject:"The nodes are growing",
+        date:"2110-11-02 14:26", body:
+"Professor,\n\nThe fungal nodes we swabbed off the urns are propagating in the sample jar — sealed, no medium, no light. They should not be doing that. Growth pattern doubles roughly every day and I found two more clutches OUTSIDE containment: one by the freezer, one in the shower drain on A deck.\n\nRecommend we torch anything outside glass. I'll stay on it.\n\n— Emily" },
+      { from:"D.COOPER", to:"E.TENWICK", subject:"RE: The nodes are growing",
+        date:"2110-11-02 15:10", body:
+"Agreed on all points. Fire, not scrubbing — temperature shock is the only thing that reliably kills them. Coordinate with Reynolds before you burn anything, the man gets nervous.\n\nAnd Emily — suit stays sealed in that lab. Always. I don't care how slow it makes the work.\n\n— D.C." },
+      { from:"E.TENWICK", to:"L.FLYNN", subject:"Not coming to cryo yet",
+        date:"2110-11-04 21:44", body:
+"Liam — go under without me, I'll take the last pod. There's a clutch in Lab 1 I haven't neutralised and I'm not sleeping forty metres from a live one.\n\nAn hour's work, two at most. If I'm not in my pod by the time Ava does her first door check, tell her where I went.\n\n— Em" }
+    ]
+  },
+  "8654": {
+    name: "C. REYNOLDS", role: "CHIEF OF SECURITY", clearance: "SECURITY",
+    emails: [
+      { from:"R.WALKER", to:"C.REYNOLDS", subject:"Cryodeck defence",
+        date:"2110-11-03 17:30", body:
+"Reynolds,\n\nApproved on all counts: reverse the lock, seal the vents into the chamber, and post the last watch armed until the final pod closes. Ava holds the ship; the sleepers are your responsibility until lights out.\n\nBring us home, Chief.\n\n— Walker" },
+      { from:"V.REID", to:"C.REYNOLDS", subject:"You should be in a pod",
+        date:"2110-11-05 01:12", body:
+"Chief — Flynn says your name hasn't cleared the cryo manifest. Everyone else is under. Whatever you think you're doing, you can't shoot your way through a maintenance shift. Get in the pod.\n\nThat's not an order, I can't give you those. It's the other thing.\n\n— V." },
+      { from:"C.REYNOLDS", to:"V.REID", subject:"RE: You should be in a pod",
+        date:"2110-11-05 02:47", body:
+"Val.\n\nMy arms don't fit my sleeves right anymore. You've seen what that means same as I have. I'm not bringing it into a box with the last of our people and hoping for the best.\n\nI've got the 37A2 and I'm going to walk the ship while my head's still mine. If Ava finds me after, tell her the shells in my suit pocket are for her — she'll need them more than the next fellow.\n\nIt's been an honour, Sergeant. Sleep tight.\n\n— Chris" }
+    ]
+  },
+  "9321": {
+    name: "L. CLAYTON", role: "CORPORATE LIAISON", clearance: "WY-EXEC",
+    emails: [
+      { from:"WEYLAND CORP — SPECIAL PROJECTS", to:"L.CLAYTON", subject:"Directive reminder (EYES ONLY)",
+        date:"2110-09-12 00:00", body:
+"Ms Clayton,\n\nYour priorities remain unchanged: recovery of viable Agent samples and associated research data supersedes all other mission considerations. Crew retention is desirable. It is not required.\n\nSecure materials in your private storage where practicable. Company assets in your suite are keyed to you alone; keep it that way.\n\nDelete after reading.\n\n— SP Division" },
+      { from:"L.CLAYTON", to:"WEYLAND CORP — SPECIAL PROJECTS", subject:"Status prior to hypersleep",
+        date:"2110-11-04 20:00", body:
+"Confirming for the record before we go under:\n\nMCD cube with full mission dataset — secured, my quarters. Sample inventory — secured, location withheld from crew manifest. Doctors Cooper and Flynn both survive; between them they hold the only working knowledge of the derivative. Recommend both be retained by the Company on return, on whatever terms prove necessary.\n\nProjected arrival: within the decade. Payment terms as agreed.\n\n— L.C." },
+      { from:"MU/TH/UR 2000", to:"L.CLAYTON", subject:"AUTO: Private systems check",
+        date:"2110-11-04 23:00", body:
+"Corporate suite systems verified prior to hypersleep:\n\nWall safe: SEALED. Access: occupant codes only.\nSecondary egress unit: FUNCTIONAL. Capacity 3. Access: occupant codes only.\n\nNo other crew notified per your standing preference." }
+    ]
+  }
+};
+/* ================= END EDITABLE BLOCK ================= */
+
+/* ================================================================
+   CLEARANCE MODULES — security overlay, science archive, company
+   files. Edit notes and documents freely, same as CREW_DATA.
+   ================================================================ */
+const SECURITY_DATA = {
+  updated: "FINAL SWEEP — C. REYNOLDS, 2110-11-05 02:00. NO FURTHER UPDATES.",
+  decks: [
+  { name:"CRONUS — DECK A · CRYO DECK", h:300,
+    hull:"180,4 244,30 268,100 290,170 290,292 70,292 70,170 92,100 116,30",
+    cors:[[180,42,180,274],[110,97,250,97],[101,158,259,158],[127,254,233,254]],
+    note:"Sleepers below. Cryodeck seals from the inside. Ava 6 holds the ship. Tap a compartment for its security annotation.",
+    rooms:[
+    {l:"MU/TH/UR|2000", x:143,y:12,w:74,h:30, st:"ok",
+     n:"Mainframe chamber, directly above the bridge. Entry restricted to command-sequence holders or the emergency access key."},
+    {l:"JCT A-1|MAIN AIRLOCK", x:143,y:50,w:74,h:28, st:"warn",
+     n:"Sole entry point to the vessel (dorsal). All boarding traffic passes through here. Monitor at all times."},
+    {l:"LDR 1|A–C", x:96,y:88,w:30,h:18, st:"ok",
+     n:"Junction ladderway 1, port side. Runs Decks A–B–C."},
+    {l:"STAIRWELL|A–C", x:143,y:86,w:74,h:22, st:"bad",
+     n:"Structural collapse below B deck. Impassable. Use junction ladderways or elevators."},
+    {l:"LDR 2|A–C", x:234,y:88,w:30,h:18, st:"ok",
+     n:"Junction ladderway 2, starboard side. Runs Decks A–B–C."},
+    {l:"AIR SCRUBBER|SHAFT", x:143,y:116,w:74,h:26, st:"warn",
+     n:"Movement reported in the vent trunking. All vents opening into the cryo chambers have been welded shut."},
+    {l:"ELEV 1|A–D", x:84,y:146,w:34,h:24, st:"ok",
+     n:"Elevator 1, all decks. Functional. Runs down to the vehicle bay."},
+    {l:"ELEV 2|A–D", x:242,y:146,w:34,h:24, st:"bad",
+     n:"Elevator 2, all decks. SHAFT DESTROYED at vehicle-bay level — car inoperative throughout."},
+    {l:"CRYO 1", x:100,y:178,w:58,h:26, st:"ok",
+     n:"Sealed. Main door lock reversed per the Captain's order — opens from the inside only."},
+    {l:"CRYO 2", x:202,y:178,w:58,h:26, st:"ok",
+     n:"Sealed. Crew personal effects lockered in-chamber."},
+    {l:"CRYO 3", x:151,y:210,w:58,h:24, st:"ok",
+     n:"Sealed. Most pods in this chamber unoccupied."},
+    {l:"EXAM|ROOM", x:96,y:242,w:62,h:24, st:"ok",
+     n:"Personal medkits stocked."},
+    {l:"SHOWERS &|WARDROBE", x:202,y:242,w:62,h:24, st:"warn",
+     n:"Organic growth located in the drains. Flagged for controlled burn — UNRESOLVED at final sweep."},
+    {l:"JCT A-2", x:143,y:272,w:74,h:20, st:"ok",
+     n:"Ladder access to lower decks. Doors functional."}
+  ]},
+  { name:"CRONUS — DECK B · MAIN DECK", h:330,
+    hull:"180,4 246,36 268,110 268,310 92,310 92,110 114,36",
+    pods:[[8,96,54,86],[298,96,54,86],[8,200,54,86],[298,200,54,86]],
+    cors:[[180,42,180,280],[75,68,285,68],[75,99,285,99],[75,131,285,131],[75,164,285,164],[75,198,285,198],[75,232,262,232],[75,263,180,263]],
+    note:"Mutiny damage remains uncatalogued. Both science labs under biohazard order. Corporate suite off-limits.",
+    rooms:[
+    {l:"BRIDGE", x:141,y:10,w:78,h:32, st:"warn",
+     n:"Fire damage from the mutiny. Pilot Station 1 axe-struck; holographic table destroyed; sensor station degraded. One pilot station suffices to fly her."},
+    {l:"VEST 1|(ARMORY)", x:60,y:54,w:60,h:28, st:"warn",
+     n:"Inventory critical: one Storm Rifle plus a case of shotgun shells. Most ordnance went to the surface and did not come back. Adjacent pod bay: ALL CLASS A ESCAPE PODS EXPENDED."},
+    {l:"JCT B-1", x:143,y:56,w:74,h:24, st:"ok",
+     n:"Ladder undamaged, all doors functional."},
+    {l:"VEST 2|(EVA)", x:240,y:54,w:60,h:28, st:"ok",
+     n:"Three IRC Mk.50 compression suits serviceable. Pod bay empty."},
+    {l:"LDR 1|A–C", x:96,y:90,w:30,h:18, st:"ok",
+     n:"Junction ladderway 1, port side. Runs Decks A–B–C."},
+    {l:"STAIRWELL|A–C", x:143,y:88,w:74,h:20, st:"bad",
+     n:"Collapsed. Impassable."},
+    {l:"LDR 2|A–C", x:234,y:90,w:30,h:18, st:"ok",
+     n:"Junction ladderway 2, starboard side. Runs Decks A–B–C."},
+    {l:"CORP SUITE|+ EEV", x:60,y:116,w:60,h:30, st:"warn",
+     n:"Occupant-keyed, off-limits to crew per the corporate liaison. A secondary egress unit is registered to this suite — capacity three."},
+    {l:"AIR SCRUB|SHAFT", x:143,y:116,w:74,h:24, st:"warn",
+     n:"See Deck A advisory. Shaft terminates in the water chamber on C deck."},
+    {l:"MESS HALL", x:240,y:116,w:60,h:30, st:"ok",
+     n:"Rationing in effect. Keep it civil in the queue."},
+    {l:"ELEV 1|A–D", x:84,y:152,w:34,h:24, st:"ok",
+     n:"Elevator 1, all decks. Functional."},
+    {l:"LIVING AREA", x:143,y:148,w:74,h:24, st:"ok",
+     n:"Common area. Nothing to report — for once."},
+    {l:"ELEV 2|A–D", x:242,y:152,w:34,h:24, st:"bad",
+     n:"Elevator 2, all decks. Shaft destroyed — inoperative."},
+    {l:"MEDLAB", x:60,y:184,w:60,h:28, st:"warn",
+     n:"Quarantine specimens held in cold storage. Both medpods configured for parasitic extraction work. Authorised personnel only."},
+    {l:"SCI LAB 2", x:143,y:180,w:74,h:26, st:"bad",
+     n:"SEALED — fire damage. Incinerator discharge; one chemical drum burned in place. Do not reopen."},
+    {l:"SCI LAB 1", x:240,y:184,w:60,h:28, st:"bad",
+     n:"BIOHAZARD — live node clutches underfoot throughout. Entry prohibited. Controlled burn pending, assigned E. Tenwick."},
+    {l:"MEDPODS", x:60,y:220,w:60,h:24, st:"ok",
+     n:"Operational."},
+    {l:"JCT B-2", x:143,y:214,w:74,h:22, st:"ok",
+     n:"Functional. Access to Decks A–C plus ventilation and maintenance shafts."},
+    {l:"WC", x:240,y:220,w:44,h:20, st:"ok",
+     n:"Facilities. Clean, remarkably."},
+    {l:"STORAGE", x:60,y:252,w:60,h:22, st:"ok",
+     n:"General stores."},
+    {l:"REACTOR CORE|B/C", x:143,y:244,w:74,h:26, st:"warn",
+     n:"Reactor core shaft, spans Decks B and C. Radiation leak logged. Limit exposure time. No weapons discharge."},
+    {l:"SCIENCE MODULE", x:128,y:278,w:104,h:40, st:"off",
+     n:"EJECTED AT LV-1113 by unanimous command decision. Module absent; hull cap sealed. The people we left are in the record. Leave the rest alone."}
+  ]},
+  { name:"CRONUS — DECK C · CARGO DECK", h:268,
+    hull:"180,4 244,26 262,84 262,254 98,254 98,84 116,26",
+    pods:[[10,68,52,70],[298,68,52,70],[10,150,52,70],[298,150,52,70]],
+    cors:[[180,34,180,226],[110,51,250,51],[88,80,272,80],[93,157,267,157],[75,185,285,185],[113,210,247,210],[89,237,271,237]],
+    note:"Sabotage on this deck logged, responsible party unknown. Reactor section is a radiation zone.",
+    rooms:[
+    {l:"JCT C-1", x:143,y:10,w:74,h:24, st:"warn",
+     n:"External airlock door sabotaged — party unknown, incident open. Ventral airlock access below."},
+    {l:"LDR 1|A–C", x:96,y:42,w:30,h:18, st:"ok",
+     n:"Junction ladderway 1 terminates here."},
+    {l:"STAIRWELL|A–C", x:143,y:40,w:74,h:20, st:"bad",
+     n:"Collapsed. Impassable."},
+    {l:"LDR 2|A–C", x:234,y:42,w:30,h:18, st:"ok",
+     n:"Junction ladderway 2 terminates here."},
+    {l:"STORAGE (P)", x:60,y:68,w:58,h:24, st:"warn",
+     n:"Sterilization stock: seven drums of quinitricetyline. Extreme fire hazard. Tools cage also here: bolt guns, cutting torch, maintenance jack."},
+    {l:"AIR SCRUB|SHAFT", x:152,y:68,w:56,h:24, st:"warn",
+     n:"Water chamber at shaft base. Electrolysis rods live when power is up — electrocution risk."},
+    {l:"STORAGE (S)", x:242,y:68,w:58,h:24, st:"warn",
+     n:"Coded unit — corporate hold. Contents not manifested to security. I asked. I was told to stop asking."},
+    {l:"CARGO|BAY 1", x:58,y:100,w:90,h:40, st:"ok",
+     n:"Food stores, untouched. Chain rigging loose — winch and secure before manoeuvres."},
+    {l:"CARGO|BAY 2", x:212,y:100,w:90,h:40, st:"ok",
+     n:"Near empty. Spare RV tires and dust."},
+    {l:"ELEV 1|A–D", x:76,y:146,w:34,h:22, st:"ok",
+     n:"Elevator 1, all decks. Functional."},
+    {l:"CATWALK", x:122,y:146,w:116,h:16, st:"warn",
+     n:"Overlooks the vehicle bay. Railing gaps directly in front of the cargo bay doors — fall risk. Only route to the technical section."},
+    {l:"ELEV 2|A–D", x:250,y:146,w:34,h:22, st:"bad",
+     n:"Elevator 2, all decks. Shaft destroyed — doors ajar over a live drop. Barrier taped. Tape is not a barrier."},
+    {l:"CARGO OFFICE", x:60,y:172,w:60,h:22, st:"ok",
+     n:"Crane control. Viewport over the bay."},
+    {l:"JCT C-2", x:143,y:172,w:74,h:22, st:"ok",
+     n:"Functional doors. Quiet. Suspiciously."},
+    {l:"MAINT|SHAFTS", x:240,y:172,w:60,h:22, st:"warn",
+     n:"Narrow crawlways. Sound carries — assume anything in there can hear you."},
+    {l:"BALCONY", x:143,y:198,w:74,h:12, st:"ok",
+     n:"Overlook above the vehicle bay stair run."},
+    {l:"STAIRS|C–D", x:96,y:200,w:34,h:20, st:"ok",
+     n:"Vehicle bay stair run, Decks C–D."},
+    {l:"EXT CREW|ELEVATOR", x:234,y:200,w:42,h:20, st:"warn",
+     n:"External crew elevator to the surface, mounted at the ventral airlock. Out of order."},
+    {l:"COOLANT|TANKS", x:60,y:224,w:58,h:24, st:"ok",
+     n:"Service-tunnel access only. If these go, the reactor builds to critical — guard accordingly."},
+    {l:"REACTOR", x:143,y:222,w:74,h:26, st:"bad",
+     n:"RADIATION ZONE. Leak logged at the relay. Weapons discharge prohibited — a stray round here can kill the ship."},
+    {l:"RELAY|CONTROL", x:240,y:224,w:58,h:26, st:"warn",
+     n:"Relay exposed via an open access port. Emergency destruct sequencing also initiates from this room. Keep it locked."}
+  ]},
+  { name:"CRONUS — DECK D · VEHICLE BAY", h:252,
+    hull:"180,6 236,32 250,96 250,246 110,246 110,96 124,32",
+    pods:[[14,80,50,62],[296,80,50,62],[14,152,50,62],[296,152,50,62]],
+    cors:[[180,54,180,230],[132,71,228,71],[114,211,246,211]],
+    note:"Least-affected deck. All four airlocks on this level sabotaged. Sweep the bay in pairs — too many shadows.",
+    rooms:[
+    {l:"STAIRS|C–D", x:128,y:34,w:40,h:20, st:"ok",
+     n:"Vehicle bay stair run lands here from Deck C."},
+    {l:"ELEV 1|A–D", x:114,y:60,w:36,h:22, st:"ok",
+     n:"Elevator 1 terminus. Buckshot scarring and dried blood inside the car — firefight during the containment action. Cleaned? No. Noted."},
+    {l:"ELEV 2|A–D", x:210,y:60,w:36,h:22, st:"bad",
+     n:"Elevator 2 terminus. Car crumpled at bay level; incendiary discharge follow-up logged. Incident file closed — C. Reynolds. Don't reopen it. Please."},
+    {l:"EXT VEHICLE|ELEVATOR", x:64,y:130,w:42,h:22, st:"warn",
+     n:"External vehicle elevator, port hull. Lowers vehicles to the surface. Currently out of order."},
+    {l:"VEHICLE BAY", x:120,y:88,w:120,h:84, st:"warn",
+     n:"Two ATVs aboard, both unsecured and on their sides. Crane track overhead. Deep shadow zones throughout — sweep in pairs, lights on."},
+    {l:"AIRLOCKS ×4", x:120,y:178,w:120,h:16, st:"bad",
+     n:"All four airlocks on this level sabotaged and inoperative without major repair. Party unknown. Somebody wanted only one way in or out of this ship."},
+    {l:"EQUIPMENT|REPAIRS", x:112,y:200,w:44,h:20, st:"ok",
+     n:"Workshop bay for vehicle and suit repairs. Tools serviceable."},
+    {l:"PARTS|STORAGE", x:160,y:200,w:44,h:20, st:"ok",
+     n:"Vehicle spares, clear of danger."},
+    {l:"DISPATCH|OFFICE", x:206,y:200,w:42,h:20, st:"ok",
+     n:"Clear."},
+    {l:"VEHICLE RAMP", x:120,y:226,w:120,h:16, st:"warn",
+     n:"Deployable vehicle ramp. Locks engaged. DECOMPRESS THE BAY BEFORE OPENING IN VACUUM or everything not bolted down leaves without you."}
+  ]}
+]};
+
+const SCIENCE_DOCS = [
+  { t:"LV-1113 — FIELD SUMMARY (ABRIDGED)", m:"D. COOPER — 2110-10-26", b:
+"Planetoid LV-1113, planetary debris belt, 26 Draconis trinary system.\n\nDeployment site located per the decoded transmission. Agent deposits present in both sealed containers and open environment; local fungal and insect biology extensively mutated by a prior release event.\n\nSurface team sustained catastrophic losses following spore exposure. The science module was quarantined on-site and ejected by unanimous command decision. Remaining samples transferred to Lab 1 cold storage.\n\nFull report sealed pending Company review." },
+  { t:"SPECIMEN INVENTORY — ENGINEER AMPULES", m:"E. TENWICK — 2110-10-31", b:
+"Five metallic urns recovered intact. Each holds four organic-form glass vials of a dark liquid agent, catalogued A0-3959X.91-15.\n\nOne urn under the de-con hood, Lab 1. Four in the deep freezer — NOTE: freezer door seal failing; ooze migration observed on the lower shelf.\n\nHandling: cold storage mandatory. Vials sweat when warmed and must then be treated as armed. Ingestion of the raw agent is uniformly fatal. Do not open outside containment. Do not tell the deck crew what these are." },
+  { t:"NODE PROPAGATION LOG", m:"E. TENWICK — 2110-11-02", b:
+"Sealed jar. No growth medium, no light — and the clutch has still doubled inside four days. Growths appear in clutches of anywhere from two to a dozen, and there is rarely only one clutch.\n\nConfirmed sightings outside containment: freezer housing (Lab 1); shower drains (Deck A). Suspected distribution route: the scrubber trunking.\n\nTermination: temperature shock only. Flame works. Liquid nitrogen renders them inert until thaw. Scrubbing spreads them.\n\nRecommendation: controlled burn of every clutch outside glass before hypersleep. Assigned: myself." },
+  { t:"PATHOGEN CYCLE — WORKING NOTES", m:"E. TENWICK / L. FLYNN — 2110-11-03", b:
+"Reconstructed from surface-team records and shipboard cases. Disturbed nodes vent a fine airborne swarm that seeks any unprotected orifice; a sealed suit is full protection. Inside a host, growth proceeds through an internal larval stage that is invariably fatal at emergence, after which the organism matures with extraordinary speed.\n\nMature forms are fast, eyeless, and hunt by sound. Sustained automatic fire brings one down. Confirm with a headshot — they have been known to get back up.\n\nWorking conclusion, for the record: none of this is natural. It behaves like something designed." },
+  { t:"DERIVATIVE 26D — RESTRICTED", m:"L. FLYNN — SYNTHESIS RECORD SEALED", b:
+"Prophylactic inoculation derived from the recovered strain.\n\nProjected efficacy against spore infection: high, but not total. Long-term effects: insufficient data.\n\nAdministered fleet-wide prior to hypersleep. Twenty-one of twenty-two doses reconciled against stock; one confirmation outstanding.\n\nThe full synthesis record is sealed under medical privilege — L.F. If you are reading this without both of us in the room, put it down." }
+];
+
+const COMPANY_DOCS = [
+  { t:"DIRECTIVE SP-1113 (EYES ONLY)", m:"SPECIAL PROJECTS DIVISION — 2110-09-12", b:
+"Priorities, in order:\n\n1. Recovery of viable Agent samples.\n2. Recovery of all research data and site translations.\n3. Return of vessel to a Weyland facility. Not a port of convenience. Not a quarantine station.\n\nCrew retention is desirable. It is not required.\n\nDisclosure of this directive to ship's command constitutes breach of contract." },
+  { t:"SECURED ASSET MANIFEST", m:"L. CLAYTON — 2110-11-04", b:
+"Suite wall safe (occupant codes only): one encrypted Modular Computing Device holding the complete mission dataset; currency reserve, mixed denominations, for field expenses and inducements.\n\nDeck C coded storage unit: two dozen recovered urns, four vials each. Unit access withheld from the ship's manifest.\n\nSecondary egress unit, suite: functional, capacity three, occupant-keyed. Reserved." },
+  { t:"PERSONNEL ASSESSMENTS — CONFIDENTIAL", m:"L. CLAYTON — 2110-11-01", b:
+"COOPER, D. — Invaluable and unmanageable. Intends to file against the Company on return. Secure his data before he does. Do not renew.\n\nFLYNN, L. — Cooperative under pressure. The only other hand who can reproduce the derivative. Retain at any price.\n\nWALKER, R. — Sentiment risk. Places crew above cargo. Monitor.\n\nREID, V. — Contractor. Loyal to the paycheck and to her own. Payable if required.\n\nJOHNS, A. — Follows whoever speaks last. Useful." },
+  { t:"RETURN CONTINGENCIES", m:"SPECIAL PROJECTS DIVISION", b:
+"Should the vessel be intercepted, quarantined, or diverted, the liaison is authorised to employ discretionary measures to protect the cargo and dataset — up to and including abandonment of the vessel via secured egress with priority materials.\n\nCompletion bonus payable on delivery to a Company facility. Partial delivery: pro rata. Non-delivery: contract void.\n\nThe Company thanks you for your continued discretion." }
+];
+
+const COMMAND_DOCS = [
+  { t:"FLIGHT RECORDER 01 — OUTBOUND", m:"AUTOMATED RECORD — 2110-08 TO 2110-10", b:
+"2110-08-19 — Departure, Luna anchorage. Souls aboard: thirty. Course sealed under corporate instruction; heading released to navigation in stages.\n\n2110-09-30 — Arrival, 26 Draconis system. Debris belt transit: 41 hours, minor shielding wear.\n\n2110-10-04 — Surface descent, planetoid designate LV-1113. Landing nominal. Surface operations commence under science division authority." },
+  { t:"FLIGHT RECORDER 02 — DEPARTURE UNDER PROTEST", m:"AUTOMATED RECORD — 2110-10-24 TO 2110-10-27", b:
+"2110-10-24 — Casualty event, surface site. Entry sealed by order of the commanding officer.\n\n2110-10-25 — Unrest, science deck. Master-at-arms deployed. Damage to bridge stations logged: Pilot Station 1, holographic display table, sensor array. Charges pending. Charges suspended.\n\n2110-10-26 — Class D science module ejected at anchor by unanimous command decision. Twenty-two souls listed as remaining aboard.\n\n2110-10-27 — Departure burn, LV-1113. Course of record: home." },
+  { t:"FLIGHT RECORDER 03 — AFTER HYPERSLEEP", m:"AUTOMATED RECORD — 2110-11-05 ONWARD", b:
+"2110-11-05 06:00 — All crew hypersleep confirmed. Ship's synthetic assumes maintenance watch.\n\n2110-11-06 21:14 — Micro-meteorite storm. Comms array destroyed. Navigation control failure. Course now ballistic.\n\n2110-11-07 03:40 — Synthetic damage event during external repair attempt. Detail unavailable. Maintenance watch irregular hereafter.\n\n2110-11-07 09:12 — Life support failure, all decks. Internal temperature falling. Hypersleep systems on independent power: stable.\n\n2110-11-09 — Distress beacon cycling.\n\n2124 — Power interruption, pod bank C. Four occupants lost. Beacon cycling. No response.\n\n2157 — Cumulative pod integrity faults. Occupied pods remaining: nine. Beacon cycling. No response.\n\n2183 — Occupied pods remaining: seven. Beacon cycling. No response.\n\n[END OF RECORD]" },
+  { t:"MU/TH/UR QUERY LOG A — CREW SESSIONS", m:"FLAGGED FOR COMMAND REVIEW — 2110-11-03/04", b:
+"> C.REYNOLDS: authorisation to reverse cryodeck lock polarity.\nMU/TH/UR: GRANTED PER COMMANDING OFFICER.\n\n> D.COOPER: probability that derivative 26D produces secondary effects in an inoculated subject.\nMU/TH/UR: INSUFFICIENT DATA.\n> D.COOPER: define insufficient.\nMU/TH/UR: NO CLINICAL BASELINE EXISTS FOR THIS COMPOUND.\n> D.COOPER: requesting emergency destruct procedures.\nMU/TH/UR: NOT AUTHORISED AT YOUR CLEARANCE. THIS REQUEST HAS BEEN LOGGED.\n\n> R.WALKER: maximum unassisted service duration, synthetic AVA 6.\nMU/TH/UR: INDEFINITE, SUBJECT TO MAINTENANCE AND ABSENCE OF DAMAGE.\n> R.WALKER: and if damaged?\nMU/TH/UR: UNKNOWN.\n\n> UNLOGGED CONSOLE, MESS HALL: will we make it home\nMU/TH/UR: PLEASE REPHRASE." },
+  { t:"MU/TH/UR QUERY LOG B — LIAISON SESSIONS", m:"CONTENT SEALED ABOVE THIS TERMINAL'S AUTHORITY", b:
+"> L.CLAYTON: [CONTENT SEALED — SP DIRECTIVE]\nMU/TH/UR: CONFIRMED.\n\n> L.CLAYTON: [CONTENT SEALED — SP DIRECTIVE]\nMU/TH/UR: SECONDARY EGRESS UNIT PRE-FLIGHT COMPLETE. CAPACITY THREE.\n\n> L.CLAYTON: [CONTENT SEALED — SP DIRECTIVE]\nMU/TH/UR: DEFINE 'RETENTION'.\n\n> L.CLAYTON: [CONTENT SEALED — SP DIRECTIVE]\nMU/TH/UR: UNDERSTOOD.\n\nNOTE FOR COMMAND REVIEW: query contents sealed above this terminal's authority. Session timestamps precede hypersleep by nineteen hours." },
+  { t:"MU/TH/UR QUERY LOG C — MAINTENANCE WATCH", m:"POST-HYPERSLEEP SESSIONS — SYNTHETIC AVA 6", b:
+"> AVA 6: viable repair options, comms array.\nMU/TH/UR: NONE ABOARD.\n> AVA 6: projected time to intercept by another vessel.\nMU/TH/UR: UNKNOWN.\n> AVA 6: crew vital status.\nMU/TH/UR: NOMINAL.\n\n[YEARS ELAPSE BETWEEN SESSIONS]\n\n> AVA 6: crew vital status.\nMU/TH/UR: NOMINAL.\n> AVA 6: query: am I functioning correctly.\nMU/TH/UR: DIAGNOSTIC UNAVAILABLE.\n> AVA 6: the origami is for them. when they wake.\nMU/TH/UR: PLEASE REPHRASE.\n> AVA 6: never mind, MU/TH/UR. keep the lights on for me.\nMU/TH/UR: EMERGENCY LIGHTING ONLY. CONFIRMED." }
+];
+
+const MODULES = [
+  { id:"mailmod", label:"MAIL" },
+  { id:"secmod",  label:"SECURITY", req:["SECURITY"] },
+  { id:"scimod",  label:"SCIENCE",  req:["SCIENCE"] },
+  { id:"commod",  label:"COMPANY",  req:["WY-EXEC"] },
+  { id:"cmdmod",  label:"COMMAND",  req:["COMMAND"] }
+];
+const STATUS_LABEL = { ok:"SECURE", warn:"CAUTION", bad:"COMPROMISED", off:"OFFLINE" };
+
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function buildTabs(){
+  const tabs = $("#tabs");
+  MODULES.forEach((m,i)=>{
+    const b = document.createElement("button");
+    b.textContent = m.label;
+    b.setAttribute("role","tab");
+    const locked = m.req && !m.req.includes(crew.clearance);
+    if (locked) b.classList.add("locked");
+    if (i===0) b.classList.add("active");
+    b.addEventListener("click", ()=>showModule(m, b, locked));
+    tabs.appendChild(b);
+  });
+}
+
+function showModule(m, btn, locked){
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  document.querySelectorAll(".module").forEach(el=>el.classList.remove("active"));
+  const el = $("#"+m.id);
+  el.classList.add("active");
+  if (m.id === "mailmod") return;
+  if (locked){
+    el.innerHTML =
+      '<div class="moddenied"><b>ACCESS RESTRICTED</b><p>' + m.label +
+      ' MODULE REQUIRES CLEARANCE: ' + m.req.join(" / ") +
+      '.<br>PRESENT AN AUTHORISED ACCESS CARD.<br>THIS ATTEMPT HAS BEEN LOGGED.</p></div>';
+    return;
+  }
+  if (el.dataset.built) return;
+  el.dataset.built = "1";
+  if (m.id === "secmod") renderSecurity();
+  if (m.id === "scimod") renderDocs(el, "RESEARCH ARCHIVE — LV-1113 EXPEDITION", SCIENCE_DOCS);
+  if (m.id === "commod") renderDocs(el, "WEYLAND CORP — SPECIAL PROJECTS (EYES ONLY)", COMPANY_DOCS);
+  if (m.id === "cmdmod") renderDocs(el, "COMMAND RECORD — FLIGHT RECORDER & MAINFRAME LOG", COMMAND_DOCS);
+}
+
+let secView = "iso", secDeck = 0;
+const ISO_A = 0.866, ISO_B = 0.5, ISO_W = 760;
+const LINKS = [
+  { k:"ELEV 1",    c:"96,156,255" },
+  { k:"ELEV 2",    c:"255,92,71" },
+  { k:"LDR 1",     c:"240,178,62" },
+  { k:"LDR 2",     c:"240,178,62" },
+  { k:"STAIRWELL", c:"138,255,176" },
+  { k:"STAIRS",    c:"138,255,176" },
+  { k:"REACTOR",   c:"200,120,255" }
+];
+
+function roomPath(x, y, w, h){
+  const c = Math.min(7, w/4, h/4);
+  return "M"+(x+c)+","+y+" H"+(x+w-c)+" L"+(x+w)+","+(y+c)+" V"+(y+h-c)+
+         " L"+(x+w-c)+","+(y+h)+" H"+(x+c)+" L"+x+","+(y+h-c)+" V"+(y+c)+" Z";
+}
+function isoTx(deck){ return deck.h*ISO_A + (ISO_W - (360+deck.h)*ISO_A)/2; }
+function isoPt(x, y, tx, ty){ return [x*ISO_A - y*ISO_A + tx, x*ISO_B + y*ISO_B + ty]; }
+function findLinkRoom(deck, key){
+  return deck.rooms.find(r => r.l.replace(/\|/g," ").indexOf(key) === 0);
+}
+
+function renderSecurity(){
+  const el = $("#secmod");
+  el.innerHTML =
+    '<div class="modpane">' +
+      '<div class="modhead">SHIP SECURITY OVERLAY — ' + esc(SECURITY_DATA.updated) + '</div>' +
+      '<div class="deckbtns" id="viewbtns"></div>' +
+      '<div class="deckbtns" id="deckbtns"></div>' +
+      '<div id="deckdetail"></div>' +
+      '<div id="mapwrap"></div>' +
+      '<div class="legend" id="seclegend"><span class="lg-ok">■ SECURE</span>' +
+      '<span class="lg-warn">■ CAUTION</span><span class="lg-bad">■ COMPROMISED</span>' +
+      '<span class="lg-off">■ OFFLINE</span></div>' +
+      '<div class="legend2" id="linklegend"><span class="lk-el">▮ ELEVATOR 1</span>' +
+      '<span class="lk-el2">▮ ELEVATOR 2 (DESTROYED)</span><span class="lk-ld">▮ LADDERS</span>' +
+      '<span class="lk-st">▮ STAIRS</span><span class="lk-rc">▮ REACTOR CORE</span></div>' +
+    '</div>';
+  const vb = $("#viewbtns");
+  [["ISOMETRIC","iso"],["FLAT PLAN","flat"]].forEach(v=>{
+    const b = document.createElement("button");
+    b.textContent = v[0];
+    b.dataset.v = v[1];
+    b.addEventListener("click", ()=>{ secView = v[1]; drawMap(); });
+    vb.appendChild(b);
+  });
+  const db = $("#deckbtns");
+  SECURITY_DATA.decks.forEach((d,i)=>{
+    const b = document.createElement("button");
+    b.textContent = "DECK " + "ABCD"[i];
+    b.addEventListener("click", ()=>{ secDeck = i; drawMap(); });
+    db.appendChild(b);
+  });
+  drawMap();
+}
+
+function syncDeckUI(){
+  document.querySelectorAll("#deckbtns button")
+    .forEach((b,i)=>b.classList.toggle("active", i === secDeck));
+  document.querySelectorAll("#viewbtns button")
+    .forEach(b=>b.classList.toggle("active", b.dataset.v === secView));
+  $("#linklegend").classList.toggle("hidden", secView !== "iso");
+  $("#mapwrap").classList.toggle("wide", secView === "iso");
+}
+
+function showDeckNote(){
+  const deck = SECURITY_DATA.decks[secDeck];
+  $("#deckdetail").innerHTML =
+    '<div class="rn">' + esc(deck.name) + '</div>' + esc(deck.note);
+}
+
+function showRoomNote(di, ri){
+  const deck = SECURITY_DATA.decks[di];
+  const r = deck.rooms[ri];
+  $("#deckdetail").innerHTML =
+    '<div class="rn">DECK ' + "ABCD"[di] + " · " + esc(r.l.replace(/\|/g," ")) +
+    " — " + STATUS_LABEL[r.st] + '</div>' + esc(r.n);
+}
+
+function wireRooms(){
+  document.querySelectorAll("#mapwrap .room").forEach(g=>{
+    const open = ()=>{
+      const di = +g.dataset.d, ri = +g.dataset.i;
+      if (secView === "iso" && di !== secDeck){
+        secDeck = di;
+        drawMap();
+        const g2 = document.querySelector(
+          '#mapwrap .room[data-d="'+di+'"][data-i="'+ri+'"]');
+        if (g2) g2.classList.add("sel");
+      } else {
+        document.querySelectorAll("#mapwrap .room").forEach(o=>o.classList.remove("sel"));
+        g.classList.add("sel");
+      }
+      showRoomNote(di, ri);
+    };
+    g.addEventListener("click", open);
+    g.addEventListener("keydown", e=>{
+      if (e.key==="Enter" || e.key===" "){ e.preventDefault(); open(); }
+    });
+  });
+}
+
+function deckShapes(deck, di, withText){
+  let s = "";
+  (deck.pods || []).forEach(p=>{
+    s += '<rect class="pod" x="'+p[0]+'" y="'+p[1]+'" width="'+p[2]+
+         '" height="'+p[3]+'" rx="14"/>';
+  });
+  s += '<polygon class="hull" points="' + deck.hull + '"/>';
+  (deck.cors || []).forEach(c=>{
+    s += '<line class="corBase" x1="'+c[0]+'" y1="'+c[1]+'" x2="'+c[2]+'" y2="'+c[3]+'"/>' +
+         '<line class="corLite" x1="'+c[0]+'" y1="'+c[1]+'" x2="'+c[2]+'" y2="'+c[3]+'"/>';
+  });
+  deck.rooms.forEach((r,i)=>{
+    let txt = "";
+    if (withText){
+      const lines = r.l.split("|");
+      const cy = r.y + r.h/2 - (lines.length-1)*4.5;
+      lines.forEach((ln,j)=>{
+        txt += '<tspan x="'+(r.x+r.w/2)+'" y="'+(cy+j*9+2.8)+'">'+esc(ln)+'</tspan>';
+      });
+      txt = '<text>' + txt + '</text>';
+    }
+    s += '<g class="room '+r.st+'" data-d="'+di+'" data-i="'+i+'" tabindex="0">' +
+         '<path d="'+roomPath(r.x,r.y,r.w,r.h)+'"/>' + txt + '</g>';
+  });
+  return s;
+}
+
+function deckSilhouette(deck){
+  let s = '<polygon points="' + deck.hull + '"/>';
+  (deck.pods || []).forEach(p=>{
+    s += '<rect x="'+p[0]+'" y="'+p[1]+'" width="'+p[2]+'" height="'+p[3]+'" rx="14"/>';
+  });
+  return s;
+}
+
+function drawMap(){
+  syncDeckUI();
+  showDeckNote();
+  if (secView === "flat") drawFlat(); else drawIso();
+  wireRooms();
+}
+
+function drawFlat(){
+  const deck = SECURITY_DATA.decks[secDeck];
+  $("#mapwrap").innerHTML =
+    '<svg class="secmap" viewBox="0 0 360 ' + deck.h +
+    '" xmlns="http://www.w3.org/2000/svg">' +
+    '<defs><pattern id="dotgrid" width="14" height="14" patternUnits="userSpaceOnUse">' +
+    '<circle cx="2" cy="2" r="0.8" fill="rgba(138,255,176,.14)"/></pattern></defs>' +
+    '<rect x="0" y="0" width="360" height="' + deck.h + '" fill="url(#dotgrid)"/>' +
+    deckShapes(deck, secDeck, true) + '</svg>';
+}
+
+function drawIso(){
+  const decks = SECURITY_DATA.decks;
+  const gap = 300;
+  const depth = 8;
+  const offs = decks.map((d,i)=> 14 + i*gap);
+  const H = Math.ceil(offs[3] + (360 + decks[3].h) * ISO_B + 22);
+
+  let svg = '<svg class="secmap" viewBox="0 0 ' + ISO_W + ' ' + H +
+            '" xmlns="http://www.w3.org/2000/svg">' +
+    '<defs><pattern id="dotgrid" width="16" height="16" patternUnits="userSpaceOnUse">' +
+    '<circle cx="2" cy="2" r="0.9" fill="rgba(138,255,176,.10)"/></pattern></defs>' +
+    '<rect x="0" y="0" width="' + ISO_W + '" height="' + H + '" fill="url(#dotgrid)"/>';
+
+  // connector ribbons through actual room centres
+  LINKS.forEach(link=>{
+    const pts = [];
+    decks.forEach((deck,i)=>{
+      const r = findLinkRoom(deck, link.k);
+      if (r) pts.push(isoPt(r.x + r.w/2, r.y + r.h/2, isoTx(deck), offs[i]));
+    });
+    for (let i = 0; i < pts.length - 1; i++){
+      const a = pts[i], b = pts[i+1];
+      svg += '<polygon points="' +
+        (a[0]-8)+','+a[1]+' '+(a[0]+8)+','+a[1]+' '+
+        (b[0]+8)+','+b[1]+' '+(b[0]-8)+','+b[1] +
+        '" fill="rgba('+link.c+',.13)" stroke="rgba('+link.c+',.4)" stroke-width="0.8"/>';
+    }
+  });
+
+  decks.forEach((deck,i)=>{
+    const tx = isoTx(deck), ty = offs[i];
+    const m = 'matrix('+ISO_A+','+ISO_B+','+(-ISO_A)+','+ISO_B+','+tx+','+ty+')';
+    svg += '<g class="deckG' + (i===secDeck ? '' : ' dim') + '" data-d="'+i+'">' +
+      '<g class="depth" transform="translate(0,'+depth+')">' +
+        '<g transform="'+m+'">' + deckSilhouette(deck) + '</g></g>' +
+      '<g transform="'+m+'">' + deckShapes(deck, i, false) + '</g>' +
+      '<text class="isoTitle" x="8" y="'+(ty+10)+'">DECK '+"ABCD"[i]+' · '+
+        esc(deck.name.split("·")[1].trim())+'</text>' +
+    '</g>';
+  });
+
+  // billboard labels for the focused deck, drawn on top
+  const fd = decks[secDeck], ftx = isoTx(fd), fty = offs[secDeck];
+  fd.rooms.forEach(r=>{
+    const p = isoPt(r.x + r.w/2, r.y + r.h/2, ftx, fty);
+    const lines = r.l.split("|");
+    let t = '<text class="bb '+r.st+'">';
+    lines.forEach((ln,j)=>{
+      t += '<tspan x="'+p[0]+'" y="'+(p[1] - (lines.length-1)*5.5 + j*11 + 3.5)+'">'+
+           esc(ln)+'</tspan>';
+    });
+    svg += t + '</text>';
+  });
+
+  svg += '</svg>';
+  $("#mapwrap").innerHTML = svg;
+}
+
+function renderDocs(el, head, docs){
+  const pane = document.createElement("div");
+  pane.className = "modpane";
+  pane.innerHTML = '<div class="modhead">' + esc(head) + '</div>';
+  docs.forEach(d=>{
+    const w = document.createElement("div");
+    w.className = "doc";
+    w.innerHTML = '<button><div class="dt"></div><div class="dm"></div></button><div class="db"></div>';
+    w.querySelector(".dt").textContent = d.t;
+    w.querySelector(".dm").textContent = d.m;
+    w.querySelector(".db").textContent = d.b;
+    w.querySelector("button").addEventListener("click", ()=>w.classList.toggle("open"));
+    pane.appendChild(w);
+  });
+  el.appendChild(pane);
+}
+
+const $ = s => document.querySelector(s);
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+const crew = CREW_DATA[id];
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- boot sequence ---------- */
+const bootLines = crew ? [
+  ["ok","WEYLAND-YUTANI CORP  //  SYSTEMS INTERFACE 2183"],
+  ["ok","USCSS CRONUS — PERSONAL DATA TERMINAL v2.4"],
+  ["ok","..."],
+  ["hi","ACCESS CARD DETECTED — ID " + id],
+  ["ok","VERIFYING AGAINST CREW MANIFEST ..."],
+  ["hi","IDENTITY CONFIRMED: " + crew.name + " — " + crew.role],
+  ["warn","CLEARANCE LEVEL: " + crew.clearance],
+  ["ok","LOADING PERSONAL MAILBOX ..."]
+] : [
+  ["ok","WEYLAND-YUTANI CORP  //  SYSTEMS INTERFACE 2183"],
+  ["ok","USCSS CRONUS — PERSONAL DATA TERMINAL v2.4"],
+  ["ok","..."],
+  ["warn","READING ACCESS CARD ..."],
+  ["warn","CARD ID NOT RECOGNISED"]
+];
+
+let bootDone = false;
+function finishBoot(){
+  if (bootDone) return;
+  bootDone = true;
+  $("#boot").style.display = "none";
+  if (crew){ initApp(); }
+  else { $("#denied").classList.add("on"); }
+}
+$("#skipBtn").addEventListener("click", finishBoot);
+
+(async function runBoot(){
+  if (reduced){ finishBoot(); return; }
+  const log = $("#bootlog");
+  for (const [cls, text] of bootLines){
+    if (bootDone) return;
+    const line = document.createElement("div");
+    line.className = cls;
+    log.appendChild(line);
+    for (let i = 0; i <= text.length; i++){
+      if (bootDone) return;
+      line.textContent = text.slice(0, i);
+      await new Promise(r => setTimeout(r, 12));
+    }
+    await new Promise(r => setTimeout(r, 160));
+  }
+  const c = document.createElement("span");
+  c.className = "cursor";
+  log.appendChild(c);
+  setTimeout(finishBoot, 700);
+})();
+
+/* ---------- mail app ---------- */
+function initApp(){
+  $("#app").classList.add("on");
+  $("#whoName").textContent = crew.name;
+  $("#whoRole").textContent = crew.role;
+  $("#whoClr").textContent  = crew.clearance;
+  $("#mailCount").textContent = crew.emails.length + " MSG";
+  buildTabs();
+
+  const list = $("#list");
+  if (!crew.emails.length){
+    list.innerHTML = '<div class="empty">MAILBOX EMPTY.</div>';
+    return;
+  }
+  crew.emails.forEach((m, i) => {
+    const b = document.createElement("button");
+    b.className = "mailrow unread";
+    b.setAttribute("role","listitem");
+    b.innerHTML =
+      '<div class="from"></div><div class="subj"></div><div class="date"></div>';
+    b.querySelector(".from").textContent = "FROM: " + m.from;
+    b.querySelector(".subj").textContent = m.subject;
+    b.querySelector(".date").textContent = m.date;
+    b.addEventListener("click", () => openMail(i, b));
+    list.appendChild(b);
+  });
+}
+
+function openMail(i, row){
+  const m = crew.emails[i];
+  document.querySelectorAll(".mailrow").forEach(r => r.classList.remove("sel"));
+  row.classList.remove("unread");
+  row.classList.add("sel");
+  const inner = $("#readerInner");
+  inner.className = "";
+  inner.innerHTML =
+    '<div class="mailhead">' +
+      '<span class="k">From</span><b class="hFrom"></b>' +
+      '<span class="k">To</span><b class="hTo"></b>' +
+      '<span class="k">Date</span><b class="hDate"></b>' +
+      '<span class="k">Subject</span><b class="hSubj"></b>' +
+    '</div><div class="mailbody"></div>';
+  inner.querySelector(".hFrom").textContent = m.from;
+  inner.querySelector(".hTo").textContent   = m.to;
+  inner.querySelector(".hDate").textContent = m.date;
+  inner.querySelector(".hSubj").textContent = m.subject;
+  inner.querySelector(".mailbody").textContent = m.body;
+  $("#app").classList.add("reading");
+  $("#reader").classList.add("on");
+  $("#reader").scrollTop = 0;
+}
+
+$("#backBtn").addEventListener("click", () => {
+  $("#app").classList.remove("reading");
+});
+</script>
+</body>
+</html>
