@@ -14,9 +14,14 @@
 <style>
 /* ============================================================
    M314 MOTION TRACKER — mobile prop for ALIEN RPG
-   Chariot of the Gods. Sweeping scope, approaching contacts,
-   synthesized proximity ping. GM tool: tap the scope to place
-   a contact where you want the players to think something is.
+   Chariot of the Gods. Sweeping scope with a synthesized ping.
+   GM tool: blips are placed by hand and stay put. Tap empty
+   scope to drop a contact, drag a contact to move it (so you
+   can walk the "creatures" toward the crew between reveals),
+   tap a contact to remove it. Nothing drifts on its own.
+   Optional ?room=CODE mirrors your blips to another tracker
+   screen over the network, so you can drive the players' scope
+   covertly from your own phone.
    ============================================================ */
 :root{
   --phos:#8affb0; --dim:#3d7a53; --faint:#1d3b2a;
@@ -47,18 +52,28 @@ body::before{
 #start .big{ font-family:'VT323',monospace; font-size:clamp(46px,15vw,90px); letter-spacing:.05em; }
 #start .sub{ color:var(--dim); font-size:clamp(12px,3.4vw,16px); letter-spacing:.16em; }
 #start .blink{ color:var(--amber); animation:bl 1.1s steps(1) infinite; letter-spacing:.2em; margin-top:8px; }
-#start .hint{ color:var(--faint); font-size:11px; letter-spacing:.1em; max-width:30ch; line-height:1.5; margin-top:14px; }
+#start .hint{ color:var(--faint); font-size:11px; letter-spacing:.1em; max-width:32ch; line-height:1.5; margin-top:14px; }
 @keyframes bl{50%{opacity:0}}
 
 #app{ display:none; height:100dvh; flex-direction:column;
   padding:calc(8px + env(safe-area-inset-top)) 10px calc(8px + env(safe-area-inset-bottom)); }
 #app.on{ display:flex; }
 
-.hud{ display:flex; justify-content:space-between; align-items:baseline; padding:2px 4px 8px;
+.hud{ display:flex; justify-content:space-between; align-items:center; padding:2px 4px 8px;
   border-bottom:2px solid var(--faint); }
 .hud .id{ font-family:'VT323',monospace; font-size:28px; letter-spacing:.05em; }
+.hud .right{ display:flex; align-items:center; gap:10px; }
 .hud .st{ font-size:12px; color:var(--dim); letter-spacing:.14em; text-transform:uppercase; }
 .hud .st.alert{ color:var(--alert); }
+/* link/pairing indicator (only shown when ?room= is used) */
+.link{ display:none; align-items:center; gap:5px; font-size:10px; letter-spacing:.12em;
+  color:var(--dim); text-transform:uppercase; }
+.link.show{ display:flex; }
+.link .dot{ width:8px; height:8px; border-radius:50%; background:var(--faint);
+  box-shadow:0 0 5px currentColor; color:var(--faint); }
+.link.up .dot{ background:var(--phos); color:var(--phos); }
+.link.wait .dot{ background:var(--amber); color:var(--amber); animation:bl 1s steps(1) infinite; }
+.link.down .dot{ background:var(--alert); color:var(--alert); }
 
 .scopewrap{ flex:1; position:relative; display:flex; align-items:center; justify-content:center; min-height:0; }
 #scope{ width:100%; height:100%; display:block; touch-action:none; }
@@ -86,13 +101,16 @@ body::before{
   <div class="big">M314</div>
   <div class="sub">MOTION TRACKER · WEYLAND-YUTANI</div>
   <div class="blink">▶ TAP TO ACTIVATE</div>
-  <div class="hint">GM prop. Tap the scope to place a contact where you want one. Contacts drift inward as they close on the crew.</div>
+  <div class="hint">GM prop. Tap the scope to drop a contact, drag it to move it, tap it again to remove it. Contacts stay exactly where you put them.</div>
 </div>
 
 <div id="app">
   <div class="hud">
     <span class="id">M314</span>
-    <span class="st" id="st">SCANNING</span>
+    <span class="right">
+      <span class="link" id="link"><span class="dot"></span><span id="linklab">LINK</span></span>
+      <span class="st" id="st">SCANNING</span>
+    </span>
   </div>
   <div class="scopewrap">
     <canvas id="scope"></canvas>
@@ -104,18 +122,17 @@ body::before{
   </div>
   <div class="controls">
     <button id="bAdd">＋ Contact</button>
-    <button id="bAuto">Auto</button>
     <button id="bSound" class="on">Sound</button>
     <button id="bClear">Clear</button>
   </div>
-  <div class="tip">Tap scope to place · <a href="../display/">Main display ▲</a> · <a href="../">Terminal ◄</a></div>
+  <div class="tip">Tap to place · drag to move · tap to remove · <a href="../display/">Main display ▲</a> · <a href="../">Terminal ◄</a></div>
 </div>
 
 <script>
 const $ = s => document.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const MAX_M = 20;              // scope radius in metres
-let soundOn = true, auto = false;
+let soundOn = true;
 
 /* -------------------- audio -------------------- */
 let AC=null;
@@ -137,7 +154,7 @@ function ping(prox){ // prox 0(far)..1(close)
   o.connect(lp); lp.connect(g); g.connect(AC.destination);
   o.start(t); o.stop(t+0.11);
 }
-/* faint sweep tick */
+/* faint placement tick */
 function sweepTick(){
   if(!AC || !soundOn) return;
   const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain();
@@ -146,12 +163,55 @@ function sweepTick(){
   o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+0.06);
 }
 
-/* -------------------- state -------------------- */
-// contacts: polar — a = bearing (rad), r = metres from centre, spd = closing speed m/s
-let contacts = [];
-function addContact(a, r, spd){
-  contacts.push({ a, r, spd: spd!=null?spd : (0.25+Math.random()*0.5), flare:0, jitter:Math.random()*6.28 });
+/* -------------------- network relay (optional, ?room=CODE) --------------------
+   A room lets a second tracker screen mirror these blips over ntfy.sh — no
+   account, no library: publish with fetch(), subscribe with a WebSocket. If
+   there's no room, or the network drops, the tracker still works standalone. */
+const ROOM = new URLSearchParams(location.search).get("room");
+const SID = Math.random().toString(36).slice(2);   // this device's id, to ignore own echoes
+let ws=null, applyingRemote=false;
+function setLink(cls,label){
+  const el=$("#link"); el.className="link show "+cls; $("#linklab").textContent=label;
 }
+function relayConnect(){
+  if(!ROOM) return;
+  setLink("wait","LINK…");
+  try{ ws = new WebSocket("wss://ntfy.sh/"+encodeURIComponent(ROOM)+"/ws"); }
+  catch(e){ setLink("down","NO LINK"); return; }
+  ws.onopen = ()=> setLink("up","LINKED");
+  ws.onclose = ()=>{ setLink("down","NO LINK"); setTimeout(relayConnect, 2500); };
+  ws.onerror = ()=>{ try{ws.close();}catch(e){} };
+  ws.onmessage = ev=>{
+    let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+    if(m.event!=="message" || !m.message) return;
+    let d; try{ d=JSON.parse(m.message); }catch(e){ return; }
+    if(d.s===SID) return;                     // ignore our own broadcast
+    if(d.t==="BLIPS" && Array.isArray(d.d)){
+      applyingRemote=true;
+      contacts = d.d.map(b=>({ a:b.a, r:b.r, flare:0 }));
+      applyingRemote=false;
+    }
+  };
+}
+let lastPub=0, pubTimer=null;
+function broadcast(force){
+  if(!ROOM || applyingRemote) return;
+  const send = ()=>{
+    lastPub=performance.now(); pubTimer=null;
+    const body = JSON.stringify({ s:SID, t:"BLIPS",
+      d: contacts.map(c=>({ a:+c.a.toFixed(4), r:+c.r.toFixed(2) })) });
+    fetch("https://ntfy.sh/"+encodeURIComponent(ROOM), { method:"POST", body }).catch(()=>{});
+  };
+  const dt = performance.now()-lastPub;
+  if(force || dt>150){ clearTimeout(pubTimer); pubTimer=null; send(); }
+  else if(!pubTimer){ pubTimer=setTimeout(send, 150-dt); }   // throttle drags
+}
+
+/* -------------------- state -------------------- */
+// contacts: polar — a = bearing (rad), r = metres from centre. Static; never move
+// on their own. flare = brief flash when the sweep passes over them.
+let contacts = [];
+function addContact(a, r){ contacts.push({ a, r, flare:0 }); }
 function randContact(){ addContact(Math.random()*Math.PI*2, MAX_M*(0.7+Math.random()*0.28)); }
 
 /* -------------------- canvas -------------------- */
@@ -197,21 +257,18 @@ function draw(dt){
   cx2.strokeStyle="rgba(138,255,176,.55)"; cx2.lineWidth=2*DPR; cx2.beginPath();
   cx2.moveTo(CXc,CYc); cx2.lineTo(CXc+Math.cos(sweep)*RAD, CYc+Math.sin(sweep)*RAD); cx2.stroke();
 
-  // update + draw contacts
+  // draw contacts (static — position only changes when the GM moves them)
+  const norm = a=>((a%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
+  const s0=norm(lastSweep), s1=norm(sweep);
   let nearest=null;
   contacts.forEach(c=>{
-    c.r -= c.spd*dt;                       // close on the operator
-    if(c.r < 0.4) c.r = 0.4;
-    // wobble so blips feel alive
-    c.jitter += dt*2; const ja = c.a + Math.sin(c.jitter)*0.02;
-    // sweep passes contact?
-    const norm = a=>((a%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
-    const s0=norm(lastSweep), s1=norm(sweep), ca=norm(ja);
+    const ca=norm(c.a);
+    // sweep passes contact? -> flash
     let crossed = s0<=s1 ? (ca>s0 && ca<=s1) : (ca>s0 || ca<=s1);
     if(crossed){ c.flare=1; }
     c.flare = Math.max(0, c.flare - dt*1.1);
     if(!nearest || c.r<nearest.r) nearest=c;
-    const px=CXc+Math.cos(ja)*m2px(c.r), py=CYc+Math.sin(ja)*m2px(c.r);
+    const px=CXc+Math.cos(c.a)*m2px(c.r), py=CYc+Math.sin(c.a)*m2px(c.r);
     const close = c.r < 3;
     cx2.shadowColor = close?"rgba(255,92,71,.9)":"rgba(240,178,62,.85)";
     cx2.shadowBlur = (4+c.flare*12)*DPR;
@@ -242,7 +299,7 @@ function updateReading(n){
   stEl.className = "st"+(close?" alert":"");
 }
 
-// proximity ping: interval shrinks as nearest contact closes (the classic accel beep)
+// proximity ping: interval shrinks as the nearest contact closes (the classic accel beep)
 let pingTimer=null;
 function schedulePing(){
   clearTimeout(pingTimer);
@@ -261,26 +318,58 @@ function schedulePing(){
   }, interval);
 }
 
-/* -------------------- input -------------------- */
-cv.addEventListener("pointerdown", e=>{
+/* -------------------- input: place / drag / remove -------------------- */
+const TAP_SLOP = 8;            // px of movement below which a gesture counts as a tap
+function ptrPolar(e){
   const b=cv.getBoundingClientRect();
   const x=(e.clientX-b.left)*DPR-CXc, y=(e.clientY-b.top)*DPR-CYc;
-  const r=Math.min(MAX_M, Math.hypot(x,y)/RAD*MAX_M);
-  const a=Math.atan2(y,x);
-  addContact(a, Math.max(2,r));
-  sweepTick();
+  return { a:Math.atan2(y,x), r:Math.min(MAX_M, Math.hypot(x,y)/RAD*MAX_M), px:e.clientX, py:e.clientY };
+}
+function hitContact(a, r){
+  // nearest contact within ~18px of the pointer, in screen space
+  let best=null, bestD=Infinity;
+  const tx=Math.cos(a)*m2px(r), ty=Math.sin(a)*m2px(r);
+  contacts.forEach(c=>{
+    const cxp=Math.cos(c.a)*m2px(c.r), cyp=Math.sin(c.a)*m2px(c.r);
+    const d=Math.hypot(cxp-tx, cyp-ty);
+    if(d<bestD){ bestD=d; best=c; }
+  });
+  return (best && bestD < 18*DPR) ? best : null;
+}
+let drag=null;   // { c, startX, startY, moved }
+cv.addEventListener("pointerdown", e=>{
+  cv.setPointerCapture && cv.setPointerCapture(e.pointerId);
+  const p=ptrPolar(e);
+  const c=hitContact(p.a, p.r);
+  drag={ c, startX:p.px, startY:p.py, moved:false };
 });
-$("#bAdd").addEventListener("click", randContact);
-$("#bClear").addEventListener("click", ()=>{ contacts=[]; });
+cv.addEventListener("pointermove", e=>{
+  if(!drag) return;
+  const p=ptrPolar(e);
+  if(!drag.moved && Math.hypot(p.px-drag.startX, p.py-drag.startY) > TAP_SLOP) drag.moved=true;
+  if(drag.moved && drag.c){                  // dragging an existing contact
+    drag.c.a=p.a; drag.c.r=Math.max(1, p.r);
+    broadcast();
+  }
+});
+cv.addEventListener("pointerup", e=>{
+  if(!drag) return;
+  const p=ptrPolar(e);
+  if(!drag.moved){                           // a tap
+    if(drag.c){ contacts = contacts.filter(c=>c!==drag.c); }  // tap a contact -> remove
+    else{ addContact(p.a, Math.max(2, p.r)); }                // tap empty -> place
+    sweepTick();
+  }
+  drag=null;
+  broadcast(true);
+});
+cv.addEventListener("pointercancel", ()=>{ drag=null; });
+
+$("#bAdd").addEventListener("click", ()=>{ randContact(); sweepTick(); broadcast(true); });
+$("#bClear").addEventListener("click", ()=>{ contacts=[]; broadcast(true); });
 $("#bSound").addEventListener("click", e=>{
   soundOn=!soundOn; e.currentTarget.classList.toggle("on",soundOn);
   if(soundOn && AC && AC.state==="suspended") AC.resume();
-});
-let autoTimer=null;
-$("#bAuto").addEventListener("click", e=>{
-  auto=!auto; e.currentTarget.classList.toggle("on",auto);
-  clearInterval(autoTimer);
-  if(auto){ autoTimer=setInterval(()=>{ if(contacts.length<5) randContact(); }, 3500); }
 });
 
 /* -------------------- loop / boot -------------------- */
@@ -290,8 +379,9 @@ function boot(){
   audioInit(); if(AC && AC.state==="suspended") AC.resume();
   $("#start").style.display="none"; $("#app").classList.add("on");
   fit(); requestAnimationFrame(frame); schedulePing();
-  // start with one distant contact so there's something to see
-  addContact(-Math.PI/2 + 0.4, MAX_M*0.9, 0.35);
+  relayConnect();
+  // start with one contact so there's something on the scope
+  addContact(-Math.PI/2 + 0.4, MAX_M*0.9); broadcast(true);
   try{ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }catch(e){}
 }
 $("#start").addEventListener("click", boot);

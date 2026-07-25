@@ -6,15 +6,22 @@
 <meta name="robots" content="noindex">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<title>MU/TH/UR 6500 — USCSS MONTERO</title>
+<title>MU/TH/UR 6500 — MAIN DISPLAY</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   MU/TH/UR 6500 — USCSS MONTERO MAIN DISPLAY
+   MU/TH/UR 6500 — MAIN SHIP DISPLAY
    Ambient bridge centerpiece for ALIEN RPG: Chariot of the Gods.
-   Built for a landscape iPad left on the table. One static file.
+   Two states: the crew's own ship (USCSS MONTERO) and the
+   derelict they board (USCSS CRONUS) — flip between them with a
+   secret triple-tap on the top bar. No motion radar, no plot
+   spoilers, no dialogue: just ship systems, registry data and
+   mundane world-building.
+   A phone controller (../control/) can remotely trigger the
+   self-destruct takeover over an optional ?room= link; a hidden
+   corner long-press works as a local fallback.
    ============================================================ */
 :root{
   --phos:#8affb0; --dim:#3d7a53; --faint:#1d3b2a;
@@ -61,20 +68,20 @@ body::after{
 #scrn.on{ display:flex; }
 
 .topbar{ display:flex; align-items:baseline; gap:14px; justify-content:space-between;
-  border-bottom:2px solid var(--faint); padding:2px 6px 8px; }
+  border-bottom:2px solid var(--faint); padding:2px 6px 8px; cursor:default; }
 .topbar .mu{ font-family:'VT323',monospace; font-size:clamp(24px,4vw,40px); letter-spacing:.05em; }
 .topbar .ttl{ color:var(--dim); font-size:clamp(11px,1.7vw,15px); letter-spacing:.16em;
   text-transform:uppercase; }
 .topbar .clk{ color:var(--amber); font-size:clamp(12px,1.8vw,17px); letter-spacing:.08em; white-space:nowrap; }
 
-.grid{ flex:1; display:grid; grid-template-columns:1fr 1.35fr 1fr; gap:10px; min-height:0;
+.grid{ flex:1; display:grid; grid-template-columns:1fr 1.15fr 1fr; gap:10px; min-height:0;
   padding-top:8px; }
 section{ border:1px solid var(--faint); background:var(--raise);
   display:flex; flex-direction:column; min-height:0; overflow:hidden; }
 section h2{ font-size:clamp(10px,1.5vw,13px); color:var(--amber); font-weight:400;
   letter-spacing:.12em; text-transform:uppercase; padding:7px 10px;
   border-bottom:1px solid var(--faint); }
-.pad{ padding:10px 12px; flex:1; min-height:0; display:flex; flex-direction:column; }
+.pad{ padding:10px 12px; flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
 
 /* systems bars */
 .bar{ margin-bottom:11px; }
@@ -92,86 +99,154 @@ section h2{ font-size:clamp(10px,1.5vw,13px); color:var(--amber); font-weight:40
   letter-spacing:.05em; line-height:1.4; }
 .sysnote.q{ color:var(--amber); }
 
-/* proximity scan */
-.scan .pad{ align-items:center; justify-content:center; padding:6px; }
-#radar{ width:100%; height:100%; max-height:100%; display:block; }
-.navline{ font-size:clamp(10px,1.5vw,13px); color:var(--dim); letter-spacing:.05em;
-  padding:6px 10px; border-top:1px solid var(--faint); text-align:center; line-height:1.5; }
-.navline b{ color:var(--phos); font-weight:400; } .navline .a{ color:var(--amber); }
+/* registry (key/value world-building) */
+.reg{ display:flex; flex-direction:column; gap:8px; font-size:clamp(11px,1.6vw,14px); }
+.reg .row{ display:flex; justify-content:space-between; gap:12px; line-height:1.35; }
+.reg .k{ color:var(--dim); letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
+.reg .v{ color:var(--phos); text-align:right; }
+.reg .v.a{ color:var(--amber); } .reg .v.x{ color:var(--alert); }
 
-/* distress signal */
-#wave{ display:flex; align-items:flex-end; gap:2px; height:44px; margin-bottom:10px; }
-#wave span{ flex:1; background:var(--phos); opacity:.5; height:20%; }
-.sigmeta{ font-size:clamp(10px,1.4vw,12px); color:var(--amber); letter-spacing:.08em;
-  text-transform:uppercase; margin-bottom:6px; }
-#sigtext{ flex:1; min-height:0; overflow:hidden; font-size:clamp(12px,1.7vw,15px);
-  line-height:1.55; white-space:pre-wrap; color:var(--phos); }
-#sigtext .cur{ display:inline-block; width:.55em; height:1.05em; background:var(--phos);
-  vertical-align:text-bottom; animation:bl 1s steps(1) infinite; }
+/* rotating notices */
+.notice{ flex:1; min-height:0; display:flex; flex-direction:column; justify-content:center;
+  font-size:clamp(12px,1.8vw,16px); line-height:1.6; color:var(--phos); }
+.notice .n{ opacity:0; transition:opacity .5s ease; }
+.notice .n.show{ opacity:1; }
+.notice .tag{ color:var(--amber); letter-spacing:.1em; text-transform:uppercase;
+  font-size:clamp(10px,1.4vw,12px); display:block; margin-bottom:5px; }
 
-/* command ticker */
+/* housekeeping ticker */
 .cmd{ border-top:2px solid var(--faint); margin-top:8px; padding:7px 8px 2px;
-  font-size:clamp(11px,1.6vw,14px); color:var(--dim); height:3.4em; overflow:hidden; white-space:pre-wrap; }
-.cmd .u{ color:var(--phos); } .cmd .m{ color:var(--amber); }
+  font-size:clamp(11px,1.6vw,14px); color:var(--dim); height:2.2em; overflow:hidden; white-space:pre-wrap; }
+.cmd .m{ color:var(--phos); } .cmd .a{ color:var(--amber); }
+.cmd .cur{ display:inline-block; width:.55em; height:1.05em; background:var(--phos);
+  vertical-align:text-bottom; animation:bl 1s steps(1) infinite; }
 .foot{ display:flex; justify-content:space-between; gap:12px; padding:4px 8px 0;
   font-size:clamp(9px,1.3vw,11px); color:var(--faint); letter-spacing:.1em; text-transform:uppercase; }
 .foot a{ color:var(--faint); text-decoration:none; } .foot a:hover{ color:var(--dim); }
+.foot .dot{ display:inline-block; width:7px; height:7px; border-radius:50%;
+  background:var(--faint); box-shadow:0 0 5px currentColor; color:var(--faint); vertical-align:middle; }
+.foot .dot.up{ background:var(--phos); color:var(--phos); }
+.foot .dot.wait{ background:var(--amber); color:var(--amber); animation:bl 1s steps(1) infinite; }
+.foot .dot.down{ background:var(--alert); color:var(--alert); }
 
 @media (max-aspect-ratio:1/1){
   .grid{ grid-template-columns:1fr 1fr; grid-auto-rows:minmax(0,1fr); }
-  .scan{ grid-column:1 / -1; grid-row:1; } .sys{ grid-row:2; } .sig{ grid-row:2; }
+  .reg-sec{ grid-column:1 / -1; }
 }
+
+/* hidden corner hotspots — local self-destruct fallback if the relay is down */
+.hot{ position:fixed; bottom:0; width:16vw; height:16vh; z-index:84; }
+.hot.l{ left:0; } .hot.r{ right:0; }
+
+/* -------- self-destruct takeover -------- */
+#destruct{ display:none; position:fixed; inset:0; z-index:88;
+  background:var(--crt); align-items:center; justify-content:center; text-align:center;
+  flex-direction:column; gap:20px; padding:24px; overflow:hidden; }
+#destruct.on{ display:flex; }
+#static{ position:absolute; inset:0; width:100%; height:100%; display:none; }
+#destruct .body{ position:relative; z-index:2; }
+
+/* ARMED */
+#destruct.armed{ background:radial-gradient(ellipse at center,#1a0604,#040001); }
+#destruct.armed::before{ content:""; position:absolute; inset:0;
+  background:repeating-linear-gradient(45deg,rgba(255,92,71,.10) 0 22px,transparent 22px 44px); }
+.d-armed,.d-count,.d-error{ display:none; }
+#destruct.armed .d-armed{ display:block; }
+#destruct.count .d-count{ display:block; }
+#destruct.error .d-error{ display:block; }
+#destruct.count{ background:radial-gradient(ellipse at center,#240705,#040001); animation:alarmwash 1s steps(1) infinite; }
+@keyframes alarmwash{50%{background:radial-gradient(ellipse at center,#3a0a06,#0a0100)}}
+.d-armed .big,.d-count .big{ color:var(--alert); text-shadow:0 0 14px rgba(255,92,71,.7); }
+.d-armed .big{ font-family:'VT323',monospace; font-size:clamp(34px,7vw,72px); letter-spacing:.06em; animation:bl 1s steps(1) infinite; }
+.d-armed .sub,.d-count .sub{ color:var(--amber); letter-spacing:.18em; text-transform:uppercase;
+  font-size:clamp(12px,2vw,18px); margin-top:14px; }
+.d-armed .ship,.d-count .ship,.d-error .ship{ color:var(--dim); letter-spacing:.2em;
+  text-transform:uppercase; font-size:clamp(11px,1.7vw,15px); margin-bottom:20px; }
+.clock{ font-family:'VT323',monospace; font-size:clamp(90px,26vw,240px); line-height:.9;
+  color:var(--alert); text-shadow:0 0 30px rgba(255,92,71,.6); letter-spacing:.02em; }
+.d-count .warn2{ color:var(--alert); letter-spacing:.16em; text-transform:uppercase;
+  font-size:clamp(12px,2vw,18px); margin-top:18px; animation:bl .7s steps(1) infinite; }
+/* SIGNAL ERROR end state */
+#destruct.error{ background:#050505; }
+.d-error .big{ font-family:'VT323',monospace; font-size:clamp(40px,10vw,110px); color:#c9d3cc;
+  letter-spacing:.05em; text-shadow:0 0 10px rgba(255,255,255,.25); animation:glitch 2.4s steps(1) infinite; }
+.d-error .sub{ color:#7d8a80; letter-spacing:.3em; text-transform:uppercase;
+  font-size:clamp(12px,2.2vw,18px); margin-top:16px; }
+.d-error .code{ color:#4a534c; letter-spacing:.18em; font-size:clamp(10px,1.6vw,13px); margin-top:26px; line-height:1.7; }
+@keyframes glitch{0%,100%{transform:translate(0,0);opacity:1}48%{transform:translate(-2px,1px);opacity:.85}49%{transform:translate(3px,-1px);opacity:.6}50%{transform:translate(-1px,0);opacity:1}}
 </style>
 </head>
 <body>
 
 <div id="start">
   <div class="big">MU/TH/UR 6500</div>
-  <div class="sub">INTERFACE 2037 READY · USCSS MONTERO</div>
+  <div class="sub">INTERFACE 2037 READY · MAIN DISPLAY</div>
   <div class="blink">▶ TAP TO INITIALISE</div>
 </div>
 
 <div id="scrn">
-  <div class="topbar">
+  <div class="topbar" id="topbar">
     <span class="mu">MU/TH/UR 6500</span>
-    <span class="ttl">USCSS MONTERO · SEV M2 · MAIN DISPLAY</span>
+    <span class="ttl" id="ttl">USCSS MONTERO · SEV M2 · MAIN DISPLAY</span>
     <span class="clk" id="clk">----.--.-- · --:--:--</span>
   </div>
 
   <div class="grid">
     <section class="sys">
-      <h2>Ship Systems</h2>
+      <h2 id="sysh">Ship Systems</h2>
       <div class="pad" id="sys"></div>
     </section>
 
-    <section class="scan">
-      <h2>Proximity Scan · Long Range</h2>
-      <div class="pad"><canvas id="radar" width="520" height="520"></canvas></div>
-      <div class="navline" id="navline">ACQUIRING …</div>
+    <section class="reg-sec">
+      <h2 id="regh">Vessel Registry</h2>
+      <div class="pad"><div class="reg" id="reg"></div></div>
     </section>
 
-    <section class="sig">
-      <h2>Inbound Transmission</h2>
-      <div class="pad">
-        <div id="wave"></div>
-        <div class="sigmeta" id="sigmeta">DECODING SIGNAL …</div>
-        <div id="sigtext"></div>
-      </div>
+    <section class="not-sec">
+      <h2 id="noth">Notices</h2>
+      <div class="pad"><div class="notice" id="notice"></div></div>
     </section>
   </div>
 
   <div class="cmd" id="cmd"></div>
   <div class="foot">
     <span>WEYLAND-YUTANI CORP — BUILDING BETTER WORLDS</span>
-    <span><a href="../tracker/">▲ MOTION TRACKER</a> · <a href="../">◄ ACCESS TERMINAL</a></span>
+    <span><span class="dot" id="pair" title="controller link"></span> <a href="../control/">◇ GM CONTROL</a> · <a href="../tracker/">▲ MOTION TRACKER</a> · <a href="../">◄ TERMINAL</a></span>
   </div>
 </div>
+
+<!-- self-destruct takeover -->
+<div id="destruct">
+  <canvas id="static"></canvas>
+  <div class="body">
+    <div class="d-armed">
+      <div class="ship" id="da-ship">USCSS MONTERO</div>
+      <div class="big">⚠ SELF-DESTRUCT ARMED ⚠</div>
+      <div class="sub">Emergency Destruct System · Awaiting final authorisation</div>
+    </div>
+    <div class="d-count">
+      <div class="ship" id="dc-ship">USCSS MONTERO</div>
+      <div class="sub">Emergency Destruct Sequence Engaged</div>
+      <div class="clock" id="clock">05:00</div>
+      <div class="warn2">All personnel evacuate immediately</div>
+    </div>
+    <div class="d-error">
+      <div class="big">SIGNAL ERROR</div>
+      <div class="sub">Transmission Lost</div>
+      <div class="code" id="err-code">NO CARRIER · LINK TERMINATED</div>
+    </div>
+  </div>
+</div>
+
+<!-- hidden local fallback hotspots -->
+<div class="hot l" id="hotL"></div>
+<div class="hot r" id="hotR"></div>
 
 <script>
 const $ = s => document.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ---------------- audio (subtle reactor hum + blips) ---------------- */
+/* ---------------- audio (reactor hum + alarm) ---------------- */
 let AC=null, hum=null, humGain=null;
 function audioInit(){
   try{
@@ -192,40 +267,155 @@ function blip(freq=680, dur=0.06, vol=0.09){
   g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime+dur);
   o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime+dur+0.02);
 }
+/* two-tone destruct klaxon; cadence tightens as the clock runs down */
+let klaxOn=false, klaxTimer=null;
+function klaxon(on){ klaxOn=on; clearTimeout(klaxTimer); if(on) klaxLoop(); }
+function klaxLoop(){
+  if(!klaxOn) return;
+  const u = destTotal ? 1-(destLeft/destTotal) : 0;   // urgency 0..1
+  alarm();
+  klaxTimer = setTimeout(klaxLoop, 1500 - u*1050);     // 1500ms -> ~450ms
+}
+function alarm(){
+  if(!AC) return; const t=AC.currentTime;
+  [[660,0],[440,0.19]].forEach(([f,off])=>{
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type="sawtooth"; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t+off);
+    g.gain.linearRampToValueAtTime(0.11,t+off+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+off+0.16);
+    o.connect(g); g.connect(AC.destination); o.start(t+off); o.stop(t+off+0.2);
+  });
+}
 
 /* ---------------- clock (in-fiction stardate) ---------------- */
 function tick(){
   const d = new Date();
   const p = n => String(n).padStart(2,"0");
-  const stardate = (2183 + d.getUTCFullYear()-2026); // drift the year into the future
+  const stardate = (2183 + d.getUTCFullYear()-2026);
   $("#clk").textContent =
     stardate + "." + p(d.getUTCMonth()+1) + "." + p(d.getUTCDate()) +
     " · " + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
 }
 
-/* ---------------- ship systems ---------------- */
-const SYS = [
-  { k:"REACTOR OUTPUT",  v:0.86, cls:"", unit:"%", noise:0.03 },
-  { k:"LIFE SUPPORT",    v:0.97, cls:"", unit:"%", noise:0.01 },
-  { k:"HULL INTEGRITY",  v:0.91, cls:"", unit:"%", noise:0.004 },
-  { k:"O₂ RESERVE",      v:0.78, cls:"", unit:"%", noise:0.012 },
-  { k:"DISPLACEMENT DRIVE", v:0.12, cls:"bad", unit:"", label:"DISENGAGED", noise:0.02 },
-  { k:"HYPERSLEEP BANK", v:1.0, cls:"", unit:"", label:"5 STASIS · 0 FAULT", noise:0 }
-];
-function buildSys(){
-  const el = $("#sys");
-  SYS.forEach((s,i)=>{
+/* ---------------- ship datasets (no spoilers, no dialogue) ---------------- */
+const SHIPS = {
+  montero: {
+    title: "USCSS MONTERO · SEV M2 · MAIN DISPLAY",
+    name: "USCSS MONTERO",
+    sysh: "Ship Systems", regh: "Vessel Registry", noth: "Notices",
+    sys: [
+      { k:"REACTOR OUTPUT",   v:0.86, unit:"%", noise:0.03 },
+      { k:"LIFE SUPPORT",     v:0.97, unit:"%", noise:0.01 },
+      { k:"HULL INTEGRITY",   v:0.91, unit:"%", noise:0.004 },
+      { k:"O₂ RESERVE",       v:0.78, unit:"%", noise:0.012 },
+      { k:"CARGO TOW TENSION",v:0.64, unit:"%", noise:0.02, cls:"" },
+      { k:"HYPERSLEEP BANK",  v:1.0,  label:"5 STASIS · 0 FAULT", noise:0 }
+    ],
+    note: { cls:"q", html:"◇ SCHEDULED MAINTENANCE WINDOW OPEN — DECK C" },
+    reg: [
+      ["REGISTRY","WEYLAND-YUTANI COMMERCIAL"],
+      ["CLASS","LOCKMART CM-88B — M-CLASS HAULER"],
+      ["HOME PORT","THEDUS"],
+      ["TONNAGE","63,700 T"],
+      ["CONFIGURATION","TUG + PROCESSING TOW"],
+      ["POWER PLANT","SAULÉ-RÖNTGEN FUSION"],
+      ["NAV STATUS","UNDER WAY",{c:"a"}]
+    ],
+    notices: [
+      ["MU/TH/UR","Water reclamation holding at 94% efficiency."],
+      ["MU/TH/UR","Galley protein synthesiser online. Menu cycle 6."],
+      ["W-Y NOTICE","Crew performance reviews due end of haul."],
+      ["MU/TH/UR","Cargo tow couplings nominal. No slip detected."],
+      ["MU/TH/UR","Next scheduled hypersleep cycle in 41 days."],
+      ["W-Y NOTICE","Uniform requisitions may be logged via terminal."],
+      ["MU/TH/UR","Radiation shielding within tolerance on all decks."]
+    ],
+    cmd: [
+      "SCHEDULED HULL-PLATE INSPECTION DUE — DECK C",
+      "ATMOSPHERIC MIX NOMINAL · N₂/O₂ WITHIN TOLERANCE",
+      "REACTOR TRIM AUTOMATIC · NO OPERATOR ACTION",
+      "CARGO INVENTORY RECONCILED · 12 MODULES SECURED",
+      "CREW GYM RESERVATION SYSTEM ONLINE",
+      "WEYLAND-YUTANI — BUILDING BETTER WORLDS"
+    ]
+  },
+  cronus: {
+    title: "USCSS CRONUS · SEV M3 · SALVAGE ACCESS",
+    name: "USCSS CRONUS",
+    sysh: "Ship Systems", regh: "Vessel Registry", noth: "System Log",
+    sys: [
+      { k:"REACTOR",        v:0.18, unit:"", label:"STANDBY", cls:"warn", noise:0.02 },
+      { k:"LIFE SUPPORT",   v:0.0,  unit:"", label:"OFFLINE", cls:"bad", noise:0 },
+      { k:"HULL INTEGRITY", v:0.64, unit:"", label:"BREACH SEALED", cls:"warn", noise:0.006 },
+      { k:"O₂ RESERVE",     v:0.09, unit:"%", cls:"bad", noise:0.01 },
+      { k:"EMERGENCY POWER",v:0.31, unit:"%", cls:"warn", noise:0.03 },
+      { k:"CRYODECK",       v:1.0,  unit:"", label:"SEALED", noise:0 }
+    ],
+    note: { cls:"", html:"⚠ LIFE SUPPORT OFFLINE — PRESSURE SUITS ADVISED" },
+    reg: [
+      ["REGISTRY","WEYLAND CORP — SCIENCE DIVISION"],
+      ["CLASS","HELIADES-CLASS SURVEY VESSEL"],
+      ["COMMISSIONED","2104"],
+      ["MISSION","DEEP-SPACE SURVEY",{c:"a"}],
+      ["LAST PORT","— UNAVAILABLE —",{c:"x"}],
+      ["POWER PLANT","EMERGENCY BUS ONLY"],
+      ["DATA CORE","PARTIAL · ARCHIVE CORRUPTED",{c:"x"}]
+    ],
+    notices: [
+      ["MU/TH/UR 2000","Emergency power routing active. Bus D only."],
+      ["MU/TH/UR 2000","Environmental control — manual override required."],
+      ["MU/TH/UR 2000","Archive sectors 3–7 unreadable."],
+      ["MU/TH/UR 2000","[ DATA EXPUNGED ]"],
+      ["MU/TH/UR 2000","Internal clock desynchronised. Source unknown."],
+      ["MU/TH/UR 2000","Please rephrase."],
+      ["WEYLAND CORP","The future, delivered."]
+    ],
+    cmd: [
+      "EMERGENCY BUS ACTIVE · NON-ESSENTIAL SYSTEMS DARK",
+      "ENVIRONMENTAL CONTROL OFFLINE · MANUAL OVERRIDE REQ",
+      "DATA CORE INTEGRITY 41% · RECOVERY UNAVAILABLE",
+      "INTERNAL SENSOR GRID INTERMITTENT",
+      "MU/TH/UR 2000 · PLEASE REPHRASE",
+      "WEYLAND CORP — THE FUTURE, DELIVERED"
+    ]
+  }
+};
+let shipKey = "montero";
+const ship = () => SHIPS[shipKey];
+
+/* ---------------- render current ship ---------------- */
+let SYS = [];   // live copy of the current ship's system bars
+function renderShip(){
+  const s = ship();
+  $("#ttl").textContent = s.title;
+  $("#sysh").textContent = s.sysh; $("#regh").textContent = s.regh; $("#noth").textContent = s.noth;
+  $("#da-ship").textContent = s.name; $("#dc-ship").textContent = s.name;
+  // systems
+  SYS = s.sys.map(x=>Object.assign({}, x));
+  const el = $("#sys"); el.innerHTML = "";
+  SYS.forEach(x=>{
     const d = document.createElement("div");
-    d.className = "bar " + s.cls;
-    d.innerHTML = '<div class="lab"><span>'+s.k+'</span><b></b></div>'+
+    d.className = "bar " + (x.cls||"");
+    d.innerHTML = '<div class="lab"><span>'+x.k+'</span><b></b></div>'+
                   '<div class="track"><div class="fill"></div></div>';
-    el.appendChild(d); s._el = d;
+    el.appendChild(d); x._el = d;
   });
   const note = document.createElement("div");
-  note.className = "sysnote q";
-  note.innerHTML = "⚠ COURSE DIVERTED — AUTOMATED DISTRESS INTERCEPT<br>⚠ UNIDENTIFIED VESSEL AT CLOSE RANGE";
+  note.className = "sysnote " + (s.note.cls||"");
+  note.innerHTML = s.note.html;
   el.appendChild(note);
   drawSys();
+  // registry
+  const rg = $("#reg"); rg.innerHTML = "";
+  s.reg.forEach(([k,v,opt])=>{
+    const row=document.createElement("div"); row.className="row";
+    row.innerHTML='<span class="k">'+k+'</span><span class="v '+((opt&&opt.c)||"")+'">'+v+'</span>';
+    rg.appendChild(row);
+  });
+  // notices reset
+  noticeI = 0;
+  // ticker resets naturally on next cycle
 }
 function drawSys(){
   SYS.forEach(s=>{
@@ -236,149 +426,169 @@ function drawSys(){
   });
 }
 
-/* ---------------- proximity radar ---------------- */
-const rc = $("#radar"), rx = rc.getContext("2d");
-let sweep = 0, contact = { ang:-0.7, r:0.62, drift:-0.00018, blink:0 };
-function drawRadar(dt){
-  const W=rc.width, H=rc.height, cx=W/2, cy=H/2, R=Math.min(cx,cy)-8;
-  rx.clearRect(0,0,W,H);
-  // rings
-  rx.strokeStyle="rgba(138,255,176,.18)"; rx.lineWidth=1;
-  for(let i=1;i<=4;i++){ rx.beginPath(); rx.arc(cx,cy,R*i/4,0,Math.PI*2); rx.stroke(); }
-  // cross
-  rx.beginPath(); rx.moveTo(cx-R,cy); rx.lineTo(cx+R,cy);
-  rx.moveTo(cx,cy-R); rx.lineTo(cx,cy+R); rx.stroke();
-  // starfield specks
-  rx.fillStyle="rgba(138,255,176,.10)";
-  for(let i=0;i<40;i++){ const a=i*2.399, rr=((i*53)%R); rx.fillRect(cx+Math.cos(a)*rr, cy+Math.sin(a)*rr,1.4,1.4); }
-  // sweep trail
-  if(!reduced) sweep += dt*1.1;
-  const grad = rx.createConicGradient ? rx.createConicGradient(sweep, cx, cy) : null;
-  if(grad){
-    grad.addColorStop(0, "rgba(138,255,176,.34)");
-    grad.addColorStop(0.06, "rgba(138,255,176,0)");
-    grad.addColorStop(1, "rgba(138,255,176,0)");
-    rx.fillStyle=grad; rx.beginPath(); rx.arc(cx,cy,R,0,Math.PI*2); rx.fill();
-  }
-  // sweep line
-  rx.strokeStyle="rgba(138,255,176,.6)"; rx.lineWidth=2; rx.beginPath();
-  rx.moveTo(cx,cy); rx.lineTo(cx+Math.cos(sweep)*R, cy+Math.sin(sweep)*R); rx.stroke();
-  // contact (the derelict)
-  contact.r += contact.drift; if(contact.r<0.5) contact.drift=Math.abs(contact.drift); if(contact.r>0.72) contact.drift=-Math.abs(contact.drift);
-  const ca = contact.ang, cr = contact.r*R;
-  const px = cx+Math.cos(ca)*cr, py = cy+Math.sin(ca)*cr;
-  // ping when swept
-  let diff = ((sweep - (ca<0?ca+Math.PI*2:ca)) % (Math.PI*2)+Math.PI*2)%(Math.PI*2);
-  if(diff < 0.06){ contact.blink = 1; blip(720,0.05,0.05); }
-  contact.blink = Math.max(0, contact.blink - dt*1.4);
-  const gl = 4 + contact.blink*10;
-  rx.fillStyle = contact.blink>0.15 ? "rgba(255,92,71,.95)" : "rgba(240,178,62,.85)";
-  rx.shadowColor="rgba(255,92,71,.8)"; rx.shadowBlur=gl;
-  rx.beginPath(); rx.arc(px,py,4.5,0,Math.PI*2); rx.fill(); rx.shadowBlur=0;
-  rx.font="13px 'Share Tech Mono',monospace";
-  rx.fillStyle="rgba(240,178,62,.9)";
-  rx.fillText("CRONUS", px+8, py-6);
-}
-function updateNav(){
-  const rangeKm = (contact.r*4200 + Math.random()*20).toFixed(0);
-  $("#navline").innerHTML =
-    'SIGNAL SOURCE: <b>USCSS CRONUS</b> — SEV M3 HELIADES · <span class="a">RANGE '+rangeKm+' KM</span><br>'+
-    'STATUS: DERELICT · NO RUNNING LIGHTS · HYPERSLEEP SIGNATURES DETECTED';
+/* ---------------- rotating notices ---------------- */
+let noticeI = 0;
+function cycleNotice(){
+  const el = $("#notice");
+  const show = ()=>{
+    const list = ship().notices;
+    const [tag,text] = list[noticeI % list.length];
+    el.innerHTML = '<div class="n"><span class="tag">'+tag+'</span>'+text+'</div>';
+    requestAnimationFrame(()=> el.querySelector(".n").classList.add("show"));
+    noticeI++;
+  };
+  show();
+  setInterval(()=>{
+    const cur = el.querySelector(".n");
+    if(cur) cur.classList.remove("show");
+    setTimeout(show, 520);
+  }, 5200);
 }
 
-/* ---------------- distress signal ---------------- */
-const WAVE_N = 48;
-function buildWave(){
-  const w=$("#wave"); for(let i=0;i<WAVE_N;i++){ w.appendChild(document.createElement("span")); }
-}
-function drawWave(){
-  if(reduced) return;
-  $("#wave").querySelectorAll("span").forEach((s,i)=>{
-    const h = 10 + Math.abs(Math.sin(performance.now()/300 + i*0.5))*70*Math.random();
-    s.style.height = h.toFixed(0)+"%";
-    s.style.opacity = 0.35 + Math.random()*0.4;
-  });
-}
-const SIGNALS = [
-  { m:"AUTOMATED DISTRESS BEACON · LOOP 1", t:
-"THIS IS THE WEYLAND SCIENCE VESSEL CRONUS.\nWE HAVE SUFFERED A CATASTROPHIC EVENT.\nCREW IN EMERGENCY HYPERSLEEP.\nDO NOT — REPEAT — DO NOT BOARD WITHOUT\nQUARANTINE PROTOCOL IN EFFECT.\nTHIS MESSAGE WILL REPEAT." },
-  { m:"AUTOMATED DISTRESS BEACON · LOOP 2", t:
-"MAYDAY. MAYDAY. VESSEL CRONUS ADRIFT.\nLIFE SUPPORT OFFLINE. NAVIGATION BALLISTIC.\nSEVEN SOULS IN STASIS AT LAST COUNT.\nCARGO IS HAZARDOUS. THE CARGO IS ALIVE.\nWHOEVER YOU ARE — TURN BACK." },
-  { m:"MU/TH/UR 2000 · FRAGMENT", t:
-"…CRYODECK SEALED FROM WITHIN…\nMOVEMENT IN THE VENTILATION TRUNKING…\nSYNTHETIC UNIT AVA 6 MAINTAINS THE SHIP…\nKEEP THE LIGHTS ON…\nPLEASE REPHRASE…" }
-];
-let sigI=0;
-async function cycleSignal(){
-  const el=$("#sigtext"), meta=$("#sigmeta");
-  while(true){
-    const s = SIGNALS[sigI % SIGNALS.length];
-    meta.textContent = s.m;
-    el.textContent = "";
-    for(let i=0;i<s.t.length;i++){
-      el.textContent = s.t.slice(0,i+1);
-      if(s.t[i] !== "\n") blipSoft();
-      await sleep(reduced?4:26);
-    }
-    const cur=document.createElement("span"); cur.className="cur"; el.appendChild(cur);
-    await sleep(4200);
-    sigI++;
-  }
-}
-let softAt=0;
-function blipSoft(){ const n=performance.now(); if(n-softAt>90){ softAt=n; blip(1200,0.012,0.015);} }
-
-/* ---------------- command ticker ---------------- */
-const CMDS = [
-  ["> NAV: PLOT INTERCEPT — DISTRESS SOURCE","MU/TH/UR: COURSE LAID IN. DISPLACEMENT DRIVE DISENGAGED."],
-  ["> COMTECH: IDENTIFY VESSEL","MU/TH/UR: MATCH — USCSS CRONUS. MISSING 75 YEARS."],
-  ["> CAPT. MILLER: LIFE SIGNS?","MU/TH/UR: HYPERSLEEP SIGNATURES DETECTED. COUNT UNCERTAIN."],
-  ["> CAPT. MILLER: CAN WE DOCK?","MU/TH/UR: DORSAL AIRLOCK ALIGNMENT POSSIBLE. ADVISE CAUTION."],
-  ["> COMTECH: DECODE BEACON","MU/TH/UR: QUARANTINE ADVISORY EMBEDDED. THE CARGO IS ALIVE."],
-  ["> ??? : ARE WE ALONE OUT HERE","MU/TH/UR: PLEASE REPHRASE."]
-];
+/* ---------------- housekeeping ticker (typed, non-spoiler) ---------------- */
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
 let cmdI=0;
 async function cycleCmd(){
   const el=$("#cmd");
   while(true){
-    const [u,m]=CMDS[cmdI%CMDS.length];
-    el.innerHTML='<span class="u"></span>';
-    const us=el.querySelector(".u");
-    for(let i=0;i<u.length;i++){ us.textContent=u.slice(0,i+1); await sleep(reduced?3:22); }
-    await sleep(500);
-    el.innerHTML='<span class="u">'+u+'</span>\n<span class="m"></span>';
+    const list = ship().cmd;
+    const line = list[cmdI % list.length];
+    el.innerHTML='<span class="a">MU/TH/UR ▸ </span><span class="m"></span>';
     const ms=el.querySelector(".m");
-    for(let i=0;i<m.length;i++){ ms.textContent=m.slice(0,i+1); await sleep(reduced?3:18); }
-    blip(520,0.05,0.04);
+    for(let i=0;i<line.length;i++){ ms.textContent=line.slice(0,i+1); if(line[i]!==" ") blipSoft(); await sleep(reduced?3:20); }
+    const cur=document.createElement("span"); cur.className="cur"; el.appendChild(cur);
+    blip(520,0.05,0.03);
     await sleep(3200); cmdI++;
   }
 }
+let softAt=0;
+function blipSoft(){ const n=performance.now(); if(n-softAt>90){ softAt=n; blip(1200,0.012,0.012);} }
+
+/* ---------------- secret ship toggle (triple-tap top bar) ---------------- */
+function switchShip(key){
+  if(key && SHIPS[key]) shipKey = key;
+  else shipKey = (shipKey==="montero") ? "cronus" : "montero";
+  renderShip(); cmdI=0; blip(shipKey==="cronus"?300:640,0.09,0.05);
+}
+(function(){
+  let taps=[], t0=0;
+  $("#topbar").addEventListener("pointerdown", ()=>{
+    const now=performance.now();
+    if(now - t0 > 700) taps=[];
+    t0=now; taps.push(now);
+    if(taps.length>=3){ taps=[]; switchShip(); }
+  });
+})();
+
+/* ---------------- self-destruct takeover ---------------- */
+let destState="hidden", destLeft=0, destTotal=0, destTimer=null;
+function setDest(state){
+  destState=state;
+  const d=$("#destruct");
+  d.className = state==="hidden" ? "" : "on "+state;
+  $("#static").style.display = state==="error" ? "block" : "none";
+  if(state!=="hidden"){ try{ if(AC&&AC.state==="suspended") AC.resume(); }catch(e){} }
+}
+function armDestruct(){ if(destState==="count") return; setDest("armed"); blip(300,0.2,0.06); }
+function startDestruct(sec){
+  destTotal = destLeft = Math.max(1, sec|0 || 300);
+  setDest("count"); renderClock(); klaxon(true);
+  clearInterval(destTimer);
+  destTimer = setInterval(()=>{
+    destLeft--;
+    if(destLeft < 0){ clearInterval(destTimer); klaxon(false); return signalError(); }
+    renderClock();
+  }, 1000);
+}
+function renderClock(){
+  const m=String(Math.floor(destLeft/60)).padStart(2,"0");
+  const s=String(destLeft%60).padStart(2,"0");
+  $("#clock").textContent = m+":"+s;
+}
+function abortDestruct(){
+  clearInterval(destTimer); klaxon(false); setDest("hidden"); blip(700,0.12,0.05);
+}
+function signalError(){
+  clearInterval(destTimer); klaxon(false); setDest("error"); fitStatic();
+}
+
+/* static / dead-channel noise for the SIGNAL ERROR screen */
+const stc = $("#static"), stx = stc.getContext("2d");
+function fitStatic(){ stc.width = Math.floor(innerWidth/2); stc.height = Math.floor(innerHeight/2); }
+function drawStatic(){
+  if(destState!=="error") return;
+  const w=stc.width, h=stc.height;
+  const img=stx.createImageData(w,h), d=img.data;
+  for(let i=0;i<d.length;i+=4){ const v=(Math.random()*255)|0; d[i]=d[i+1]=d[i+2]=v; d[i+3]=26; }
+  stx.putImageData(img,0,0);
+}
+
+/* ---------------- network relay (optional, ?room=CODE) ---------------- */
+const ROOM = new URLSearchParams(location.search).get("room");
+function setPair(cls){ $("#pair").className = "dot "+cls; }
+function relayConnect(){
+  if(!ROOM){ return; }
+  setPair("wait");
+  let ws;
+  try{ ws = new WebSocket("wss://ntfy.sh/"+encodeURIComponent(ROOM)+"/ws"); }
+  catch(e){ setPair("down"); return; }
+  ws.onopen = ()=> setPair("up");
+  ws.onclose = ()=>{ setPair("down"); setTimeout(relayConnect, 2500); };
+  ws.onerror = ()=>{ try{ws.close();}catch(e){} };
+  ws.onmessage = ev=>{
+    let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+    if(m.event!=="message" || !m.message) return;
+    handleCommand(m.message.trim());
+  };
+}
+function handleCommand(cmd){
+  const [op,arg] = cmd.split(":");
+  switch(op){
+    case "ARM":       armDestruct(); break;
+    case "START":     startDestruct(parseInt(arg,10) || 300); break;
+    case "ABORT":     abortDestruct(); break;
+    case "CUTSIGNAL": signalError(); break;
+    case "SHIP":      switchShip(arg); break;
+  }
+}
+
+/* ---------------- local fallback hotspots (long-press corners) ---------------- */
+function longpress(el, fn){
+  let tmr=null;
+  const down=()=>{ tmr=setTimeout(()=>{ fn(); }, 900); };
+  const up=()=>{ clearTimeout(tmr); };
+  el.addEventListener("pointerdown", down);
+  el.addEventListener("pointerup", up);
+  el.addEventListener("pointerleave", up);
+  el.addEventListener("pointercancel", up);
+}
+// bottom-left: arm  <->  abort ;  bottom-right: start (if armed) / cut signal (if counting)
+longpress($("#hotL"), ()=>{ if(destState==="hidden") armDestruct(); else abortDestruct(); });
+longpress($("#hotR"), ()=>{
+  if(destState==="armed") startDestruct(300);
+  else if(destState==="count") signalError();
+});
 
 /* ---------------- loop + boot ---------------- */
-const sleep = ms => new Promise(r=>setTimeout(r,ms));
 let last=0;
 function frame(t){
-  const dt = Math.min(0.05,(t-last)/1000||0); last=t;
-  drawRadar(dt); drawWave();
+  last=t;
+  drawStatic();
   requestAnimationFrame(frame);
 }
-function fitRadar(){
-  const box = rc.parentElement.getBoundingClientRect();
-  const s = Math.max(220, Math.min(box.width, box.height))*window.devicePixelRatio;
-  rc.width = rc.height = Math.floor(s);
-}
-addEventListener("resize", fitRadar);
+addEventListener("resize", ()=>{ if(destState==="error") fitStatic(); });
 
 function boot(){
   audioInit();
   if(AC && AC.state==="suspended") AC.resume();
   $("#start").style.display="none";
   $("#scrn").classList.add("on");
-  buildSys(); buildWave(); fitRadar();
+  renderShip();
   tick(); setInterval(tick,1000);
   setInterval(drawSys, 2200);
-  setInterval(updateNav, 3000); updateNav();
-  requestAnimationFrame(frame);
-  cycleSignal(); cycleCmd();
+  cycleNotice(); cycleCmd();
+  fitStatic(); requestAnimationFrame(frame);
+  relayConnect();
   try{ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }catch(e){}
 }
 $("#start").addEventListener("click", boot);

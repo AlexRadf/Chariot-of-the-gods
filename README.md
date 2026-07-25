@@ -88,8 +88,9 @@ phone the mail list and reader swap places; on a desktop they sit side by side.
 | Path | What it is |
 |------|------------|
 | [`index.html`](index.html) | The crew access terminal — markup, styling, story data, and logic in one file. |
-| [`display/`](display/) | The **MU/TH/UR 6500 main display** — an ambient bridge screen for an iPad on the table. |
-| [`tracker/`](tracker/) | The **M314 motion tracker** — a mobile scope with a synthesized proximity ping. |
+| [`display/`](display/) | The **MU/TH/UR 6500 main display** — an ambient bridge screen for an iPad on the table, with two ship states and a phone-triggered self-destruct. |
+| [`control/`](control/) | The **GM control** remote — a phone page that pairs to the display and drives the self-destruct sequence. |
+| [`tracker/`](tracker/) | The **M314 motion tracker** — a mobile scope with hand-placed contacts and a synthesized proximity ping. |
 | [`qr/`](qr/) | Per-crew access-card QR codes, PNG **and** SVG (e.g. `qr/reynolds-8654.png`). |
 | [`cards/access-cards.html`](cards/access-cards.html) | Print-ready sheet of all nine cards. |
 | [`scripts/generate_qr.py`](scripts/generate_qr.py) | Regenerates the codes and card sheet for any site URL. |
@@ -124,10 +125,15 @@ The included workflow does the publishing; you just point Pages at it once:
 
 ## Table displays
 
-Two extra screens turn the site into a set-dressing kit for the table. Both are
-self-contained pages under the same site, and both open with a **tap to
+Three extra screens turn the site into a set-dressing kit for the table. All are
+self-contained pages under the same site, and each opens with a **tap to
 activate** panel — that first tap is what lets iOS play sound and go
 full-screen, so tap once and hand the device over.
+
+Everything the players see is **spoiler-free**: ship systems, registry data,
+corporate flavour, a countdown, a signal-error screen. The scenario's mysteries
+stay where they always were — behind the clearance-gated modules of the crew
+[access terminal](index.html), handed out card by card.
 
 ### Main display — MU/TH/UR 6500 (iPad, landscape)
 
@@ -135,14 +141,57 @@ full-screen, so tap once and hand the device over.
 https://alexradf.github.io/Chariot-of-the-gods/display/
 ```
 
-Leave it running in the middle of the table as the crew's own ship computer.
-It shows the **USCSS Montero's** live systems (reactor, life support, hull,
-O₂, the disengaged displacement drive, the hypersleep bank), a long-range
-proximity scan sweeping over the derelict **Cronus**, the inbound distress
-beacon decoding line by line, a ticking stardate, and a MU/TH/UR command ticker
-— with a low reactor hum underneath. It's ambient: nothing to operate, it just
-runs. Best on a plugged-in iPad in landscape with auto-lock off and the browser
-in full-screen.
+Leave it running in the middle of the table as the ship's computer. It has **two
+states** you flip between with a **secret triple-tap on the top bar** (no visible
+button, so players never see the switch):
+
+- **USCSS Montero** — the crew's own hauler: reactor, life support, hull, O₂,
+  cargo-tow tension and the hypersleep bank, plus the vessel registry and mundane
+  MU/TH/UR housekeeping notices.
+- **USCSS Cronus** — the derelict they board: degraded systems (life support
+  offline, reactor on standby, hull breach sealed, emergency power), the old
+  Weyland science-division registry, and a glitchy, redacted system log.
+
+There is **no motion radar** on this screen — the radar lives in the motion
+tracker below. A low reactor hum runs underneath and a stardate ticks; otherwise
+it's ambient, nothing to operate. Best on a plugged-in iPad in landscape with
+auto-lock off and the browser in full-screen.
+
+**Self-destruct.** On a signal from the [GM control](#gm-control--self-destruct-phone-portrait)
+phone, the display is taken over by the emergency destruct sequence: **ARMED** →
+a big **countdown** with a rising klaxon → and when it hits zero (or on your
+command) it cuts to a **SIGNAL ERROR — TRANSMISSION LOST** dead-channel screen.
+**Abort** returns it to the ship view. If the network ever drops, a **hidden
+fallback** works locally: long-press the bottom-**left** corner to arm/abort, and
+the bottom-**right** corner to start the countdown (or cut the signal while it
+runs).
+
+### GM control — self-destruct (phone, portrait)
+
+```
+https://alexradf.github.io/Chariot-of-the-gods/control/
+```
+
+Your off-fiction remote for the main display. It **pairs to the display over a
+room code** (shown on the page) and lets you, from your own phone:
+
+| Control | Effect on the display |
+|---------|-----------------------|
+| **Montero / Cronus** | Flip which ship state the big screen is showing. |
+| **10:00 / 05:00 / 01:00 / 00:10** | Pick the countdown length. |
+| **Arm** | Put the display into the armed self-destruct standby. |
+| **Start** | Begin the countdown (arm first). |
+| **Abort** | Cancel and return the display to the ship view. |
+| **Cut Signal** (hold) | Jump straight to the SIGNAL ERROR screen — hold to fire so it can't misfire. |
+
+**Pairing:** open the control page, note its **room code**, then open the display
+with the *same* room — tap **Copy link** to get the exact
+`…/display/?room=CODE` URL and send it to the iPad. Both devices need to be
+**online** for the remote to work; the link runs over the free public
+[ntfy.sh](https://ntfy.sh) relay (no account, nothing to install). The room code
+is your private channel — pick something only your table uses. This is the one
+part of the kit that needs the network; the hidden corner fallback on the display
+covers you if it's unavailable.
 
 ### Motion tracker — M314 (phone, portrait)
 
@@ -151,21 +200,28 @@ https://alexradf.github.io/Chariot-of-the-gods/tracker/
 ```
 
 Your handheld motion-tracker prop for the reveal moment: a sweeping scope with
-range rings out to 20 metres, contacts that drift inward as they close, a live
-distance readout, and the unmistakable ping that quickens as the nearest
-contact approaches (the tone is synthesized in-browser, nothing to download).
+range rings out to 20 metres, a live distance readout, and the unmistakable ping
+that quickens as the nearest contact approaches (the tone is synthesized
+in-browser, nothing to download).
 
-It doubles as a GM tool:
+Contacts are **fully under your control** — they stay exactly where you put them
+and never drift or wander on their own, so *you* decide when the creatures move:
 
 | Control | Effect |
 |---------|--------|
-| **Tap the scope** | Drop a contact exactly where you want the players to think something is. |
+| **Tap empty scope** | Drop a static contact exactly where you want one. |
+| **Drag a contact** | Slide it inward between beats to fake something closing in. |
+| **Tap a contact** | Remove that one contact. |
 | **＋ Contact** | Add a contact at a random bearing near the edge. |
-| **Auto** | Spawn contacts on their own for a "the walls are alive" scene. |
 | **Sound** | Mute / unmute the ping (also buzzes the phone when a contact is right on top of you). |
 | **Clear** | Wipe the scope. |
 
-Hold it so players see the blips march toward the centre and hear the ping tighten — then let them decide whether to open that door.
+**Two-screen mode.** Add the same `?room=CODE` to two tracker links and they
+**mirror**: place and drag contacts on your own phone
+(`…/tracker/?room=CODE`) and they appear live on a second tracker screen you've
+handed the players — you walk the blips toward the centre from across the table
+while they watch and sweat. Same relay and room mechanics as the self-destruct;
+with no `?room=` the tracker is just the standalone handheld prop.
 
 ---
 
