@@ -87,7 +87,9 @@ phone the mail list and reader swap places; on a desktop they sit side by side.
 
 | Path | What it is |
 |------|------------|
-| [`index.html`](index.html) | The entire terminal — markup, styling, story data, and logic in one file. |
+| [`index.html`](index.html) | The crew access terminal — markup, styling, story data, and logic in one file. |
+| [`display/`](display/) | The **MU/TH/UR 6500 main display** — an ambient bridge screen for an iPad on the table. |
+| [`tracker/`](tracker/) | The **M314 motion tracker** — a mobile scope with a synthesized proximity ping. |
 | [`qr/`](qr/) | Per-crew access-card QR codes, PNG **and** SVG (e.g. `qr/reynolds-8654.png`). |
 | [`cards/access-cards.html`](cards/access-cards.html) | Print-ready sheet of all nine cards. |
 | [`scripts/generate_qr.py`](scripts/generate_qr.py) | Regenerates the codes and card sheet for any site URL. |
@@ -117,6 +119,53 @@ The included workflow does the publishing; you just point Pages at it once:
 3. Push to the deployment branch, or run the workflow from the **Actions** tab.
    The live URL appears in the workflow summary and under **Settings → Pages**
    once the first run finishes (allow a few minutes).
+
+---
+
+## Table displays
+
+Two extra screens turn the site into a set-dressing kit for the table. Both are
+self-contained pages under the same site, and both open with a **tap to
+activate** panel — that first tap is what lets iOS play sound and go
+full-screen, so tap once and hand the device over.
+
+### Main display — MU/TH/UR 6500 (iPad, landscape)
+
+```
+https://alexradf.github.io/Chariot-of-the-gods/display/
+```
+
+Leave it running in the middle of the table as the crew's own ship computer.
+It shows the **USCSS Montero's** live systems (reactor, life support, hull,
+O₂, the disengaged displacement drive, the hypersleep bank), a long-range
+proximity scan sweeping over the derelict **Cronus**, the inbound distress
+beacon decoding line by line, a ticking stardate, and a MU/TH/UR command ticker
+— with a low reactor hum underneath. It's ambient: nothing to operate, it just
+runs. Best on a plugged-in iPad in landscape with auto-lock off and the browser
+in full-screen.
+
+### Motion tracker — M314 (phone, portrait)
+
+```
+https://alexradf.github.io/Chariot-of-the-gods/tracker/
+```
+
+Your handheld motion-tracker prop for the reveal moment: a sweeping scope with
+range rings out to 20 metres, contacts that drift inward as they close, a live
+distance readout, and the unmistakable ping that quickens as the nearest
+contact approaches (the tone is synthesized in-browser, nothing to download).
+
+It doubles as a GM tool:
+
+| Control | Effect |
+|---------|--------|
+| **Tap the scope** | Drop a contact exactly where you want the players to think something is. |
+| **＋ Contact** | Add a contact at a random bearing near the edge. |
+| **Auto** | Spawn contacts on their own for a "the walls are alive" scene. |
+| **Sound** | Mute / unmute the ping (also buzzes the phone when a contact is right on top of you). |
+| **Clear** | Wipe the scope. |
+
+Hold it so players see the blips march toward the centre and hear the ping tighten — then let them decide whether to open that door.
 
 ---
 
