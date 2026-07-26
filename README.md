@@ -3,9 +3,9 @@
 A set of in-fiction browser screens for running the **ALIEN RPG** cinematic
 scenario *Chariot of the Gods*. It turns any phones, tablets and laptops on your
 table into the working technology of the story: a boot-up crew terminal, live
-character sheets with dice built in, the ship's main computer, and a handheld
-motion tracker — all talking to each other, all hosted as one static
-**GitHub Pages** site.
+character sheets with dice built in, the ship's main computer (with a
+phone-triggered self-destruct), and a handheld motion tracker — all talking to
+each other, all hosted as one static **GitHub Pages** site.
 
 No build step, no dependencies, no server-side code, no database. Every screen is
 plain HTML/CSS/JS that runs in any modern browser.
@@ -21,14 +21,15 @@ https://alexradf.github.io/Chariot-of-the-gods/
 
 ---
 
-## The four screens at a glance
+## The screens at a glance
 
 | Screen | URL | Who holds it | What it is |
 |--------|-----|--------------|------------|
 | **Access Terminal** | `/` | Players, at "consoles" | Boots up as a Cronus crew member from a card `?id=`. Shows that crew member's inbox and clearance-gated ship systems. This is how the derelict's story is discovered. |
 | **Crew Sheets** | `/sheet/` | Each player | The players' own Montero characters — stats, talent, per-Act agenda, condition trackers, and a full ALIEN dice roller. |
-| **Main Display** | `/display/` | Middle of the table (iPad) | The MU/TH/UR 6500 ship computer: live systems, a proximity scan, the inbound distress beacon. Ambient set dressing. |
-| **Motion Tracker** | `/tracker/` | The Game Mother (phone) | The M314 scope for the reveal moments — you place the blips, players watch them close in. |
+| **Main Display** | `/display/` | Middle of the table (iPad) | The MU/TH/UR 6500 ship computer: two ship states (Montero / Cronus), ambient systems and registry, an on-screen motion-detector tab, and a self-destruct takeover. |
+| **GM Control** | `/control/` | The Game Mother (phone) | An off-fiction remote that pairs to the display and drives the self-destruct sequence (arm → countdown → signal-lost). |
+| **Motion Tracker** | `/tracker/` | The Game Mother (phone) | The M314 scope for the reveal moments — you hand-place the blips and walk them in; players watch them close. |
 
 **Two crews, don't mix them up.** The *Access Terminal* cards are the **Cronus's
 dead crew** (Reynolds, Clayton, Johns…) — the people whose story your players are
@@ -170,52 +171,104 @@ calls for it, and it overlays onto whichever character they're already playing.
 https://alexradf.github.io/Chariot-of-the-gods/display/
 ```
 
-Leave it running in the middle of the table as the crew's own ship computer. It
-shows the **USCSS Montero's** live systems (reactor, life support, hull, O₂, the
-disengaged displacement drive, the hypersleep bank), a long-range proximity scan
-sweeping over the derelict **Cronus**, the inbound distress beacon decoding line
-by line, a ticking stardate, and a MU/TH/UR command ticker — with a low reactor
-hum underneath. It also **pops up every dice roll** made at the table in the
-corner, with a blip.
+Leave it running in the middle of the table as the ship's computer. It has **two
+states** you flip between with a **secret triple-tap on the top bar** (no visible
+button, so players never see the switch):
 
-It's ambient: nothing to operate, it just runs. Best on a plugged-in iPad in
-landscape with auto-lock off and the browser full-screen. It opens with a **tap
-to activate** panel — that first tap is what lets iOS play sound and go
+- **USCSS Montero** — the crew's own hauler: reactor, life support, hull, O₂,
+  cargo-tow tension and the hypersleep bank, plus the vessel registry and mundane
+  MU/TH/UR housekeeping notices.
+- **USCSS Cronus** — the derelict they board: degraded systems (life support
+  offline, reactor on standby, hull breach sealed, emergency power), the old
+  Weyland science-division registry, and a glitchy, redacted system log.
+
+Everything on this screen is **spoiler-free** — the scenario's mysteries stay
+behind the terminal's clearance-gated modules. There is **no ship radar**;
+instead the top bar carries a visible **`SHIP | ◎ TRACKER`** button that turns the
+whole screen into the **M314 motion detector** (and back). Open the display with a
+`?room=` code and that on-iPad scope **mirrors the GM's tracker phone** — blips
+you place there show up on the table screen live. A low reactor hum runs
+underneath and a stardate ticks. It also **pops up every dice roll** made at the
+table in the corner, with a blip.
+
+**Self-destruct.** On a signal from the [GM Control](#screen-4--gm-control--self-destruct-phone-portrait)
+phone, the display is taken over by the emergency destruct sequence: **ARMED** →
+a big **countdown** with a rising klaxon → and at zero (or on command) it cuts to
+a **SIGNAL ERROR — TRANSMISSION LOST** dead-channel screen. **Abort** returns it
+to the ship view. If the network drops, a **hidden fallback** works locally:
+long-press the bottom-**left** corner to arm/abort, the bottom-**right** to start
+the countdown (or cut the signal while it runs).
+
+It's ambient otherwise: nothing to operate, it just runs. Best on a plugged-in
+iPad in landscape with auto-lock off and the browser full-screen. It opens with a
+**tap to activate** panel — that first tap is what lets iOS play sound and go
 full-screen, so tap once and hand the device over.
 
 ---
 
-## Screen 4 — Motion Tracker · M314 (phone, portrait)
+## Screen 4 — GM Control · self-destruct (phone, portrait)
+
+```
+https://alexradf.github.io/Chariot-of-the-gods/control/
+```
+
+Your off-fiction remote for the Main Display. It **pairs to the display over a
+room code** and lets you, from your own phone, drive the ship state and the
+self-destruct takeover:
+
+| Control | Effect on the display |
+|---------|-----------------------|
+| **Montero / Cronus** | Flip which ship state the big screen is showing. |
+| **10:00 / 05:00 / 01:00 / 00:10** | Pick the countdown length. |
+| **Arm** | Put the display into the armed self-destruct standby. |
+| **Start** | Begin the countdown (arm first). |
+| **Abort** | Cancel and return the display to the ship view. |
+| **Cut Signal** (hold) | Jump straight to the SIGNAL ERROR screen — hold to fire so it can't misfire. |
+
+**Pairing:** open the control page, note its **room code**, then open the display
+with the *same* room (**Copy link** gives you the exact `…/display/?room=CODE` URL
+to send to the iPad). Both devices must be **online** — the link runs over the
+free public [ntfy.sh](https://ntfy.sh) relay (no account, nothing to install). The
+hidden corner fallback on the display covers you if the relay is unavailable.
+
+---
+
+## Screen 5 — Motion Tracker · M314 (phone, portrait)
 
 ```
 https://alexradf.github.io/Chariot-of-the-gods/tracker/
 ```
 
 Your handheld motion-tracker prop for the reveal moment: a sweeping scope with
-range rings out to 20 metres, contacts that drift inward as they close, a live
-distance readout, and the unmistakable ping that quickens as the nearest contact
-approaches (the tone is synthesized in-browser, nothing to download). It also
-shows a compact **feed of the crew's dice rolls**, so as GM you never miss a roll
-or a panic.
+range rings out to 20 metres, a live distance readout, and the unmistakable ping
+that quickens as the nearest contact approaches (the tone is synthesized
+in-browser, nothing to download). It also shows a compact **feed of the crew's
+dice rolls**, so as GM you never miss a roll or a panic.
 
-As a GM tool:
+Contacts are **fully under your control** — they stay exactly where you put them
+and never drift on their own, so *you* decide when the creatures move:
 
 | Control | Effect |
 |---------|--------|
-| **Tap the scope** | Drop a contact exactly where you want players to think something is. |
+| **Tap empty scope** | Drop a static contact exactly where you want one. |
+| **Drag a contact** | Slide it inward between beats to fake something closing in. |
+| **Tap a contact** | Remove that one contact. |
 | **＋ Contact** | Add a contact at a random bearing near the edge. |
-| **Auto** | Spawn contacts on their own for a "the walls are alive" scene. |
 | **Sound** | Mute / unmute the ping (also buzzes the phone when a contact is right on top of you). |
 | **Clear** | Wipe the scope. |
 
-Hold it so players see the blips march toward the centre and hear the ping
-tighten — then let them decide whether to open that door.
+**Two-screen mode.** Add the same `?room=CODE` to two tracker links and they
+**mirror**: place and drag contacts on your own phone (`…/tracker/?room=CODE`) and
+they appear live on a second tracker screen you've handed the players — you walk
+the blips toward the centre from across the table while they watch and sweat.
+(The on-iPad `SHIP | ◎ TRACKER` tab mirrors the same way.) With no `?room=` it's
+just the standalone handheld prop.
 
 ---
 
 ## At the table: how the screens connect
 
-The four screens aren't just separate pages: the **dice tie them together**. When
+The screens aren't just separate pages: the **dice tie them together**. When
 a player rolls on their sheet, that roll appears live on:
 
 - their own sheet's **Table Feed**, and every other player's sheet,
@@ -252,19 +305,26 @@ A rough flow showing how the pieces come into play — adapt freely.
 
 - **Before play.** Publish the site. Send players the `…/sheet/` link and the
   room code; each picks a character and reads their **Act I** agenda. Put the
-  **Main Display** on the table. Privately decide if anyone is **Lucas**, and
-  give them the codeword.
+  **Main Display** on the table (Montero state) and keep the **GM Control** and
+  **Motion Tracker** on your own phone. Privately decide if anyone is **Lucas**,
+  and give them the codeword.
 - **Act I — the approach.** The Main Display sells the intercept of the Cronus.
   Players roll Piloting/Comtech/Observation on their sheets to close on and board
-  the derelict; the whole table sees the rolls. Hand out the first **terminal
-  cards** as they reach working consoles and start reading the dead crew's mail.
+  the derelict; the whole table sees the rolls. Secretly triple-tap the display's
+  top bar to flip it to the **Cronus** state as they board. Hand out the first
+  **terminal cards** as they reach working consoles and start reading the dead
+  crew's mail.
 - **Act II — the truth.** More terminal cards deepen the mystery (Security deck
   maps, the Company's orders). Nudge players to switch their agenda to **Act II**.
   Stress climbs, pushes start triggering **Panic Rolls** — visible to everyone.
-  Break out the **Motion Tracker** for the first "something's moving" beat.
+  Break out the **Motion Tracker** for the first "something's moving" beat; flip
+  the display to its **◎ TRACKER** tab (with a shared `?room=`) so the scope
+  mirrors onto the table screen.
 - **Act III — the endgame.** Players flip to their **Act III** agenda; if the
   scenario calls for it, hand out the **`INFECTED`** codeword. The tracker earns
-  its keep as things close in. The dice feed keeps the table synced through the
+  its keep as things close in, and — when the ship is lost — the **GM Control**
+  phone arms the **self-destruct** and takes the big screen down to the
+  SIGNAL ERROR dead channel. The dice feed keeps the table synced through the
   chaos.
 
 ---
@@ -291,8 +351,9 @@ live automatically. `.nojekyll` tells Pages to serve the files as-is.
 |------|------------|
 | [`index.html`](index.html) | The **Access Terminal** — markup, styling, story data, and logic in one file. |
 | [`sheet/`](sheet/) | The **player crew sheets** — pick a character, track Health/Stress, read your per-Act agenda, roll dice that broadcast to the room, and open the rules window. |
-| [`display/`](display/) | The **MU/TH/UR 6500 main display** — the ambient bridge screen for an iPad. |
-| [`tracker/`](tracker/) | The **M314 motion tracker** — the mobile scope with a synthesized proximity ping. |
+| [`display/`](display/) | The **MU/TH/UR 6500 main display** — the ambient bridge screen for an iPad, with two ship states, an on-screen motion-detector tab, and the self-destruct takeover. |
+| [`control/`](control/) | The **GM Control** remote — a phone page that pairs to the display and drives the self-destruct sequence. |
+| [`tracker/`](tracker/) | The **M314 motion tracker** — the mobile scope with hand-placed contacts and a synthesized proximity ping. |
 | [`assets/rollbus.js`](assets/rollbus.js) | The shared **roll bus** — makes a dice roll on one device show up on every screen in the room. |
 | [`qr/`](qr/) | Per-crew access-card QR codes, PNG **and** SVG (e.g. `qr/reynolds-8654.png`). |
 | [`cards/access-cards.html`](cards/access-cards.html) | Print-ready sheet of all nine terminal cards. |
