@@ -153,8 +153,14 @@ character from the manifest.
 - **The dice, built in.** A full **ALIEN *Year Zero*** roller: tap any skill (or
   set attribute + skill + gear + stress by hand) to roll base **and** stress
   dice, count 6s for successes, **push** to reroll for +1 stress, and make a
-  **Panic Roll** when a pushed stress die comes up 1. A quick **player rules
-  reference** is folded in at the bottom.
+  **Panic Roll** when a pushed stress die comes up 1.
+- **A rules window, one tap away.** An *Open ALIEN rules window* button (also a
+  *rules ▸* link by the dice and a *Rules* link in the footer) pops up the full
+  **Game Mother Screen** quick reference as a toggle overlay — dice &amp;
+  pushing, the complete Panic table, stress triggers, time &amp; range, slow/fast
+  actions, ranged &amp; cover mods, stealth, every skill's stunts, synthetic and
+  xenomorph rules, and the full d66 critical-injury table. Collapsible sections,
+  closes on <kbd>Esc</kbd> or a tap outside.
 
 ### Rolls the whole room can see
 
