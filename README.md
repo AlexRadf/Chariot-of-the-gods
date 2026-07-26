@@ -88,8 +88,10 @@ phone the mail list and reader swap places; on a desktop they sit side by side.
 | Path | What it is |
 |------|------------|
 | [`index.html`](index.html) | The crew access terminal — markup, styling, story data, and logic in one file. |
+| [`sheet/`](sheet/) | The **player crew sheets** — pick a character, track Health/Stress, read your per-Act agenda, and roll dice that broadcast to the room. |
 | [`display/`](display/) | The **MU/TH/UR 6500 main display** — an ambient bridge screen for an iPad on the table. |
 | [`tracker/`](tracker/) | The **M314 motion tracker** — a mobile scope with a synthesized proximity ping. |
+| [`assets/rollbus.js`](assets/rollbus.js) | The shared **roll bus** — makes a dice roll on one device show up on every screen in the room. |
 | [`qr/`](qr/) | Per-crew access-card QR codes, PNG **and** SVG (e.g. `qr/reynolds-8654.png`). |
 | [`cards/access-cards.html`](cards/access-cards.html) | Print-ready sheet of all nine cards. |
 | [`scripts/generate_qr.py`](scripts/generate_qr.py) | Regenerates the codes and card sheet for any site URL. |
@@ -119,6 +121,64 @@ The included workflow does the publishing; you just point Pages at it once:
 3. Push to the deployment branch, or run the workflow from the **Actions** tab.
    The live URL appears in the workflow summary and under **Settings → Pages**
    once the first run finishes (allow a few minutes).
+
+---
+
+## Player crew sheets
+
+```
+https://alexradf.github.io/Chariot-of-the-gods/sheet/
+```
+
+The sheet page is the **players' side** of the prop — the regenerated Montero
+crew who board the Cronus. Share the one link; each player picks their own
+character from the manifest.
+
+- **Choose your character.** Five cards — Cpt. Miller (Officer), Davis (Pilot),
+  Rye and Cham (Roughnecks), and Wilson (Company Agent) — each with the exact
+  attributes, skills, talent and signature item from the character sheets.
+  Your choice is remembered on that device, and a direct link like
+  `…/sheet/?char=davis` drops a player straight into their character.
+- **Live condition trackers.** Tap the pips to set **Health** (equal to your
+  Strength), **Stress Level**, and **Radiation**. Stress feeds the dice roller
+  automatically.
+- **A hidden agenda, togglable per Act.** The agenda stays sealed behind
+  *Open sealed agenda* until the player chooses to read it, then **Act I / II /
+  III** tabs switch between that act's goal — so players reveal only the act
+  they're in. Wilson's Act I also shows the redacted **Special Order 966**.
+- **Sealed orders (GM secret roles).** If the Game Mother quietly hands a player
+  a codeword — **`LUCAS`** (the undercover synthetic) or **`INFECTED`** (the
+  Abomination) — entering it unlocks that secret agenda and its stat changes,
+  right on the player's own sheet. No codeword, nothing to see.
+- **The dice, built in.** A full **ALIEN *Year Zero*** roller: tap any skill (or
+  set attribute + skill + gear + stress by hand) to roll base **and** stress
+  dice, count 6s for successes, **push** to reroll for +1 stress, and make a
+  **Panic Roll** when a pushed stress die comes up 1. A quick **player rules
+  reference** is folded in at the bottom.
+
+### Rolls the whole room can see
+
+Every roll is broadcast over a lightweight **roll bus** ([`assets/rollbus.js`](assets/rollbus.js)):
+
+- The player who rolled sees it on their sheet's **Table Feed**, and so does
+  every other player sheet.
+- The **MU/TH/UR main display** pops the roll up in the corner (with a blip), so
+  the whole table sees it.
+- The **M314 motion tracker** — the phone the GM is already holding to place the
+  blips — shows the same feed, so the GM never misses a roll or a panic.
+
+It works with **no server and no accounts**. Same-device screens sync instantly
+(`BroadcastChannel`); across devices it uses a public [ntfy.sh](https://ntfy.sh)
+topic keyed to a **room code** (shown at the foot of the sheet, default
+`montero`). Everyone in the room just needs the same code — change it in the
+footer, or pass `?room=yourcode` on any of the links, to keep separate tables
+apart. If the network is blocked, rolls still work locally; nothing is lost on
+the device that made them.
+
+> **Privacy note.** The ntfy topic is public to anyone who knows the room code,
+> and it only ever carries dice results (who rolled what) — never the agendas or
+> secret roles, which stay on each player's own device. Pick an
+> not-easy-to-guess room code if you care.
 
 ---
 
