@@ -73,6 +73,15 @@ body::after{
 .topbar .ttl{ color:var(--dim); font-size:clamp(11px,1.7vw,15px); letter-spacing:.16em;
   text-transform:uppercase; }
 .topbar .clk{ color:var(--amber); font-size:clamp(12px,1.8vw,17px); letter-spacing:.08em; white-space:nowrap; }
+/* visible SHIP / TRACKER view toggle */
+.viewtabs{ display:flex; gap:6px; }
+.viewtabs button{ background:none; border:1px solid var(--faint); color:var(--dim);
+  font-family:inherit; text-shadow:var(--glow); font-size:clamp(10px,1.5vw,13px);
+  letter-spacing:.1em; padding:.35em .85em; text-transform:uppercase; cursor:pointer; }
+.viewtabs button.on{ background:var(--faint); color:var(--amber); border-color:var(--amber); }
+#trackerView{ display:none; flex:1; width:100%; border:0; min-height:0; background:var(--crt); }
+#scrn.trk .grid, #scrn.trk .cmd{ display:none; }
+#scrn.trk #trackerView{ display:block; }
 
 .grid{ flex:1; display:grid; grid-template-columns:1fr 1.15fr 1fr; gap:10px; min-height:0;
   padding-top:8px; }
@@ -188,6 +197,10 @@ section h2{ font-size:clamp(10px,1.5vw,13px); color:var(--amber); font-weight:40
   <div class="topbar" id="topbar">
     <span class="mu">MU/TH/UR 6500</span>
     <span class="ttl" id="ttl">USCSS MONTERO · SEV M2 · MAIN DISPLAY</span>
+    <span class="viewtabs" id="viewtabs">
+      <button type="button" data-view="ship" class="on">SHIP</button>
+      <button type="button" data-view="tracker">◎ TRACKER</button>
+    </span>
     <span class="clk" id="clk">----.--.-- · --:--:--</span>
   </div>
 
@@ -207,6 +220,8 @@ section h2{ font-size:clamp(10px,1.5vw,13px); color:var(--amber); font-weight:40
       <div class="pad"><div class="notice" id="notice"></div></div>
     </section>
   </div>
+
+  <iframe id="trackerView" title="M314 Motion Tracker" allow="fullscreen"></iframe>
 
   <div class="cmd" id="cmd"></div>
   <div class="foot">
@@ -472,13 +487,28 @@ function switchShip(key){
 }
 (function(){
   let taps=[], t0=0;
-  $("#topbar").addEventListener("pointerdown", ()=>{
+  $("#topbar").addEventListener("pointerdown", (e)=>{
+    if(e.target.closest("#viewtabs")) return;   // the visible tabs aren't part of the secret gesture
     const now=performance.now();
     if(now - t0 > 700) taps=[];
     t0=now; taps.push(now);
     if(taps.length>=3){ taps=[]; switchShip(); }
   });
 })();
+
+/* ---------------- visible SHIP / TRACKER view toggle ---------------- */
+function setView(v){
+  $("#scrn").classList.toggle("trk", v==="tracker");
+  $("#viewtabs").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.view===v));
+  if(v==="tracker" && !$("#trackerView").src){          // lazy-load the M314 scope on first switch
+    const q = ROOM ? ("&room="+encodeURIComponent(ROOM)) : "";
+    $("#trackerView").src = "../tracker/?embed=1"+q;
+  }
+}
+$("#viewtabs").addEventListener("click", e=>{
+  const b=e.target.closest("button[data-view]"); if(!b) return;
+  setView(b.dataset.view); blip(b.dataset.view==="tracker"?520:660,0.05,0.04);
+});
 
 /* ---------------- self-destruct takeover ---------------- */
 let destState="hidden", destLeft=0, destTotal=0, destTimer=null;

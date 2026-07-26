@@ -152,10 +152,15 @@ button, so players never see the switch):
   offline, reactor on standby, hull breach sealed, emergency power), the old
   Weyland science-division registry, and a glitchy, redacted system log.
 
-There is **no motion radar** on this screen — the radar lives in the motion
-tracker below. A low reactor hum runs underneath and a stardate ticks; otherwise
-it's ambient, nothing to operate. Best on a plugged-in iPad in landscape with
-auto-lock off and the browser in full-screen.
+There is **no ship radar** on this screen. Instead the top bar carries a visible
+**`SHIP | ◎ TRACKER`** button: tap **TRACKER** and the whole screen becomes the
+**M314 motion detector** (the ALIEN-style scope — range rings, sweep and
+hand-placed blips), tap **SHIP** to go back. When you open the display with a
+`?room=` code, that on-iPad motion detector **mirrors your phone**, so blips you
+place on the [GM's tracker](#motion-tracker--m314-phone-portrait) show up on the
+table screen live. A low reactor hum runs underneath and a stardate ticks;
+otherwise it's ambient, nothing to operate. Best on a plugged-in iPad in
+landscape with auto-lock off and the browser in full-screen.
 
 **Self-destruct.** On a signal from the [GM control](#gm-control--self-destruct-phone-portrait)
 phone, the display is taken over by the emergency destruct sequence: **ARMED** →

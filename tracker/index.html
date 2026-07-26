@@ -93,6 +93,9 @@ body::before{
 .tip{ text-align:center; font-size:10px; color:var(--faint); letter-spacing:.1em;
   padding-top:6px; text-transform:uppercase; }
 .tip a{ color:var(--faint); text-decoration:none; }
+/* embedded inside the iPad display: no splash, no footer chrome */
+body.embed #start{ display:none; }
+body.embed .tip{ display:none; }
 </style>
 </head>
 <body>
@@ -168,6 +171,7 @@ function sweepTick(){
    account, no library: publish with fetch(), subscribe with a WebSocket. If
    there's no room, or the network drops, the tracker still works standalone. */
 const ROOM = new URLSearchParams(location.search).get("room");
+const EMBED = new URLSearchParams(location.search).get("embed")==="1";  // shown inside the iPad display
 const SID = Math.random().toString(36).slice(2);   // this device's id, to ignore own echoes
 let ws=null, applyingRemote=false;
 function setLink(cls,label){
@@ -338,6 +342,7 @@ function hitContact(a, r){
 }
 let drag=null;   // { c, startX, startY, moved }
 cv.addEventListener("pointerdown", e=>{
+  if(AC && AC.state==="suspended") AC.resume();   // first touch unlocks the ping (matters when embedded)
   cv.setPointerCapture && cv.setPointerCapture(e.pointerId);
   const p=ptrPolar(e);
   const c=hitContact(p.a, p.r);
@@ -380,11 +385,15 @@ function boot(){
   $("#start").style.display="none"; $("#app").classList.add("on");
   fit(); requestAnimationFrame(frame); schedulePing();
   relayConnect();
-  // start with one contact so there's something on the scope
-  addContact(-Math.PI/2 + 0.4, MAX_M*0.9); broadcast(true);
-  try{ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }catch(e){}
+  if(!EMBED){
+    // standalone: seed one contact so there's something on the scope, and go full-screen
+    addContact(-Math.PI/2 + 0.4, MAX_M*0.9); broadcast(true);
+    try{ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }catch(e){}
+  }
+  // embedded: start empty and silent so the iPad tab faithfully mirrors the GM's phone
 }
 $("#start").addEventListener("click", boot);
+if(EMBED){ document.body.classList.add("embed"); boot(); }
 </script>
 </body>
 </html>
