@@ -367,9 +367,6 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
   <section class="panel">
     <h2>Quick Rolls</h2>
     <div class="quick">
-      <button data-roll="STR|closeCombat">⚔ Close Attack</button>
-      <button data-roll="AGI|rangedCombat">➶ Ranged Attack</button>
-      <button data-roll="AGI|mobility">👣 Stealth</button>
       <button class="panic" id="qPanic">Panic Roll</button>
       <button class="crit" id="qCrit">Critical Injury</button>
     </div>
@@ -1255,14 +1252,9 @@ function panicResult(t){
 
 /* ============================================================
    QUICK ROLLS · direct panic · critical injury (d66)
+   Attacks and stealth are ordinary skill rolls — tap the skill
+   on the sheet for those.
    ============================================================ */
-/* Close/Ranged Attack and Stealth are ordinary skill rolls — these
-   buttons just open the roll pop-up pre-set to the right skill. */
-$$('.quick [data-roll]').forEach(b=>{
-  const parts = b.getAttribute('data-roll').split('|');
-  b.addEventListener('click', ()=> openRoll(parts[0], parts[1]));
-});
-
 /* shared result pop-up (panic / critical injury) */
 let miscAgainFn = null;
 function showMisc(title, bodyHtml, againFn){
