@@ -14,13 +14,14 @@
 <style>
 /* ============================================================
    USCSS MONTERO — PLAYER CHARACTER SHEET
-   Interactive crew sheets for ALIEN RPG: Chariot of the Gods.
-   - Choose your character (the regenerated Montero crew)
-   - Live attributes / skills, Health & Stress trackers
-   - Personal Agenda hidden until opened, togglable per Act
-   - ALIEN Year Zero dice roller (base + stress dice, push, panic)
-   - Every roll is broadcast to the room (main display + tracker)
-   All character stats & agenda text follow the supplied files.
+   Chariot of the Gods · ALIEN RPG.
+   Layout:
+     · Centre  — character stats. Tap a skill/attribute to roll;
+       the roll happens in a pop-up, then drops into the log at
+       the bottom.
+     · Left    — slide-out AGENDA drawer (codeword input on top).
+     · Right   — slide-out RULES drawer (player-facing summary).
+   Every roll is broadcast to the room (display + tracker).
    ============================================================ */
 :root{
   --phos:#8affb0; --dim:#3d7a53; --faint:#1d3b2a;
@@ -36,7 +37,7 @@ body{
   text-shadow:var(--glow); -webkit-font-smoothing:antialiased; overflow-x:hidden;
 }
 body::before{
-  content:""; position:fixed; inset:0; z-index:80; pointer-events:none;
+  content:""; position:fixed; inset:0; z-index:2; pointer-events:none;
   background:
     repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, transparent 1px 3px),
     radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
@@ -54,7 +55,7 @@ button:focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
 h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spacing:.06em;
   color:var(--amber); text-transform:uppercase; }
 
-/* ---------------- select screen ---------------- */
+/* ---------------- character select ---------------- */
 #pick{ min-height:100dvh; padding:calc(20px + env(safe-area-inset-top)) 16px 40px;
   max-width:1100px; margin:0 auto; }
 #pick .lead{ text-align:center; margin:8px 0 22px; }
@@ -70,9 +71,10 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .card .ds{ color:var(--dim); font-size:12.5px; line-height:1.45; }
 .card .atts{ display:flex; gap:10px; margin-top:2px; flex-wrap:wrap; font-size:12px; color:var(--phos); }
 .card .atts span b{ color:var(--amber); font-weight:400; }
+.backlink{ margin-top:18px; text-align:center; }
 
-/* ---------------- sheet ---------------- */
-#sheet{ display:none; max-width:1100px; margin:0 auto;
+/* ---------------- sheet shell ---------------- */
+#sheet{ display:none; max-width:860px; margin:0 auto;
   padding:calc(10px + env(safe-area-inset-top)) 14px calc(30px + env(safe-area-inset-bottom)); }
 #sheet.on{ display:block; }
 .top{ display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px;
@@ -82,52 +84,102 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .top .sp{ flex:1; }
 .top .desc{ flex-basis:100%; color:var(--dim); font-size:13px; }
 
-.layout{ display:grid; gap:14px; margin-top:14px; grid-template-columns:1fr; }
-@media (min-width:820px){ .layout{ grid-template-columns:1fr 1fr; } .layout .full{ grid-column:1 / -1; } }
-
-.panel{ border:1px solid var(--faint); background:var(--raise); padding:14px; }
+.panel{ border:1px solid var(--faint); background:var(--raise); padding:14px; margin-top:14px; }
 .panel > h2{ margin-bottom:10px; border-bottom:1px solid var(--faint); padding-bottom:6px; }
+.panel > h2 .sub{ font-size:12px; color:var(--dim); text-transform:none; letter-spacing:0; }
+.cols{ display:grid; gap:14px; grid-template-columns:1fr; }
+@media (min-width:720px){ .cols{ grid-template-columns:1fr 1fr; } }
 
-/* attributes */
+/* attributes + skills */
 .attrs{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.attr{ border:1px solid var(--faint); padding:10px; }
-.attr .hd{ display:flex; align-items:center; gap:10px; }
-.attr .val{ font-family:'VT323',monospace; font-size:40px; line-height:.9; color:var(--white);
-  border:1px solid var(--dim); width:52px; height:52px; display:flex; align-items:center; justify-content:center; }
-.attr .an{ text-transform:uppercase; letter-spacing:.1em; font-size:13px; color:var(--amber); }
-.attr .skills{ margin-top:8px; display:flex; flex-direction:column; gap:2px; }
+@media (max-width:520px){ .attrs{ grid-template-columns:1fr; } }
+.attr{ border:1px solid var(--faint); }
+.attr .hd{ display:flex; align-items:center; gap:10px; padding:10px 10px 6px; cursor:pointer; }
+.attr .hd:hover{ background:var(--raise2); }
+.attr .val{ font-family:'VT323',monospace; font-size:38px; line-height:.9; color:var(--white);
+  border:1px solid var(--dim); width:50px; height:50px; display:flex; align-items:center; justify-content:center; }
+.attr .an{ text-transform:uppercase; letter-spacing:.1em; font-size:13px; color:var(--amber); flex:1; }
+.attr .hd .cue{ font-size:10px; color:var(--faint); letter-spacing:.1em; }
+.attr .hd:hover .cue{ color:var(--amber); }
+.attr .skills{ display:flex; flex-direction:column; padding:0 8px 8px; }
 .skill{ display:flex; justify-content:space-between; align-items:center; gap:8px;
-  font-size:12.5px; padding:3px 4px; cursor:pointer; border:1px solid transparent; }
-.skill:hover{ border-color:var(--faint); background:var(--raise2); }
+  font-size:13px; padding:7px 6px; cursor:pointer; border-top:1px solid var(--faint); }
+.skill:hover{ background:var(--raise2); }
 .skill .sn{ color:var(--dim); text-transform:uppercase; letter-spacing:.05em; }
 .skill.has .sn{ color:var(--phos); }
-.skill .sv{ color:var(--white); font-family:'VT323',monospace; font-size:18px; min-width:1.2em; text-align:right; }
-.skill .roll-cue{ color:var(--faint); font-size:10px; letter-spacing:.1em; }
-.skill:hover .roll-cue{ color:var(--amber); }
+.skill .rt{ display:flex; align-items:center; gap:8px; }
+.skill .rt .cue{ color:var(--faint); font-size:10px; letter-spacing:.1em; }
+.skill:hover .rt .cue{ color:var(--amber); }
+.skill .sv{ color:var(--white); font-family:'VT323',monospace; font-size:20px; min-width:1.1em; text-align:right; }
 
 /* trackers */
 .pips{ display:flex; flex-wrap:wrap; gap:5px; margin:6px 0 2px; }
-.pip{ width:22px; height:22px; border:1px solid var(--dim); cursor:pointer; background:transparent; padding:0; }
+.pip{ width:20px; height:20px; border:1px solid var(--dim); cursor:pointer; background:transparent; padding:0; }
 .pip.on{ background:var(--phos); box-shadow:0 0 6px rgba(138,255,176,.5); }
 .pip.stress.on{ background:var(--amber); box-shadow:0 0 6px rgba(240,178,62,.5); }
 .pip.rad.on{ background:var(--alert); box-shadow:0 0 6px rgba(255,92,71,.5); }
 .trk{ margin-bottom:12px; }
+.trk:last-child{ margin-bottom:0; }
 .trk .lbl{ display:flex; justify-content:space-between; align-items:baseline; }
 .trk .lbl .n{ text-transform:uppercase; letter-spacing:.1em; font-size:13px; color:var(--amber); }
 .trk .lbl .v{ font-family:'VT323',monospace; font-size:20px; color:var(--white); }
 .trk small{ color:var(--faint); font-size:11px; letter-spacing:.05em; }
 
 .kv{ font-size:13px; margin:3px 0; } .kv b{ color:var(--amber); font-weight:400; text-transform:uppercase; letter-spacing:.06em; }
-.talent b{ color:var(--white); }
-.talent{ font-size:13.5px; line-height:1.5; }
+.talent{ font-size:13.5px; line-height:1.5; } .talent b{ color:var(--white); }
 
-/* agenda */
+/* roll log */
+#log{ list-style:none; display:flex; flex-direction:column; gap:6px; max-height:300px; overflow:auto; }
+#log li{ border:1px solid var(--faint); padding:7px 9px; font-size:12.5px; line-height:1.4; }
+#log li.mine{ border-color:var(--dim); }
+#log li.panic{ border-color:var(--alert); }
+#log .who{ color:var(--amber); text-transform:uppercase; letter-spacing:.06em; }
+#log .s{ color:var(--white); font-family:'VT323',monospace; font-size:16px; }
+#log .dim{ color:var(--dim); }
+#log .empty{ color:var(--faint); border:none; padding:2px; }
+
+/* ---------------- edge tabs ---------------- */
+.edge-tab{ position:fixed; top:50%; z-index:40;
+  writing-mode:vertical-rl; text-orientation:mixed; letter-spacing:.22em; font-size:13px;
+  padding:16px 7px; border:1px solid var(--faint); background:var(--raise2); color:var(--amber);
+  text-transform:uppercase; cursor:pointer; box-shadow:0 0 14px rgba(0,0,0,.5); }
+.edge-tab.left{ left:0; border-left:0; transform:translateY(-50%) rotate(180deg); }
+.edge-tab.right{ right:0; border-right:0; transform:translateY(-50%); }
+.edge-tab:hover{ background:var(--faint); color:var(--white); }
+.edge-tab .badge{ display:none; }
+.edge-tab.has-badge .badge{ display:inline-block; color:var(--alert); }
+
+/* ---------------- drawers ---------------- */
+#scrim{ position:fixed; inset:0; z-index:45; background:rgba(1,4,2,.6); display:none; }
+#scrim.on{ display:block; }
+.drawer{ position:fixed; top:0; bottom:0; width:min(400px,88vw); z-index:50;
+  background:var(--crt); overflow:auto; padding:calc(14px + env(safe-area-inset-top)) 16px 24px;
+  transition:transform .26s ease; box-shadow:0 0 30px rgba(0,0,0,.7); }
+.drawer.left{ left:0; border-right:1px solid var(--dim); transform:translateX(-102%); }
+.drawer.right{ right:0; border-left:1px solid var(--dim); transform:translateX(102%); }
+.drawer.open{ transform:none; }
+.drawer .dhead{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+  border-bottom:2px solid var(--faint); padding-bottom:8px; margin-bottom:12px; }
+.drawer .dhead h2{ font-size:24px; }
+.drawer .dhead button{ border-color:var(--dim); font-size:12px; padding:.3em .7em; }
+
+/* sealed orders (top of agenda drawer) */
+.sealed{ border:1px solid var(--faint); padding:10px; margin-bottom:14px; background:var(--raise); }
+.sealed .lbl{ font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.1em; }
+.sealed .row{ display:flex; gap:8px; margin-top:8px; }
+.sealed input{ flex:1; min-width:0; background:var(--crt); border:1px solid var(--faint); color:var(--phos);
+  font-family:inherit; font-size:13px; padding:.55em .7em; text-transform:uppercase; letter-spacing:.14em; }
+.sealed input:focus{ outline:1px solid var(--amber); }
+.sealed .msg{ font-size:12px; color:var(--dim); margin-top:8px; min-height:1.1em; }
+.sealed .msg.bad{ color:var(--alert); }
+
+/* agenda body */
 .agenda-open{ width:100%; }
 .agenda-open.armed{ border-color:var(--amber); color:var(--amber); }
 #agendaBody{ display:none; margin-top:12px; }
 #agendaBody.on{ display:block; }
 .acts{ display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
-.acts button{ flex:1; min-width:70px; font-size:12px; padding:.5em .4em; }
+.acts button{ flex:1; min-width:60px; font-size:12px; padding:.5em .4em; }
 .acts button.on{ background:var(--faint); color:var(--amber); border-color:var(--amber); }
 .agenda-intro{ color:var(--dim); font-size:12.5px; font-style:italic; line-height:1.5;
   border-left:2px solid var(--faint); padding-left:10px; margin-bottom:10px; }
@@ -136,124 +188,74 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .redact{ margin-top:12px; background:#000; color:#4dff6a; border:1px solid #123;
   padding:10px 12px; font-size:11.5px; line-height:1.5; letter-spacing:.03em; white-space:pre-wrap;
   text-shadow:0 0 6px rgba(77,255,106,.5); }
-
-/* sealed orders */
-.sealed .row{ display:flex; gap:8px; margin-top:8px; }
-.sealed input{ flex:1; background:var(--crt); border:1px solid var(--faint); color:var(--phos);
-  font-family:inherit; font-size:13px; padding:.55em .7em; text-transform:uppercase; letter-spacing:.14em; }
-.sealed input:focus{ outline:1px solid var(--amber); }
-.sealed .msg{ font-size:12px; color:var(--dim); margin-top:8px; min-height:1.2em; }
-.sealed .msg.bad{ color:var(--alert); }
-.secret{ margin-top:12px; border:1px solid var(--alert); background:#140606; padding:12px; }
+.secret{ margin-top:14px; border:1px solid var(--alert); background:#140606; padding:12px; }
 .secret h3{ color:var(--alert); font-family:'VT323',monospace; font-weight:400; font-size:20px;
   letter-spacing:.06em; text-transform:uppercase; margin-bottom:8px; }
 .secret .agenda-intro{ border-color:#5a1a14; color:#c98; }
 .secret .agenda-goal .glabel{ color:var(--alert); }
 .secret .note{ margin-top:10px; font-size:12px; color:#e9b; border-top:1px solid #5a1a14; padding-top:8px; }
 
-/* dice roller */
-.dice-setup{ display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:end; }
-.dice-setup .fld{ display:flex; flex-direction:column; gap:3px; }
-.dice-setup label{ font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--dim); }
-.dice-setup select, .dice-setup input[type=number]{
-  background:var(--crt); border:1px solid var(--faint); color:var(--phos);
-  font-family:inherit; font-size:14px; padding:.5em; }
-.pool-note{ font-size:12px; color:var(--dim); margin:10px 0; }
-.pool-note b{ color:var(--white); font-family:'VT323',monospace; font-size:18px; }
-.rollbtns{ display:flex; gap:8px; margin-top:6px; }
-.rollbtns .big{ flex:2; border-color:var(--phos); color:var(--white); font-size:16px; padding:.7em; }
-.rollbtns .push{ flex:1; border-color:var(--amber); color:var(--amber); }
-.rollbtns .push:disabled{ opacity:.35; cursor:not-allowed; border-color:var(--faint); color:var(--faint); }
-.rollbtns .big.flash{ animation:cue .4s ease; }
+/* rules drawer */
+.rsec{ border-bottom:1px solid var(--faint); }
+.rsec > summary{ cursor:pointer; padding:11px 2px; font-family:'VT323',monospace; font-size:19px;
+  letter-spacing:.05em; color:var(--white); list-style:none; }
+.rsec > summary::-webkit-details-marker{ display:none; }
+.rsec > summary::before{ content:"▸ "; color:var(--amber); }
+.rsec[open] > summary::before{ content:"▾ "; }
+.rc{ padding:2px 2px 14px; font-size:12.5px; line-height:1.5; }
+.rc h4{ color:var(--amber); font-weight:400; letter-spacing:.04em; text-transform:uppercase; font-size:11.5px; margin:12px 0 4px; }
+.rc h4:first-child{ margin-top:2px; }
+.rc p{ margin:5px 0; } .rc b{ color:var(--white); font-weight:400; }
+.rc ul{ margin:4px 0 8px 16px; } .rc li{ margin:2px 0; }
+.rtable{ width:100%; border-collapse:collapse; margin:6px 0 8px; font-size:12px; }
+.rtable td,.rtable th{ border:1px solid var(--faint); padding:3px 6px; text-align:left; vertical-align:top; }
+.rtable th{ color:var(--amber); font-weight:400; text-transform:uppercase; font-size:10.5px; letter-spacing:.05em; }
+.rtable td:first-child{ color:var(--white); white-space:nowrap; }
+.rcredit{ color:var(--faint); font-size:11px; letter-spacing:.05em; padding:12px 2px 0; }
+
+/* ---------------- roll pop-up ---------------- */
+#rollModal{ position:fixed; inset:0; z-index:80; display:none; }
+#rollModal.on{ display:block; }
+#rollModal .veil{ position:absolute; inset:0; background:rgba(1,4,2,.82); }
+#rollModal .box{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:min(460px,92vw); max-height:88dvh; overflow:auto; background:var(--crt); border:1px solid var(--dim);
+  padding:18px; box-shadow:0 0 34px rgba(0,0,0,.75); }
+#rollModal .rhead{ display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+  border-bottom:2px solid var(--faint); padding-bottom:10px; }
+#rollModal .rhead .rt{ font-family:'VT323',monospace; font-size:26px; letter-spacing:.04em; color:var(--white); text-transform:uppercase; }
+#rollModal .rhead button{ border-color:var(--dim); font-size:12px; padding:.3em .7em; }
+.poolrow{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:14px 0 6px; flex-wrap:wrap; }
+.poolrow .pool{ font-size:13px; color:var(--dim); }
+.poolrow .pool b{ color:var(--white); font-family:'VT323',monospace; font-size:20px; }
+.modrow{ display:flex; align-items:center; gap:10px; }
+.modrow .ml{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); }
+.stepper{ display:inline-flex; align-items:center; border:1px solid var(--faint); }
+.stepper button{ border:0; font-size:20px; padding:.1em .6em; line-height:1; }
+.stepper .mv{ min-width:2.4em; text-align:center; font-family:'VT323',monospace; font-size:22px; color:var(--white); }
+#rollBtn{ width:100%; margin-top:14px; border-color:var(--phos); color:var(--white); font-size:18px; padding:.75em; }
+#rollBtn.flash{ animation:cue .4s ease; }
 @keyframes cue{ 0%{background:var(--phos); color:#03170c} 100%{background:none; color:var(--white)} }
 
-.result{ margin-top:14px; display:none; }
+.result{ margin-top:16px; display:none; }
 .result.on{ display:block; }
 .dicewrap{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
 .die{ width:38px; height:38px; border:1px solid var(--dim); display:flex; align-items:center; justify-content:center;
-  font-family:'VT323',monospace; font-size:26px; color:var(--phos); background:var(--raise2); position:relative; }
+  font-family:'VT323',monospace; font-size:26px; color:var(--phos); background:var(--raise2); }
 .die.stress{ border-color:var(--amber); color:var(--amber); }
 .die.six{ background:var(--phos); color:#03170c; border-color:var(--phos); box-shadow:0 0 8px rgba(138,255,176,.6); text-shadow:none; }
 .die.stress.six{ background:var(--amber); color:#1a1102; border-color:var(--amber); box-shadow:0 0 8px rgba(240,178,62,.6); }
 .die.one.stress{ border-color:var(--alert); color:var(--alert); box-shadow:0 0 8px rgba(255,92,71,.5); }
 .die.rolling{ animation:tumble .5s ease; }
 @keyframes tumble{ 0%{transform:translateY(-6px) rotate(-12deg); opacity:.3} 100%{transform:none; opacity:1} }
-.tally{ font-size:15px; }
 .tally .succ{ color:var(--white); font-family:'VT323',monospace; font-size:30px; }
 .tally .succ.zero{ color:var(--alert); }
 .tally .meta{ color:var(--dim); font-size:12.5px; }
-.panic-flag{ margin-top:10px; border:1px solid var(--alert); background:#140606; color:var(--alert);
-  padding:10px; font-size:13px; }
+#pushBtn{ margin-top:10px; border-color:var(--amber); color:var(--amber); }
+#pushBtn:disabled{ opacity:.35; cursor:not-allowed; border-color:var(--faint); color:var(--faint); }
+.panic-flag{ margin-top:12px; border:1px solid var(--alert); background:#140606; color:var(--alert); padding:10px; font-size:13px; }
 .panic-flag button{ margin-top:8px; border-color:var(--alert); color:var(--alert); }
 .panic-out{ margin-top:8px; font-size:13px; color:var(--white); }
 .panic-out .t{ font-family:'VT323',monospace; font-size:26px; color:var(--alert); }
-
-/* feed */
-#feed{ list-style:none; display:flex; flex-direction:column; gap:6px; max-height:280px; overflow:auto; }
-#feed li{ border:1px solid var(--faint); padding:7px 9px; font-size:12.5px; line-height:1.4; }
-#feed li.mine{ border-color:var(--dim); }
-#feed li.panic{ border-color:var(--alert); }
-#feed .who{ color:var(--amber); text-transform:uppercase; letter-spacing:.06em; }
-#feed .s{ color:var(--white); font-family:'VT323',monospace; font-size:16px; }
-#feed .dim{ color:var(--dim); }
-#feed .empty{ color:var(--faint); border:none; padding:2px; }
-
-/* rules */
-details.rules{ border:1px solid var(--faint); background:var(--raise); padding:0 14px; }
-details.rules summary{ cursor:pointer; padding:12px 0; font-family:'VT323',monospace; font-size:20px;
-  letter-spacing:.06em; color:var(--amber); text-transform:uppercase; list-style:none; }
-details.rules summary::-webkit-details-marker{ display:none; }
-details.rules summary::before{ content:"▸ "; color:var(--dim); }
-details.rules[open] summary::before{ content:"▾ "; }
-.rules-body{ padding-bottom:14px; font-size:13px; line-height:1.55; }
-.rules-body h4{ color:var(--white); font-weight:400; margin:12px 0 4px; letter-spacing:.04em; }
-.rules-body ul{ margin:4px 0 8px 18px; } .rules-body li{ margin:2px 0; }
-.rules-body .pt{ display:grid; grid-template-columns:auto 1fr; gap:2px 12px; font-size:12.5px; margin-top:4px; }
-.rules-body .pt b{ color:var(--amber); font-weight:400; }
-
-/* rules button + modal window */
-.rulesbtn{ width:100%; border-color:var(--amber); color:var(--amber); font-size:15px; padding:.8em;
-  display:flex; align-items:center; justify-content:center; gap:8px; }
-h2 .rulink{ float:right; font-size:12px; text-transform:none; letter-spacing:.02em; color:var(--dim);
-  border:1px solid var(--faint); padding:2px 8px; cursor:pointer; }
-h2 .rulink:hover{ color:var(--amber); border-color:var(--amber); }
-
-.modal{ position:fixed; inset:0; z-index:120; display:none; }
-.modal.on{ display:block; }
-.modal .veil{ position:absolute; inset:0; background:rgba(1,4,2,.82); backdrop-filter:blur(1px); }
-.modal .win{ position:absolute; inset:max(12px,env(safe-area-inset-top)) 12px 12px; margin:0 auto;
-  max-width:900px; background:var(--crt); border:1px solid var(--dim); display:flex; flex-direction:column;
-  box-shadow:0 0 30px rgba(0,0,0,.7); }
-.modal .whead{ display:flex; align-items:center; justify-content:space-between; gap:12px;
-  padding:12px 14px; border-bottom:2px solid var(--faint); background:var(--raise); }
-.modal .whead .t{ font-family:'VT323',monospace; font-size:26px; letter-spacing:.05em; color:var(--amber); }
-.modal .whead .t small{ display:block; font-family:'Share Tech Mono',monospace; font-size:11px;
-  letter-spacing:.14em; color:var(--dim); }
-.modal .whead button{ border-color:var(--dim); }
-.modal .wbody{ overflow:auto; padding:0 14px 20px; flex:1; }
-.modal .wbody::-webkit-scrollbar{ width:10px; } .modal .wbody::-webkit-scrollbar-thumb{ background:var(--faint); }
-
-.rsec{ border-bottom:1px solid var(--faint); }
-.rsec > summary{ cursor:pointer; padding:13px 2px; font-family:'VT323',monospace; font-size:21px;
-  letter-spacing:.05em; color:var(--white); list-style:none; position:sticky; top:0; background:var(--crt); }
-.rsec > summary::-webkit-details-marker{ display:none; }
-.rsec > summary::before{ content:"▸ "; color:var(--amber); }
-.rsec[open] > summary::before{ content:"▾ "; }
-.rsec .rc{ padding:2px 2px 16px; font-size:13px; line-height:1.55; }
-.rsec .rc h4{ color:var(--amber); font-weight:400; letter-spacing:.04em; text-transform:uppercase;
-  font-size:12.5px; margin:14px 0 5px; }
-.rsec .rc h4:first-child{ margin-top:4px; }
-.rsec .rc p{ margin:5px 0; } .rsec .rc b{ color:var(--white); font-weight:400; }
-.rsec .rc ul{ margin:4px 0 8px 18px; } .rsec .rc li{ margin:2px 0; }
-.rtable{ width:100%; border-collapse:collapse; margin:6px 0 10px; font-size:12.5px; }
-.rtable th, .rtable td{ border:1px solid var(--faint); padding:4px 7px; text-align:left; vertical-align:top; }
-.rtable th{ color:var(--amber); font-weight:400; text-transform:uppercase; letter-spacing:.05em; font-size:11px; }
-.rtable td:first-child{ color:var(--white); white-space:nowrap; }
-.rtable.tight td, .rtable.tight th{ padding:3px 6px; }
-.rgrid{ display:grid; grid-template-columns:1fr 1fr; gap:0 22px; }
-@media (max-width:620px){ .rgrid{ grid-template-columns:1fr; } }
-.rcredit{ color:var(--faint); font-size:11px; letter-spacing:.06em; padding:14px 2px 4px; }
-.pill{ display:inline-block; border:1px solid var(--faint); padding:1px 6px; margin:2px 3px 2px 0; font-size:12px; }
 
 .footbar{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; margin-top:16px;
   border-top:2px solid var(--faint); padding-top:10px; font-size:11px; letter-spacing:.08em;
@@ -262,7 +264,6 @@ h2 .rulink:hover{ color:var(--amber); border-color:var(--amber); }
 .roombox{ display:inline-flex; gap:6px; align-items:center; }
 .roombox input{ width:8em; background:var(--crt); border:1px solid var(--faint); color:var(--phos);
   font-family:inherit; font-size:11px; padding:.3em .5em; text-transform:lowercase; letter-spacing:.06em; }
-.backlink{ margin-top:18px; text-align:center; }
 </style>
 </head>
 <body>
@@ -288,15 +289,13 @@ h2 .rulink:hover{ color:var(--amber); border-color:var(--amber); }
     <span class="desc" id="cDesc"></span>
   </div>
 
-  <div class="layout">
+  <!-- attributes + skills (tap to roll) -->
+  <section class="panel">
+    <h2>Attributes &amp; Skills <span class="sub">— tap a skill to roll</span></h2>
+    <div class="attrs" id="attrs"></div>
+  </section>
 
-    <!-- attributes + skills -->
-    <section class="panel full">
-      <h2>Attributes &amp; Skills <span style="font-size:12px;color:var(--dim);text-transform:none;letter-spacing:0">— tap a skill to roll it</span></h2>
-      <div class="attrs" id="attrs"></div>
-    </section>
-
-    <!-- condition trackers -->
+  <div class="cols">
     <section class="panel">
       <h2>Condition</h2>
       <div class="trk">
@@ -315,7 +314,6 @@ h2 .rulink:hover{ color:var(--amber); border-color:var(--amber); }
       </div>
     </section>
 
-    <!-- talent + kit -->
     <section class="panel">
       <h2>Talent &amp; Kit</h2>
       <div class="talent" id="talent"></div>
@@ -325,412 +323,188 @@ h2 .rulink:hover{ color:var(--amber); border-color:var(--amber); }
         <div class="kv"><b>Rival:</b> <span id="rival"></span></div>
       </div>
     </section>
-
-    <!-- agenda -->
-    <section class="panel full">
-      <h2>Personal Agenda</h2>
-      <button class="agenda-open" id="agendaBtn">▣ Open sealed agenda</button>
-      <div id="agendaBody">
-        <div class="acts" id="actTabs"></div>
-        <div class="agenda-intro" id="agIntro"></div>
-        <div class="agenda-goal" id="agGoal"></div>
-        <div class="redact" id="agRedact" style="display:none"></div>
-      </div>
-
-      <!-- sealed orders (GM-assigned secret roles) -->
-      <div class="sealed" style="margin-top:16px">
-        <div style="font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em">Sealed orders</div>
-        <div class="row">
-          <input id="codeIn" placeholder="ENTER CODEWORD" autocomplete="off" spellcheck="false">
-          <button id="codeBtn">Unlock</button>
-        </div>
-        <div class="msg" id="codeMsg">If the Game Mother gave you a codeword, enter it here.</div>
-        <div id="secretWrap"></div>
-      </div>
-    </section>
-
-    <!-- dice roller -->
-    <section class="panel full">
-      <h2>Dice — ALIEN Year Zero <span class="rulink" id="rulink2" role="button" tabindex="0">rules ▸</span></h2>
-      <div class="dice-setup">
-        <div class="fld">
-          <label for="dAttr">Attribute</label>
-          <select id="dAttr"></select>
-        </div>
-        <div class="fld">
-          <label for="dSkill">Skill</label>
-          <select id="dSkill"></select>
-        </div>
-        <div class="fld">
-          <label for="dMod">Gear / modifier</label>
-          <input type="number" id="dMod" value="0" min="-6" max="10" step="1">
-        </div>
-        <div class="fld">
-          <label for="dStress">Stress dice</label>
-          <input type="number" id="dStress" value="0" min="0" max="20" step="1">
-        </div>
-      </div>
-      <div class="pool-note">Dice pool: <b id="poolN">0</b> base + <b id="poolS">0</b> stress = <b id="poolT">0</b> dice</div>
-      <div class="rollbtns">
-        <button class="big" id="rollBtn">⚄ Roll</button>
-        <button class="push" id="pushBtn" disabled>Push (+1 stress)</button>
-      </div>
-
-      <div class="result" id="result">
-        <div class="dicewrap" id="dicewrap"></div>
-        <div class="tally" id="tally"></div>
-        <div id="panicZone"></div>
-      </div>
-    </section>
-
-    <!-- live table feed -->
-    <section class="panel full">
-      <h2>Table Feed — Live Rolls</h2>
-      <ul id="feed"><li class="empty">No rolls yet. Every roll at the table shows up here.</li></ul>
-    </section>
-
-    <!-- rules -->
-    <section class="panel full">
-      <h2>Rules Reference</h2>
-      <button class="rulesbtn" id="rulesBtn">⧉ Open ALIEN rules window</button>
-      <p style="color:var(--dim);font-size:12.5px;margin-top:8px">
-        The full ALIEN <i>Year Zero</i> quick rules — dice, pushing, panic, actions,
-        combat, injuries and more — in a pop-up window you can open any time.
-      </p>
-    </section>
-
   </div>
+
+  <!-- roll log -->
+  <section class="panel">
+    <h2>Roll Log</h2>
+    <ul id="log"><li class="empty">No rolls yet. Tap a skill above — every roll at the table lands here.</li></ul>
+  </section>
 
   <div class="footbar">
     <span class="net">Room <span class="roombox"><input id="roomIn" spellcheck="false"></span> · sync <b id="netDot">·</b></span>
-    <span><a href="#" id="rulesFoot">⧉ Rules</a> · <a href="../">◄ Terminal</a> · <a href="../display/">Main display</a> · <a href="../tracker/">Motion tracker</a></span>
+    <span><a href="../">◄ Terminal</a> · <a href="../display/">Main display</a> · <a href="../tracker/">Motion tracker</a></span>
   </div>
 </div>
 
-<!-- ============== RULES WINDOW ============== -->
-<div class="modal" id="rulesModal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
-  <div class="veil" data-close></div>
-  <div class="win">
-    <div class="whead">
-      <div class="t" id="rulesTitle">ALIEN — Quick Rules<small>Game Mother Screen · Year Zero engine</small></div>
-      <button data-close aria-label="Close rules window">✕ Close</button>
+<!-- edge pull-tabs -->
+<button class="edge-tab left" id="agendaTab" aria-controls="agendaPanel">Agenda <span class="badge">●</span></button>
+<button class="edge-tab right" id="rulesTab" aria-controls="rulesPanel">Rules</button>
+
+<div id="scrim"></div>
+
+<!-- ============== LEFT DRAWER — AGENDA ============== -->
+<aside class="drawer left" id="agendaPanel" role="dialog" aria-label="Personal agenda">
+  <div class="dhead"><h2>Agenda</h2><button data-close-drawer>✕</button></div>
+
+  <div class="sealed">
+    <div class="lbl">Sealed orders</div>
+    <div class="row">
+      <input id="codeIn" placeholder="ENTER CODEWORD" autocomplete="off" spellcheck="false">
+      <button id="codeBtn">Unlock</button>
     </div>
-    <div class="wbody">
+    <div class="msg" id="codeMsg">If the Game Mother gave you a codeword, enter it here.</div>
+  </div>
+  <div id="secretWrap"></div>
 
-      <details class="rsec" open>
-        <summary>Dice &amp; Pushing</summary>
-        <div class="rc">
-          <h4>Dice rolls</h4>
-          <ul>
-            <li><b>Base dice</b> = Attribute + Skill + Gear.</li>
-            <li><b>Stress dice</b> = +1 die per Stress Level. A <b>1</b> on a stress die triggers a Panic Roll.</li>
-            <li><b>Modifiers</b> adjust the number of dice — remove from base dice first, then stress.</li>
-            <li><b>Results:</b> every <b>6</b> is a success. Extra 6s buy Stunts.</li>
-          </ul>
-          <h4>Pushing</h4>
-          <p>If no 1s show on your stress dice, you may push: add <b>1 Stress Level</b> (and its new stress die), then reroll all non-6s. You can only push once (some talents allow twice).</p>
-          <h4>Story Points</h4>
-          <ul>
-            <li>Gain 1 by playing your agenda (max 3).</li>
-            <li>Spend 1 to add a 6 to a roll.</li>
-          </ul>
-          <h4>Difficulty modifiers</h4>
-          <table class="rtable tight"><tbody>
-            <tr><td>Trivial</td><td>+3</td><td>Average</td><td>±0</td></tr>
-            <tr><td>Simple</td><td>+2</td><td>Demanding</td><td>−1</td></tr>
-            <tr><td>Easy</td><td>+1</td><td>Hard</td><td>−2</td></tr>
-            <tr><td></td><td></td><td>Formidable</td><td>−3</td></tr>
-          </tbody></table>
-        </div>
-      </details>
+  <button class="agenda-open" id="agendaBtn">▣ Open personal agenda</button>
+  <div id="agendaBody">
+    <div class="acts" id="actTabs"></div>
+    <div class="agenda-intro" id="agIntro"></div>
+    <div class="agenda-goal" id="agGoal"></div>
+    <div class="redact" id="agRedact" style="display:none"></div>
+  </div>
+</aside>
 
-      <details class="rsec">
-        <summary>Stress &amp; Panic</summary>
-        <div class="rc">
-          <h4>Panic Roll — d6 + current Stress Level</h4>
-          <table class="rtable"><tbody>
-            <tr><td>≤6</td><td><b>Keeping it together.</b> You hold your nerve. Barely.</td></tr>
-            <tr><td>7</td><td><b>Nervous twitch.</b> Your Stress Level and that of all friendly PCs in Short range increase by one.</td></tr>
-            <tr><td>8</td><td><b>Tremble.</b> All AGILITY rolls suffer −2 until your panic stops.</td></tr>
-            <tr><td>9</td><td><b>Drop item.</b> You drop a weapon/important item (GM's choice). Stress +1.</td></tr>
-            <tr><td>10</td><td><b>Freeze.</b> Frozen for one Round, losing your next action. You and friendly PCs in Short range gain 1 stress.</td></tr>
-            <tr><td>11</td><td><b>Seek cover.</b> Next action must move to safety (retreat roll allowed if enemy Engaged). Your stress −1; friendly PCs in Short range +1.</td></tr>
-            <tr><td>12</td><td><b>Scream.</b> Lose next action. Your stress −1, but every friendly who hears must make a Panic Roll.</td></tr>
-            <tr><td>13</td><td><b>Flee.</b> Flee to safety and refuse to leave. Your stress −1; everyone who sees you run must Panic Roll.</td></tr>
-            <tr><td>14</td><td><b>Psychotic.</b> Attack the nearest person or creature until you or the target is Broken. Witnesses must Panic Roll.</td></tr>
-            <tr><td>15+</td><td><b>Catatonic.</b> You collapse, unable to move or speak.</td></tr>
-          </tbody></table>
-          <p style="color:var(--dim)">Duration: 7/9/10/11/12 immediate; 8/13/14/15+ last until a Stop Panic action, Broken, or 1 Turn passes.</p>
-          <div class="rgrid">
-            <div>
-              <h4>Gain Stress when…</h4>
-              <ul>
-                <li>You push a skill roll.</li>
-                <li>You fire full-auto.</li>
-                <li>You suffer one or more points of damage.</li>
-                <li>You go without sleep, food, or water.</li>
-                <li>You perform a coup de grâce.</li>
-                <li>A Scientist fails to Analyze something.</li>
-                <li>A crewmate attacks you.</li>
-                <li>Someone nearby is revealed to be an android.</li>
-                <li>You meet certain creatures/places (per scenario/GM).</li>
-              </ul>
-            </div>
-            <div>
-              <h4>Make a Panic Roll if…</h4>
-              <ul>
-                <li>You roll one or more 1s on your stress dice (you can't push — roll Panic instead).</li>
-                <li>You witness a friendly suffering certain panic effects.</li>
-                <li>You're pinned down by a ranged attack.</li>
-                <li>You suffer a critical injury.</li>
-                <li>You're attacked by a strange creature you've never seen.</li>
-                <li>A truly terrifying event occurs (per scenario/GM).</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </details>
+<!-- ============== RIGHT DRAWER — RULES ============== -->
+<aside class="drawer right" id="rulesPanel" role="dialog" aria-label="Quick rules">
+  <div class="dhead"><h2>Quick Rules</h2><button data-close-drawer>✕</button></div>
 
-      <details class="rsec">
-        <summary>Time &amp; Range</summary>
-        <div class="rc">
-          <h4>Time units</h4>
-          <table class="rtable"><thead><tr><th>Unit</th><th>Duration</th><th>Primary use</th></tr></thead><tbody>
-            <tr><td>Round</td><td>5–10 seconds</td><td>Combat</td></tr>
-            <tr><td>Turn</td><td>5–10 minutes</td><td>Stealth</td></tr>
-            <tr><td>Shift</td><td>5–10 hours</td><td>Recovery</td></tr>
-          </tbody></table>
-          <h4>Range</h4>
-          <table class="rtable"><thead><tr><th>Range</th><th>Description</th></tr></thead><tbody>
-            <tr><td>Engaged</td><td>Right next to you; same zone.</td></tr>
-            <tr><td>Short</td><td>A few metres away; same zone.</td></tr>
-            <tr><td>Medium</td><td>Up to 25 m; adjacent zone.</td></tr>
-            <tr><td>Long</td><td>Up to ~100 m; 2–4 zones away.</td></tr>
-            <tr><td>Extreme</td><td>Up to ~1 km; 5+ zones.</td></tr>
-          </tbody></table>
-        </div>
-      </details>
+  <details class="rsec" open>
+    <summary>Rolling &amp; pushing</summary>
+    <div class="rc">
+      <h4>How to roll</h4>
+      <ul>
+        <li>Your pool = <b>Attribute + Skill</b> (+ any gear or modifier), plus <b>stress dice</b> equal to your Stress Level.</li>
+        <li>Every <b>6</b> is a success. One success means you make it; extra 6s buy stunts. No 6s means you fail.</li>
+      </ul>
+      <h4>Pushing</h4>
+      <ul>
+        <li>Failed, or want more? <b>Push once</b> — reroll every die that isn't a 6.</li>
+        <li>Pushing raises your <b>Stress Level by 1</b> and adds a stress die.</li>
+        <li>If a stress die shows a <b>1</b> on a push, you can't push again — make a <b>Panic Roll</b>.</li>
+      </ul>
+    </div>
+  </details>
 
-      <details class="rsec">
-        <summary>Actions</summary>
-        <div class="rc">
-          <h4>Slow actions</h4>
-          <table class="rtable"><tbody>
-            <tr><td>Close combat attack</td><td>CLOSE COMBAT, usually Engaged. Spend 6s for +1 damage, exchange initiative, disarm/steal, knock prone, or grapple.</td></tr>
-            <tr><td>Full auto</td><td>Shoot with +2 mod and +1 Stress; distribute extra 6s to other targets within Short of the primary.</td></tr>
-            <tr><td>Shoot / throw</td><td>RANGED COMBAT + range/size mods. Spend 6s: +1 damage, pin down, exchange initiative, disarm, prone, knock back.</td></tr>
-            <tr><td>Give orders</td><td>COMMAND a character who can hear you; each 6 gives +1 to their roll carrying out the order.</td></tr>
-            <tr><td>Manipulate</td><td>MANIPULATION on a person/group; success = they comply or must attack you.</td></tr>
-            <tr><td>First aid</td><td>MEDICAL AID to get a Broken character up; each 6 heals 1 Health. On a fatal crit, success stops Death Rolls.</td></tr>
-            <tr><td>Break a grapple</td><td>Opposed CLOSE COMBAT roll to escape.</td></tr>
-            <tr><td>Stop panic</td><td>COMMAND to bring a panicking character back to their senses.</td></tr>
-            <tr><td>Reload</td><td>A 1 on stress dice during a ranged attack spends a reload (start with 2).</td></tr>
-            <tr><td>Help (slow)</td><td>+1 to another's slow action per helper (max +3).</td></tr>
-          </tbody></table>
-          <h4>Fast actions</h4>
-          <table class="rtable"><tbody>
-            <tr><td>Aim</td><td>+2 on a RANGED COMBAT roll made immediately after.</td></tr>
-            <tr><td>Block attack</td><td>Reaction vs armed/creature attacks with a weapon. Spend 6s: −1 damage, counterattack (base dmg), or disarm.</td></tr>
-            <tr><td>Draw weapon / Get up</td><td>Ready an item; or stand (until then close attacks vs you get +2).</td></tr>
-            <tr><td>Grapple attack</td><td>After a successful grapple, an unarmed attack as a fast action.</td></tr>
-            <tr><td>Shove</td><td>CLOSE COMBAT vs Engaged enemy; success moves them to Short.</td></tr>
-            <tr><td>Retreat / disengage</td><td>MOBILITY to move Engaged→Short. Fail: you move but the enemy gets a free, unblockable attack.</td></tr>
-            <tr><td>Run</td><td>Move to an adjacent zone, or Short→Engaged in the same zone.</td></tr>
-            <tr><td>Seek cover</td><td>Take cover to use its Armor Rating vs ranged attacks.</td></tr>
-            <tr><td>Set overwatch</td><td>No Engaged enemies; pick a direction. Interrupt to make a ranged attack before your next turn.</td></tr>
-            <tr><td>Help (fast)</td><td>+1 to another's fast action per helper (max +3).</td></tr>
-          </tbody></table>
-        </div>
-      </details>
+  <details class="rsec">
+    <summary>Stress &amp; panic</summary>
+    <div class="rc">
+      <h4>Panic Roll — d6 + Stress Level</h4>
+      <table class="rtable"><tbody>
+        <tr><td>≤6</td><td>Keeping it together — no effect.</td></tr>
+        <tr><td>7</td><td>Nervous twitch — you and friendlies in Short range gain 1 stress.</td></tr>
+        <tr><td>8</td><td>Tremble — all AGILITY rolls −2 until panic stops.</td></tr>
+        <tr><td>9</td><td>Drop item — you drop something; stress +1.</td></tr>
+        <tr><td>10</td><td>Freeze — lose your next action; you and friendlies near gain 1 stress.</td></tr>
+        <tr><td>11</td><td>Seek cover — must move to safety before anything else.</td></tr>
+        <tr><td>12</td><td>Scream — lose your action; everyone who hears must Panic Roll.</td></tr>
+        <tr><td>13</td><td>Flee — run to safety and refuse to leave.</td></tr>
+        <tr><td>14</td><td>Berserk — attack the nearest character until you or they are Broken.</td></tr>
+        <tr><td>15+</td><td>Catatonic — you collapse, unable to move or speak.</td></tr>
+      </tbody></table>
+      <h4>You gain stress when…</h4>
+      <ul>
+        <li>you push a roll; you take damage; you fire full-auto;</li>
+        <li>you go without sleep, food or water;</li>
+        <li>a crewmate attacks you, or a horrifying truth comes to light;</li>
+        <li>you face something truly terrifying.</li>
+      </ul>
+      <p style="color:var(--dim)">Stress only comes down with rest, a safe moment, or when the GM says the pressure lifts.</p>
+    </div>
+  </details>
 
-      <details class="rsec">
-        <summary>Combat, Cover &amp; Stealth</summary>
-        <div class="rc">
-          <div class="rgrid">
-            <div>
-              <h4>Ranged fire modifiers</h4>
-              <table class="rtable tight"><tbody>
-                <tr><td>Aimed shot</td><td>+2</td></tr>
-                <tr><td>Engaged range</td><td>−3 / +3</td></tr>
-                <tr><td>Short range</td><td>—</td></tr>
-                <tr><td>Medium range</td><td>−1</td></tr>
-                <tr><td>Long range</td><td>−2</td></tr>
-                <tr><td>Extreme range</td><td>−3</td></tr>
-                <tr><td>Large / small target</td><td>+2 / −2</td></tr>
-                <tr><td>Dim light / darkness</td><td>−1 / −2</td></tr>
-              </tbody></table>
-              <p style="color:var(--dim)">Dim light &amp; darkness also apply to OBSERVATION.</p>
-            </div>
-            <div>
-              <h4>Cover (Armor Rating)</h4>
-              <table class="rtable tight"><tbody>
-                <tr><td>Shrubbery</td><td>2</td></tr>
-                <tr><td>Furniture</td><td>3</td></tr>
-                <tr><td>Door</td><td>4</td></tr>
-                <tr><td>Inner bulkhead</td><td>5</td></tr>
-                <tr><td>Outer bulkhead</td><td>6</td></tr>
-                <tr><td>Armored bulkhead</td><td>7+</td></tr>
-              </tbody></table>
-            </div>
-          </div>
-          <h4>Stealth &amp; sneak attacks</h4>
-          <ul>
-            <li>Speed 1 = move/explore up to 2 zones per Turn. Passive enemies can be ambushed; active enemies stalk you.</li>
-            <li>Sneak past / ambush: MOBILITY vs their OBSERVATION; success = a free attack.</li>
-            <li>Motion trackers detect movement: M314 (long/extreme), M316 (medium/long).</li>
-          </ul>
-          <table class="rtable tight"><thead><tr><th>Sneak-attack range</th><th>Mobility mod</th></tr></thead><tbody>
-            <tr><td>Engaged</td><td>−2</td></tr>
-            <tr><td>Short / behind open door</td><td>−1 / +2</td></tr>
-            <tr><td>Medium</td><td>0</td></tr>
-            <tr><td>Long / Extreme</td><td>+1 / +3</td></tr>
-          </tbody></table>
-        </div>
-      </details>
+  <details class="rsec">
+    <summary>Actions in a round</summary>
+    <div class="rc">
+      <h4>Slow actions</h4>
+      <table class="rtable"><tbody>
+        <tr><td>Close attack</td><td>CLOSE COMBAT, usually Engaged. 6s: +1 damage, grapple, disarm, knock prone.</td></tr>
+        <tr><td>Shoot / throw</td><td>RANGED COMBAT + range mods. 6s: +1 damage, pin down, disarm, knock back.</td></tr>
+        <tr><td>Full auto</td><td>Shoot at +2 and +1 stress; spread extra 6s to nearby targets.</td></tr>
+        <tr><td>First aid</td><td>MEDICAL AID to get a Broken ally up; each 6 heals 1 Health.</td></tr>
+        <tr><td>Give orders</td><td>COMMAND an ally who can hear you; each 6 gives +1 to their roll.</td></tr>
+        <tr><td>Manipulate</td><td>MANIPULATION to get someone to comply (or they must attack you).</td></tr>
+        <tr><td>Stop panic</td><td>COMMAND to bring a panicking ally back to their senses.</td></tr>
+      </tbody></table>
+      <h4>Fast actions</h4>
+      <table class="rtable"><tbody>
+        <tr><td>Aim</td><td>+2 on a ranged attack made right after.</td></tr>
+        <tr><td>Block</td><td>Reaction vs an armed/creature attack. 6s: −1 damage, counter, disarm.</td></tr>
+        <tr><td>Draw / get up</td><td>Ready an item, or stand (attacks vs you get +2 until you do).</td></tr>
+        <tr><td>Shove / retreat</td><td>Push an enemy to Short, or MOBILITY to disengage to Short.</td></tr>
+        <tr><td>Run</td><td>Move to an adjacent zone (or Short→Engaged in the same zone).</td></tr>
+        <tr><td>Seek cover</td><td>Use nearby cover's Armor Rating vs ranged attacks.</td></tr>
+        <tr><td>Help</td><td>+1 to an ally's action per helper (max +3).</td></tr>
+      </tbody></table>
+    </div>
+  </details>
 
-      <details class="rsec">
-        <summary>Skill Stunts (spend extra 6s)</summary>
-        <div class="rc rgrid">
-          <div>
-            <h4>Close Combat (STR)</h4>
-            <p>+1 damage · swap initiative · foe drops weapon · pull object · grapple · knock prone · clinch. <b>Blocking:</b> −1 dmg per 6 · counterattack (base dmg) · disarm.</p>
-            <h4>Ranged Combat (AGI)</h4>
-            <p>+1 damage · swap initiative · foe makes Panic Roll · foe drops weapon · prone/pushed back · (autofire) hit another target.</p>
-            <h4>Heavy Machinery (STR)</h4>
-            <p>+1 later related roll · no re-roll needed · half the time · break it permanently · act quietly · show off.</p>
-            <h4>Stamina (STR)</h4>
-            <p>Give a 6 to someone in the same situation · +1 later roll · no re-roll needed · impress someone.</p>
-            <h4>Mobility (AGI)</h4>
-            <p>Give a 6 to someone similar · +1 later roll · impress someone.</p>
-            <h4>Piloting (AGI)</h4>
-            <p>+1 later related roll · show off.</p>
-          </div>
-          <div>
-            <h4>Observation (WITS)</h4>
-            <p>Ask: Is it coming for me? · Are there more close by? · How do I get in/past/away?</p>
-            <h4>Comtech (WITS)</h4>
-            <p>+1 later related roll · needn't overcome again · half the time · new/unexpected info · hide your tracks · show off.</p>
-            <h4>Survival (WITS)</h4>
-            <p>Give a 6 to someone in the same situation · +1 later roll · impress someone.</p>
-            <h4>Command (EMP)</h4>
-            <p>+1 to the target's roll to carry out the order.</p>
-            <h4>Manipulation (EMP)</h4>
-            <p>No return favour demanded · they do more than asked · impressed (will help later).</p>
-            <h4>Medical Aid (EMP)</h4>
-            <p>Recover +1 Health.</p>
-          </div>
-        </div>
-      </details>
+  <details class="rsec">
+    <summary>Range &amp; time</summary>
+    <div class="rc">
+      <table class="rtable"><thead><tr><th>Range</th><th></th></tr></thead><tbody>
+        <tr><td>Engaged</td><td>Right next to you.</td></tr>
+        <tr><td>Short</td><td>A few metres; same zone.</td></tr>
+        <tr><td>Medium</td><td>Up to 25 m; next zone. Ranged −1.</td></tr>
+        <tr><td>Long</td><td>Up to ~100 m. Ranged −2.</td></tr>
+        <tr><td>Extreme</td><td>Up to ~1 km. Ranged −3.</td></tr>
+      </tbody></table>
+      <table class="rtable"><thead><tr><th>Time</th><th></th></tr></thead><tbody>
+        <tr><td>Round</td><td>5–10 seconds — combat.</td></tr>
+        <tr><td>Turn</td><td>5–10 minutes — exploring.</td></tr>
+        <tr><td>Shift</td><td>5–10 hours — recovery.</td></tr>
+      </tbody></table>
+    </div>
+  </details>
 
-      <details class="rsec">
-        <summary>Synthetics</summary>
-        <div class="rc">
-          <h4>General rules</h4>
-          <ul>
-            <li><b>Attributes:</b> +3 to two attributes of choice. <b>Skills:</b> can't push rolls.</li>
-            <li><b>Stress &amp; Panic:</b> none — no Stress Level, never Panic.</li>
-            <li>Don't need air, food, water or sleep; immune to vacuum, cold and disease; typically unaffected by alien pathogens.</li>
-            <li>Don't heal — a Shift of work + COMTECH roll repairs all lost Health and crits (unless in System Shutdown). Can self-repair.</li>
-            <li>Never make Death Rolls. On System Shutdown they can be reactivated (power + Turn + COMTECH), but gain permanent mental trauma.</li>
-          </ul>
-          <h4>Critical injuries (d6)</h4>
-          <table class="rtable tight"><tbody>
-            <tr><td>1</td><td>Ruptured fluid pump — lose next slow action.</td></tr>
-            <tr><td>2</td><td>Destroyed leg servos — must stay prone, can only crawl.</td></tr>
-            <tr><td>3</td><td>Destroyed arm servos — one-handed gear only.</td></tr>
-            <tr><td>4</td><td>Head dislocation — all fast actions become slow.</td></tr>
-            <tr><td>5</td><td>Severe chassis breach — completely immobilized.</td></tr>
-            <tr><td>6</td><td>System shutdown — needs a COMTECH roll to communicate.</td></tr>
-          </tbody></table>
-          <p style="color:var(--dim)">A Broken android keeps operating with its crit until System Shutdown. Repeat crits shift one step down the table.</p>
-        </div>
-      </details>
+  <details class="rsec">
+    <summary>Skill stunts (spend extra 6s)</summary>
+    <div class="rc">
+      <p><b>Close Combat</b> — +1 damage · disarm · knock prone · grapple.</p>
+      <p><b>Ranged Combat</b> — +1 damage · foe panics · disarm · knock back.</p>
+      <p><b>Heavy Machinery / Stamina</b> — +1 later roll · half the time · impress · show off.</p>
+      <p><b>Mobility / Piloting</b> — +1 later roll · give a 6 to someone with you · show off.</p>
+      <p><b>Observation</b> — ask: is it coming for me? more of them near? a way past?</p>
+      <p><b>Comtech</b> — +1 later roll · half the time · new info · hide your tracks.</p>
+      <p><b>Survival</b> — +1 later roll · give a 6 to an ally · impress.</p>
+      <p><b>Command</b> — +1 to the ally's roll to carry out the order.</p>
+      <p><b>Manipulation</b> — no return favour · they do more · impressed (help later).</p>
+      <p><b>Medical Aid</b> — recover +1 Health.</p>
+    </div>
+  </details>
 
-      <details class="rsec">
-        <summary>Xenomorphs</summary>
-        <div class="rc">
-          <h4>General rules</h4>
-          <ul>
-            <li>No attributes — use listed skills. Never push rolls. Have natural armor.</li>
-            <li>Higher Speed (2+): move 2 zones per Speed in stealth; draw an initiative card per Speed in combat (slow + fast on each).</li>
-            <li>Signature attacks: roll a d6 on the creature's table at Engaged; blockable only with a weapon/blunt instrument.</li>
-            <li>At 0 Health they're not Broken — roll a d6 crit below.</li>
-          </ul>
-          <h4>Critical injuries (d6)</h4>
-          <table class="rtable tight"><tbody>
-            <tr><td>1</td><td>Rise again — plays dead; regains 1 Health and rises if attacked or on its next turn.</td></tr>
-            <tr><td>2</td><td>Wounded — Speed −1, regains 1 Health; may try to escape (1–3 each Round).</td></tr>
-            <tr><td>3</td><td>Desperate action — free fast + slow action; escapes or attacks nearest.</td></tr>
-            <tr><td>4</td><td>Last breath — kills nearest on its next turn, then dies (dies instantly if wounded first).</td></tr>
-            <tr><td>5–6</td><td>Torn apart — instant death; Analyze only at OBSERVATION −2.</td></tr>
-          </tbody></table>
-        </div>
-      </details>
+  <div class="rcredit">Quick play aid — your Game Mother's rulings are final.</div>
+</aside>
 
-      <details class="rsec">
-        <summary>Critical Injuries (d66)</summary>
-        <div class="rc">
-          <p style="color:var(--dim)">Fatal injuries require a Death Roll when the time limit runs out.</p>
-          <table class="rtable tight"><thead><tr><th>d66</th><th>Injury</th><th>Fatal</th><th>Effect</th></tr></thead><tbody>
-            <tr><td>11</td><td>Winded</td><td>—</td><td>None.</td></tr>
-            <tr><td>12</td><td>Stunned</td><td>—</td><td>None.</td></tr>
-            <tr><td>13</td><td>Crippling pain</td><td>—</td><td>Stress Level +1.</td></tr>
-            <tr><td>14</td><td>Sprained ankle</td><td>—</td><td>MOBILITY −2, can't run until Medical Aid.</td></tr>
-            <tr><td>15</td><td>Blood in eyes</td><td>—</td><td>OBSERVATION &amp; RANGED COMBAT −2 until Medical Aid.</td></tr>
-            <tr><td>16</td><td>Concussion</td><td>—</td><td>MOBILITY −2.</td></tr>
-            <tr><td>21</td><td>Severed ear</td><td>—</td><td>OBSERVATION −2.</td></tr>
-            <tr><td>22</td><td>Broken toes</td><td>—</td><td>Running becomes a slow action.</td></tr>
-            <tr><td>23</td><td>Broken hand</td><td>—</td><td>Can't use hand.</td></tr>
-            <tr><td>24</td><td>Knocked-out teeth</td><td>—</td><td>MANIPULATION −2.</td></tr>
-            <tr><td>25</td><td>Impaled thigh</td><td>—</td><td>Running becomes a slow action.</td></tr>
-            <tr><td>26</td><td>Slashed shoulder</td><td>—</td><td>Can't use arm.</td></tr>
-            <tr><td>31</td><td>Broken nose</td><td>—</td><td>MANIPULATION &amp; OBSERVATION −1.</td></tr>
-            <tr><td>32</td><td>Crotch hit</td><td>—</td><td>1 damage on every MOBILITY/CLOSE COMBAT roll.</td></tr>
-            <tr><td>33</td><td>Broken ribs</td><td>—</td><td>MOBILITY &amp; CLOSE COMBAT −2.</td></tr>
-            <tr><td>34</td><td>Gouged eye</td><td>—</td><td>RANGED COMBAT &amp; OBSERVATION −2.</td></tr>
-            <tr><td>35</td><td>Busted kneecap</td><td>—</td><td>Can't run, only crawl.</td></tr>
-            <tr><td>36</td><td>Broken arm</td><td>—</td><td>Can't use arm.</td></tr>
-            <tr><td>41</td><td>Broken leg</td><td>—</td><td>Can't run, only crawl.</td></tr>
-            <tr><td>42</td><td>Crushed foot</td><td>—</td><td>Can't run, only crawl.</td></tr>
-            <tr><td>43</td><td>Crushed elbow</td><td>—</td><td>Can't use arm.</td></tr>
-            <tr><td>44</td><td>Punctured lung</td><td>Yes · 1 Day</td><td>STAMINA &amp; MOBILITY −2.</td></tr>
-            <tr><td>45</td><td>Bleeding gut</td><td>Yes · 1 Shift</td><td>1 damage on every MOBILITY/CLOSE COMBAT roll.</td></tr>
-            <tr><td>46</td><td>Ruptured intestines</td><td>Yes · 1 Shift</td><td>Disease, Virulence 6.</td></tr>
-            <tr><td>51</td><td>Busted kidney</td><td>Yes · 1 Day</td><td>Can't run, only crawl; MOBILITY −2.</td></tr>
-            <tr><td>52</td><td>Arm artery cut</td><td>Yes −1 · 1 Turn</td><td>Can't use arm.</td></tr>
-            <tr><td>53</td><td>Leg artery cut</td><td>Yes −1 · 1 Turn</td><td>Running becomes a slow action.</td></tr>
-            <tr><td>54</td><td>Severed arm</td><td>Yes −1 · 1 Shift</td><td>Can't use arm (permanent).</td></tr>
-            <tr><td>55</td><td>Severed leg</td><td>Yes −1 · 1 Shift</td><td>Can't run, only crawl (permanent).</td></tr>
-            <tr><td>56</td><td>Cracked spine</td><td>—</td><td>Paralyzed neck-down; permanent without timely Medical Aid.</td></tr>
-            <tr><td>61</td><td>Ruptured jugular</td><td>Yes −1 · 1 Round</td><td>STAMINA −1.</td></tr>
-            <tr><td>62</td><td>Ruptured aorta</td><td>Yes −2 · 1 Round</td><td>STAMINA −2.</td></tr>
-            <tr><td>63</td><td>Disemboweled</td><td>Yes</td><td>Instant death.</td></tr>
-            <tr><td>64</td><td>Crushed skull</td><td>Yes</td><td>Your story ends here.</td></tr>
-            <tr><td>65</td><td>Pierced head</td><td>Yes</td><td>You die immediately.</td></tr>
-            <tr><td>66</td><td>Impaled heart</td><td>Yes</td><td>Your heart beats for the last time.</td></tr>
-          </tbody></table>
-        </div>
-      </details>
+<!-- ============== ROLL POP-UP ============== -->
+<div id="rollModal" role="dialog" aria-modal="true" aria-label="Roll">
+  <div class="veil" data-close-roll></div>
+  <div class="box">
+    <div class="rhead">
+      <span class="rt" id="rTitle">Roll</span>
+      <button data-close-roll aria-label="Close">✕</button>
+    </div>
 
-      <details class="rsec">
-        <summary>NPCs don't…</summary>
-        <div class="rc">
-          <p>
-            <span class="pill">Accumulate Stress</span>
-            <span class="pill">Block close-combat attacks</span>
-            <span class="pill">Have Talents</span>
-            <span class="pill">Make Panic rolls</span>
-            <span class="pill">Push rolls</span>
-            <span class="pill">Seek cover</span>
-            <span class="pill">Track ammo (until it runs out dramatically)</span>
-            <span class="pill">Track crit mechanics (use common sense)</span>
-          </p>
-          <p style="color:var(--dim)">When Broken, an NPC may simply die if the GM says so.</p>
-        </div>
-      </details>
+    <div class="poolrow">
+      <span class="pool">Dice pool: <b id="rBase">0</b> base + <b id="rStress">0</b> stress = <b id="rTotal">0</b></span>
+      <span class="modrow">
+        <span class="ml">Modifier</span>
+        <span class="stepper">
+          <button id="modDown" aria-label="modifier down">−</button>
+          <span class="mv" id="modVal">0</span>
+          <button id="modUp" aria-label="modifier up">+</button>
+        </span>
+      </span>
+    </div>
 
-      <div class="rcredit">Reference: ALIEN RPG Game Mother Screen by Tim Bannock · page numbers refer to the ALIEN RPG core rulebook. Play aid for use at the table; the Game Mother's rulings are final.</div>
+    <button id="rollBtn">⚄ Roll</button>
 
+    <div class="result" id="result">
+      <div class="dicewrap" id="dicewrap"></div>
+      <div class="tally" id="tally"></div>
+      <button id="pushBtn" disabled>Push (+1 stress)</button>
+      <div id="panicZone"></div>
     </div>
   </div>
 </div>
@@ -743,9 +517,6 @@ const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
 
 /* ============================================================
    CREW DATA — the regenerated Montero crew.
-   Stats, skills, talents and agendas transcribed from the
-   supplied COTG character sheets and agendas files.
-   attrs: STR/AGI/WITS/EMP with their three skills.
    ============================================================ */
 const SKILLS = {
   STR:  [["closeCombat","Close Combat"],["heavyMachinery","Heavy Machinery"],["stamina","Stamina"]],
@@ -841,7 +612,7 @@ const CREW = {
 };
 const ORDER = ["miller","davis","rye","cham","wilson"];
 
-/* Secret, GM-assigned agendas unlocked by codeword. */
+/* GM-assigned secret roles, unlocked by codeword. */
 const SECRETS = {
   LUCAS: {
     title:"LUCAS — Synthetic",
@@ -866,9 +637,10 @@ const SECRETS = {
 /* ============================================================
    STATE + PERSISTENCE
    ============================================================ */
-let current = null;          // character id
-let charState = {};          // { hp, stress, rad, act, secret, agendaOpen }
-let lastRoll = null;         // for pushing
+let current = null;
+let charState = {};
+let lastRoll = null;    // active roll in the pop-up
+let modalCtx = null;    // { attr, skillKey, label }
 
 function stateKey(id){ return "cotg_sheet_" + id; }
 function loadState(id){
@@ -876,10 +648,7 @@ function loadState(id){
   const c = CREW[id];
   return { hp:c.STR, stress:0, rad:0, act:0, secret:null, agendaOpen:false };
 }
-function saveState(){
-  if(!current) return;
-  try{ localStorage.setItem(stateKey(current), JSON.stringify(charState)); }catch(e){}
-}
+function saveState(){ if(current){ try{ localStorage.setItem(stateKey(current), JSON.stringify(charState)); }catch(e){} } }
 
 /* ============================================================
    CHARACTER SELECT
@@ -895,16 +664,13 @@ function buildCards(){
       '<span class="rl">'+c.role+'</span>'+
       '<span class="ds">'+c.desc+'</span>'+
       '<span class="atts">'+
-        '<span>STR <b>'+c.STR+'</b></span>'+
-        '<span>AGI <b>'+c.AGI+'</b></span>'+
-        '<span>WITS <b>'+c.WITS+'</b></span>'+
-        '<span>EMP <b>'+c.EMP+'</b></span>'+
+        '<span>STR <b>'+c.STR+'</b></span><span>AGI <b>'+c.AGI+'</b></span>'+
+        '<span>WITS <b>'+c.WITS+'</b></span><span>EMP <b>'+c.EMP+'</b></span>'+
       '</span>';
     b.addEventListener("click", ()=> selectChar(id));
     g.appendChild(b);
   });
 }
-
 function selectChar(id){
   current = id;
   charState = loadState(id);
@@ -917,7 +683,7 @@ function selectChar(id){
 }
 
 /* ============================================================
-   RENDER SHEET
+   RENDER
    ============================================================ */
 function renderSheet(){
   const c = CREW[current];
@@ -928,11 +694,9 @@ function renderSheet(){
   $("#sig").textContent = c.sig;
   $("#buddy").textContent = c.buddy;
   $("#rival").textContent = c.rival;
-
   buildAttrs();
   buildTrackers();
   buildAgenda();
-  buildDiceControls();
   renderSecret();
 }
 
@@ -947,16 +711,17 @@ function buildAttrs(){
       const v = c.skills[key]||0;
       sk += '<div class="skill'+(v?' has':'')+'" data-attr="'+a+'" data-skill="'+key+'" tabindex="0" role="button">'+
               '<span class="sn">'+label+'</span>'+
-              '<span><span class="roll-cue">ROLL ▸</span> <span class="sv">'+v+'</span></span>'+
+              '<span class="rt"><span class="cue">ROLL ▸</span><span class="sv">'+v+'</span></span>'+
             '</div>';
     });
     div.innerHTML =
-      '<div class="hd"><span class="val">'+c[a]+'</span><span class="an">'+ATTR_NAME[a]+'</span></div>'+
+      '<div class="hd" data-attr="'+a+'" data-skill="" tabindex="0" role="button">'+
+        '<span class="val">'+c[a]+'</span><span class="an">'+ATTR_NAME[a]+'</span><span class="cue">ROLL ▸</span></div>'+
       '<div class="skills">'+sk+'</div>';
     wrap.appendChild(div);
   });
-  $$("#attrs .skill").forEach(el=>{
-    const go = ()=> setupRollFor(el.getAttribute("data-attr"), el.getAttribute("data-skill"));
+  $$("#attrs .skill, #attrs .hd").forEach(el=>{
+    const go = ()=> openRoll(el.getAttribute("data-attr"), el.getAttribute("data-skill"));
     el.addEventListener("click", go);
     el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
   });
@@ -964,36 +729,27 @@ function buildAttrs(){
 
 function buildTrackers(){
   const c = CREW[current];
-  // health
   $("#hpMax").textContent = c.STR;
-  buildPips("#hpPips", c.STR, charState.hp, "", (n)=>{ charState.hp=n; $("#hpNow").textContent=n; saveState(); });
+  buildPips("#hpPips", c.STR, charState.hp, "", n=>{ charState.hp=n; $("#hpNow").textContent=n; saveState(); });
   $("#hpNow").textContent = charState.hp;
-  // stress (0..10 display)
-  buildPips("#stPips", 10, charState.stress, "stress", (n)=>{ charState.stress=n; $("#stVal").textContent=n; syncStressToDice(); saveState(); });
+  buildPips("#stPips", 10, charState.stress, "stress", n=>{ charState.stress=n; $("#stVal").textContent=n; refreshPool(); saveState(); });
   $("#stVal").textContent = charState.stress;
-  // radiation (0..10)
-  buildPips("#radPips", 10, charState.rad, "rad", (n)=>{ charState.rad=n; $("#radVal").textContent=n; saveState(); });
+  buildPips("#radPips", 10, charState.rad, "rad", n=>{ charState.rad=n; $("#radVal").textContent=n; saveState(); });
   $("#radVal").textContent = charState.rad;
 }
-
-/* pips: click a pip to set the value to that many; click the active top pip to clear one */
 function buildPips(sel, max, value, cls, onChange){
   const el = $(sel); el.innerHTML="";
   for(let i=1;i<=max;i++){
     const b = document.createElement("button");
     b.className = "pip " + cls + (i<=value ? " on":"");
     b.setAttribute("aria-label", i);
-    b.addEventListener("click", ()=>{
-      const nv = (i===value) ? i-1 : i;   // tapping the current top pip clears it
-      onChange(nv);
-      buildPips(sel, max, nv, cls, onChange);
-    });
+    b.addEventListener("click", ()=>{ const nv=(i===value)?i-1:i; onChange(nv); buildPips(sel,max,nv,cls,onChange); });
     el.appendChild(b);
   }
 }
 
 /* ============================================================
-   AGENDA
+   AGENDA (left drawer)
    ============================================================ */
 function buildAgenda(){
   const c = CREW[current];
@@ -1005,11 +761,10 @@ function buildAgenda(){
     b.addEventListener("click", ()=>{ charState.act=i; saveState(); paintAgenda(); });
     tabs.appendChild(b);
   });
-  // reflect open/closed
   const open = !!charState.agendaOpen;
   $("#agendaBody").classList.toggle("on", open);
   const btn = $("#agendaBtn");
-  btn.textContent = open ? "▣ Hide agenda" : "▣ Open sealed agenda";
+  btn.textContent = open ? "▣ Hide agenda" : "▣ Open personal agenda";
   btn.classList.toggle("armed", !open);
   if(open) paintAgenda();
 }
@@ -1017,15 +772,12 @@ function paintAgenda(){
   const c = CREW[current];
   $$("#actTabs button").forEach((b,i)=> b.classList.toggle("on", i===charState.act));
   $("#agIntro").textContent = c.agenda.intro;
-  const goal = c.agenda.acts[charState.act];
-  $("#agGoal").innerHTML = '<span class="glabel">Act '+["I","II","III"][charState.act]+' — your goal</span>' + goal;
+  $("#agGoal").innerHTML = '<span class="glabel">Act '+["I","II","III"][charState.act]+' — your goal</span>' + c.agenda.acts[charState.act];
   const red = $("#agRedact");
   if(c.agenda.redact && charState.act===0){ red.style.display="block"; red.textContent=c.agenda.redact; }
   else red.style.display="none";
 }
-$("#agendaBtn").addEventListener("click", ()=>{
-  charState.agendaOpen = !charState.agendaOpen; saveState(); buildAgenda();
-});
+$("#agendaBtn").addEventListener("click", ()=>{ charState.agendaOpen=!charState.agendaOpen; saveState(); buildAgenda(); });
 
 /* sealed orders / secret roles */
 $("#codeBtn").addEventListener("click", tryCode);
@@ -1033,192 +785,158 @@ $("#codeIn").addEventListener("keydown", e=>{ if(e.key==="Enter") tryCode(); });
 function tryCode(){
   const code = ($("#codeIn").value||"").trim().toUpperCase();
   const msg = $("#codeMsg");
-  if(!code){ return; }
+  if(!code) return;
   if(SECRETS[code]){
-    charState.secret = code; saveState();
-    $("#codeIn").value="";
+    charState.secret = code; saveState(); $("#codeIn").value="";
     msg.className="msg"; msg.textContent="Sealed orders decrypted.";
     renderSecret();
-    $("#secretWrap").scrollIntoView({behavior:"smooth", block:"nearest"});
-  } else {
-    msg.className="msg bad"; msg.textContent="Codeword not recognised.";
-  }
+  } else { msg.className="msg bad"; msg.textContent="Codeword not recognised."; }
 }
 function renderSecret(){
   const w = $("#secretWrap"); w.innerHTML="";
   const key = charState.secret;
+  $("#agendaTab").classList.toggle("has-badge", !!(key && SECRETS[key]));
   if(!key || !SECRETS[key]) return;
   const s = SECRETS[key];
-  let actsHtml = "";
-  if(s.acts.length>1){
-    actsHtml = '<div class="acts" id="secActs"></div>';
-  }
   const div = document.createElement("div");
   div.className="secret";
   div.innerHTML =
     '<h3>⚠ '+s.title+'</h3>'+
     '<div class="agenda-intro">'+s.intro+'</div>'+
-    actsHtml+
+    (s.acts.length>1 ? '<div class="acts" id="secActs"></div>' : '')+
     '<div class="agenda-goal" id="secGoal"></div>'+
     '<div class="note">'+s.note+'</div>'+
     '<div style="margin-top:10px"><button id="secForget">Re-seal these orders</button></div>';
   w.appendChild(div);
-  const paint = (i)=>{
+  const paint = i=>{
     $("#secGoal").innerHTML = '<span class="glabel">'+(s.acts.length>1?("Act "+["I","II","III"][i]+" — "):"")+'directive</span>'+s.acts[i];
     if($("#secActs")) $$("#secActs button").forEach((b,j)=> b.classList.toggle("on", j===i));
   };
   if(s.acts.length>1){
-    const tabs = $("#secActs");
-    s.acts.forEach((_,i)=>{
-      const b=document.createElement("button"); b.textContent="Act "+["I","II","III"][i];
-      b.className=(i===(charState.act||0)?"on":"");
-      b.addEventListener("click", ()=>paint(i));
-      tabs.appendChild(b);
-    });
+    const tabs=$("#secActs");
+    s.acts.forEach((_,i)=>{ const b=document.createElement("button"); b.textContent="Act "+["I","II","III"][i];
+      b.className=(i===(charState.act||0)?"on":""); b.addEventListener("click",()=>paint(i)); tabs.appendChild(b); });
     paint(Math.min(charState.act||0, s.acts.length-1));
-  } else {
-    paint(0);
-  }
-  $("#secForget").addEventListener("click", ()=>{
-    charState.secret=null; saveState(); renderSecret();
-    $("#codeMsg").className="msg"; $("#codeMsg").textContent="Sealed orders re-encrypted.";
-  });
+  } else paint(0);
+  $("#secForget").addEventListener("click", ()=>{ charState.secret=null; saveState(); renderSecret();
+    $("#codeMsg").className="msg"; $("#codeMsg").textContent="Sealed orders re-encrypted."; });
 }
 
 /* ============================================================
-   DICE
+   DRAWERS
    ============================================================ */
-function buildDiceControls(){
-  const c = CREW[current];
-  const aSel = $("#dAttr"); aSel.innerHTML="";
-  ["STR","AGI","WITS","EMP"].forEach(a=>{
-    const o=document.createElement("option"); o.value=a; o.textContent=ATTR_NAME[a]+" ("+c[a]+")"; aSel.appendChild(o);
-  });
-  aSel.value="WITS";
-  fillSkillOptions();
-  aSel.onchange = ()=>{ fillSkillOptions(); updatePool(); };
-  $("#dSkill").onchange = updatePool;
-  $("#dMod").oninput = updatePool;
-  $("#dStress").oninput = updatePool;
-  syncStressToDice();
+function openDrawer(id){
+  closeDrawers();
+  $(id).classList.add("open");
+  $("#scrim").classList.add("on");
 }
-function fillSkillOptions(){
-  const c = CREW[current];
-  const a = $("#dAttr").value;
-  const sSel = $("#dSkill"); sSel.innerHTML="";
-  const none=document.createElement("option"); none.value=""; none.textContent="— none (attribute only) —"; sSel.appendChild(none);
-  SKILLS[a].forEach(([key,label])=>{
-    const v=c.skills[key]||0;
-    const o=document.createElement("option"); o.value=key; o.textContent=label+" ("+v+")"; sSel.appendChild(o);
-  });
-  updatePool();
+function closeDrawers(){
+  $("#agendaPanel").classList.remove("open");
+  $("#rulesPanel").classList.remove("open");
+  $("#scrim").classList.remove("on");
 }
-function syncStressToDice(){ $("#dStress").value = charState.stress; updatePool(); }
-function currentPool(){
-  const c = CREW[current];
-  const a = $("#dAttr").value;
-  const skKey = $("#dSkill").value;
-  const attrV = c[a]||0;
-  const skV = skKey ? (c.skills[skKey]||0) : 0;
-  const mod = parseInt($("#dMod").value,10)||0;
-  let base = attrV + skV + mod; if(base<0) base=0;
-  const stress = Math.max(0, parseInt($("#dStress").value,10)||0);
-  const label = ATTR_NAME[a] + (skKey ? (" + " + labelFor(a,skKey)) : "");
-  return { base, stress, label };
-}
+$("#agendaTab").addEventListener("click", ()=> $("#agendaPanel").classList.contains("open") ? closeDrawers() : openDrawer("#agendaPanel"));
+$("#rulesTab").addEventListener("click", ()=> $("#rulesPanel").classList.contains("open") ? closeDrawers() : openDrawer("#rulesPanel"));
+$("#scrim").addEventListener("click", closeDrawers);
+$$("[data-close-drawer]").forEach(b=> b.addEventListener("click", closeDrawers));
+
+/* ============================================================
+   ROLL POP-UP
+   ============================================================ */
 function labelFor(a, key){ const f = SKILLS[a].find(s=>s[0]===key); return f?f[1]:key; }
-function updatePool(){
-  const p = currentPool();
-  $("#poolN").textContent = p.base;
-  $("#poolS").textContent = p.stress;
-  $("#poolT").textContent = p.base + p.stress;
+function openRoll(attr, skillKey){
+  modalCtx = { attr, skillKey, label: ATTR_NAME[attr] + (skillKey ? (" + " + labelFor(attr, skillKey)) : "") };
+  $("#rTitle").textContent = modalCtx.label;
+  $("#modVal").textContent = "0";
+  lastRoll = null;
+  $("#result").classList.remove("on");
+  $("#dicewrap").innerHTML=""; $("#tally").innerHTML=""; $("#panicZone").innerHTML="";
+  $("#pushBtn").disabled = true;
+  $("#rollModal").classList.add("on");
+  refreshPool();
+  document.addEventListener("keydown", rollKey);
+  setTimeout(()=>$("#rollBtn").focus(), 30);
 }
-function setupRollFor(a, skKey){
-  $("#dAttr").value = a; fillSkillOptions(); $("#dSkill").value = skKey; updatePool();
-  $("#dSkill").scrollIntoView({behavior:"smooth", block:"center"});
-  const btn=$("#rollBtn"); btn.classList.add("flash"); setTimeout(()=>btn.classList.remove("flash"),400);
-}
+function closeRoll(){ $("#rollModal").classList.remove("on"); document.removeEventListener("keydown", rollKey); }
+function rollKey(e){ if(e.key==="Escape") closeRoll(); }
+$$("[data-close-roll]").forEach(b=> b.addEventListener("click", closeRoll));
 
-function d6(){ return 1 + Math.floor(Math.random()*6); }
+function currentMod(){ return parseInt($("#modVal").textContent,10)||0; }
+function poolNow(){
+  const c = CREW[current];
+  const attrV = c[modalCtx.attr]||0;
+  const skV = modalCtx.skillKey ? (c.skills[modalCtx.skillKey]||0) : 0;
+  let base = attrV + skV + currentMod(); if(base<0) base=0;
+  return { base, stress: Math.max(0, charState.stress) };
+}
+function refreshPool(){
+  if(!modalCtx || !$("#rollModal").classList.contains("on")) return;
+  const p = poolNow();
+  $("#rBase").textContent = p.base; $("#rStress").textContent = p.stress; $("#rTotal").textContent = p.base+p.stress;
+}
+$("#modUp").addEventListener("click", ()=>{ let v=Math.min(6,currentMod()+1); $("#modVal").textContent=v; refreshPool(); });
+$("#modDown").addEventListener("click", ()=>{ let v=Math.max(-3,currentMod()-1); $("#modVal").textContent=v; refreshPool(); });
+
+function d6(){ return 1+Math.floor(Math.random()*6); }
 function rollN(n){ const a=[]; for(let i=0;i<n;i++) a.push(d6()); return a; }
+function countSix(a){ return a.filter(v=>v===6).length; }
+function countOne(a){ return a.filter(v=>v===1).length; }
 
-$("#rollBtn").addEventListener("click", doRoll);
-$("#pushBtn").addEventListener("click", doPush);
-
-function doRoll(){
-  const p = currentPool();
-  lastRoll = {
-    label:p.label, base:rollN(p.base), stress:rollN(p.stress),
-    pushed:0
-  };
-  paintResult(false);
-  publishRoll("roll");
-}
-
-function doPush(){
+$("#rollBtn").addEventListener("click", ()=>{
+  const p = poolNow();
+  lastRoll = { label:modalCtx.label, base:rollN(p.base), stress:rollN(p.stress), pushed:0 };
+  const btn=$("#rollBtn"); btn.classList.add("flash"); setTimeout(()=>btn.classList.remove("flash"),400);
+  paintResult(false); publishRoll("roll");
+});
+$("#pushBtn").addEventListener("click", ()=>{
   if(!lastRoll) return;
-  // pushing: +1 stress, add a stress die, reroll every non-6
-  charState.stress = Math.min(10, charState.stress+1);
-  buildTrackers();                 // reflect new stress on pips
-  lastRoll.stress.push(0);         // new stress die slot (rerolled below)
-  lastRoll.base = lastRoll.base.map(v=> v===6 ? 6 : d6());
-  lastRoll.stress = lastRoll.stress.map(v=> v===6 ? 6 : d6());
+  charState.stress = Math.min(10, charState.stress+1); buildTrackers();
+  lastRoll.stress.push(0);
+  lastRoll.base = lastRoll.base.map(v=> v===6?6:d6());
+  lastRoll.stress = lastRoll.stress.map(v=> v===6?6:d6());
   lastRoll.pushed++;
-  paintResult(true);
-  publishRoll("push");
-}
-
-function countSix(arr){ return arr.filter(v=>v===6).length; }
-function countOne(arr){ return arr.filter(v=>v===1).length; }
+  paintResult(true); publishRoll("push");
+});
 
 function paintResult(wasPush){
   const r = lastRoll;
-  const succ = countSix(r.base) + countSix(r.stress);
+  const succ = countSix(r.base)+countSix(r.stress);
   const stressOnes = countOne(r.stress);
   const panic = wasPush && stressOnes>0;
 
-  const wrap = $("#dicewrap"); wrap.innerHTML="";
+  const wrap=$("#dicewrap"); wrap.innerHTML="";
   r.base.forEach(v=> wrap.appendChild(dieEl(v,false)));
   r.stress.forEach(v=> wrap.appendChild(dieEl(v,true)));
 
-  const t = $("#tally");
-  t.innerHTML =
+  $("#tally").innerHTML =
     '<span class="succ'+(succ===0?' zero':'')+'">'+succ+'</span> success'+(succ===1?'':'es')+
-    ' <span class="meta">· '+r.label+' · '+(r.base.length)+' base + '+(r.stress.length)+' stress'+
-    (r.pushed?(' · pushed ×'+r.pushed):'')+
-    (stressOnes?(' · '+stressOnes+' stress ✦1'):'')+'</span>';
+    ' <span class="meta">· '+r.base.length+' base + '+r.stress.length+' stress'+
+    (r.pushed?(' · pushed ×'+r.pushed):'')+(stressOnes?(' · '+stressOnes+' stress ✦1'):'')+'</span>';
 
-  const pz = $("#panicZone"); pz.innerHTML="";
+  const pz=$("#panicZone"); pz.innerHTML="";
   if(panic){
-    pz.innerHTML =
-      '<div class="panic-flag">⚠ A stress die rolled a 1 on a push — you must make a PANIC ROLL.'+
+    pz.innerHTML='<div class="panic-flag">⚠ A stress die rolled a 1 on a push — make a PANIC ROLL.'+
       '<br><button id="panicBtn">Roll panic (d6 + '+charState.stress+' stress)</button>'+
       '<div class="panic-out" id="panicOut"></div></div>';
     $("#panicBtn").addEventListener("click", doPanic);
   }
   $("#result").classList.add("on");
-
-  // enable push unless a panic is pending or nothing to reroll
   $("#pushBtn").disabled = panic || (r.base.length+r.stress.length)===0;
 }
-
 function dieEl(v, stress){
   const d=document.createElement("div");
-  d.className = "die" + (stress?" stress":"") + (v===6?" six":"") + (v===1?" one":"") + " rolling";
-  d.textContent = v;
-  return d;
+  d.className="die"+(stress?" stress":"")+(v===6?" six":"")+(v===1?" one":"")+" rolling";
+  d.textContent=v; return d;
 }
-
 function doPanic(){
-  const die = d6();
-  const total = die + charState.stress;
-  $("#panicOut").innerHTML = 'Rolled <b>'+die+'</b> + '+charState.stress+' stress = <span class="t">'+total+'</span> — '+panicResult(total);
+  const die=d6(); const total=die+charState.stress;
+  $("#panicOut").innerHTML='Rolled <b>'+die+'</b> + '+charState.stress+' stress = <span class="t">'+total+'</span> — '+panicResult(total);
   publishRoll("panic", { panicDie:die, panicTotal:total, panicText:panicResult(total) });
 }
 function panicResult(t){
   if(t<=6) return "Keeping it together.";
   if(t===7) return "Nervous twitch.";
-  if(t===8) return "Trembling — −2 to next roll.";
+  if(t===8) return "Trembling — −2 to next AGILITY roll.";
   if(t===9) return "Drop item.";
   if(t===10) return "Freeze — lose next action.";
   if(t===11) return "Seek cover.";
@@ -1229,108 +947,62 @@ function panicResult(t){
 }
 
 /* ============================================================
-   BROADCAST + FEED
+   BROADCAST + LOG
    ============================================================ */
 function publishRoll(kind, extra){
-  const c = CREW[current]; const r = lastRoll;
-  const payload = Object.assign({
+  const c=CREW[current], r=lastRoll;
+  RollBus.publish(Object.assign({
     kind, who:c.name, role:c.role, label:r.label,
     base:r.base, stress:r.stress,
     successes: countSix(r.base)+countSix(r.stress),
-    stressOnes: countOne(r.stress),
-    pushed:r.pushed
-  }, extra||{});
-  RollBus.publish(payload);
+    stressOnes: countOne(r.stress), pushed:r.pushed
+  }, extra||{}));
 }
-
-const feedItems = [];
-function onRoll(o){
-  feedItems.unshift(o);
-  if(feedItems.length>40) feedItems.pop();
-  renderFeed();
-}
-function renderFeed(){
-  const ul = $("#feed");
-  if(!feedItems.length){ ul.innerHTML='<li class="empty">No rolls yet. Every roll at the table shows up here.</li>'; return; }
+const logItems=[];
+function onRoll(o){ logItems.unshift(o); if(logItems.length>40) logItems.pop(); renderLog(); }
+function renderLog(){
+  const ul=$("#log");
+  if(!logItems.length){ ul.innerHTML='<li class="empty">No rolls yet. Tap a skill above — every roll at the table lands here.</li>'; return; }
   ul.innerHTML="";
-  feedItems.forEach(o=>{
+  logItems.forEach(o=>{
     const li=document.createElement("li");
-    const mine = o.src===RollBus.clientId;
-    li.className = (o.kind==="panic"?"panic ":"") + (mine?"mine":"");
+    li.className=(o.kind==="panic"?"panic ":"")+(o.src===RollBus.clientId?"mine":"");
     let body;
     if(o.kind==="panic"){
-      body = '<span class="who">'+esc(o.who)+'</span> panics — d6 '+o.panicDie+' + '+
-             (o.panicTotal-o.panicDie)+' = <span class="s">'+o.panicTotal+'</span> <span class="dim">'+esc(o.panicText||"")+'</span>';
+      body='<span class="who">'+esc(o.who)+'</span> panics — d6 '+o.panicDie+' + '+(o.panicTotal-o.panicDie)+
+           ' = <span class="s">'+o.panicTotal+'</span> <span class="dim">'+esc(o.panicText||"")+'</span>';
     } else {
-      body = '<span class="who">'+esc(o.who)+'</span> '+(o.kind==="push"?"pushes":"rolls")+' '+
-             '<span class="dim">'+esc(o.label)+'</span> → <span class="s">'+o.successes+'</span> succ'+
-             ' <span class="dim">('+(o.base?o.base.length:0)+'b+'+(o.stress?o.stress.length:0)+'s'+
-             (o.pushed?(' · push×'+o.pushed):'')+
-             (o.stressOnes?(' · ✦'+o.stressOnes):'')+')</span>';
+      body='<span class="who">'+esc(o.who)+'</span> '+(o.kind==="push"?"pushes":"rolls")+
+           ' <span class="dim">'+esc(o.label)+'</span> → <span class="s">'+o.successes+'</span> succ'+
+           ' <span class="dim">('+(o.base?o.base.length:0)+'b+'+(o.stress?o.stress.length:0)+'s'+
+           (o.pushed?(' · push×'+o.pushed):'')+(o.stressOnes?(' · ✦'+o.stressOnes):'')+')</span>';
     }
-    li.innerHTML = body + ' <span class="dim" style="float:right">'+clock(o.ts)+'</span>';
+    li.innerHTML=body+' <span class="dim" style="float:right">'+clock(o.ts)+'</span>';
     ul.appendChild(li);
   });
 }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
-function clock(ts){ if(!ts) return ""; const d=new Date(ts); const p=n=>String(n).padStart(2,"0"); return p(d.getHours())+":"+p(d.getMinutes()); }
+function clock(ts){ if(!ts) return ""; const d=new Date(ts), p=n=>String(n).padStart(2,"0"); return p(d.getHours())+":"+p(d.getMinutes()); }
 
 /* ============================================================
-   ROOM / SYNC WIRING
+   ROOM / SYNC + BOOT
    ============================================================ */
 $("#switchBtn").addEventListener("click", ()=>{
+  closeDrawers(); closeRoll();
   $("#sheet").classList.remove("on"); $("#pick").style.display="block";
   history.replaceState(null,"", "?" + (RollBus.room()?("room="+RollBus.room()):""));
   window.scrollTo(0,0);
 });
-
 function initRoom(){
   const room = RollBus.config({});
   $("#roomIn").value = room;
-  $("#roomIn").addEventListener("change", ()=>{
-    const nr = RollBus.setRoom($("#roomIn").value);
-    $("#roomIn").value = nr;
-  });
+  $("#roomIn").addEventListener("change", ()=>{ $("#roomIn").value = RollBus.setRoom($("#roomIn").value); });
   RollBus.on("roll", onRoll);
-  RollBus.on("status", s=>{
-    const dot=$("#netDot"); dot.textContent = s.net ? "LIVE" : "local";
-    dot.className = s.net ? "" : "off";
-  });
+  RollBus.on("status", s=>{ const d=$("#netDot"); d.textContent=s.net?"LIVE":"local"; d.className=s.net?"":"off"; });
 }
-
-/* ============================================================
-   RULES WINDOW
-   ============================================================ */
-function initRules(){
-  const modal = $("#rulesModal");
-  let lastFocus = null;
-  function open(){
-    lastFocus = document.activeElement;
-    modal.classList.add("on");
-    modal.querySelector('[data-close]').focus();
-    document.addEventListener("keydown", onKey);
-  }
-  function close(){
-    modal.classList.remove("on");
-    document.removeEventListener("keydown", onKey);
-    if(lastFocus && lastFocus.focus) lastFocus.focus();
-  }
-  function onKey(e){ if(e.key==="Escape") close(); }
-  $("#rulesBtn").addEventListener("click", open);
-  $("#rulesFoot").addEventListener("click", e=>{ e.preventDefault(); open(); });
-  const rl2 = $("#rulink2");
-  rl2.addEventListener("click", open);
-  rl2.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); open(); } });
-  modal.querySelectorAll("[data-close]").forEach(el=> el.addEventListener("click", close));
-}
-
-/* ============================================================
-   BOOT
-   ============================================================ */
 (function boot(){
   buildCards();
   initRoom();
-  initRules();
   const params = new URLSearchParams(location.search);
   let start = params.get("char");
   if(!start){ try{ start = localStorage.getItem("cotg_last_char"); }catch(e){} }
