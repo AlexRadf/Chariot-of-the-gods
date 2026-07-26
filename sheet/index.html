@@ -94,8 +94,23 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 
 /* attributes + skills */
 .attrs{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-@media (max-width:520px){ .attrs{ grid-template-columns:1fr; } }
-.attr{ border:1px solid var(--faint); }
+/* keep Strength / Agility / Wits / Empathy as a 2×2 grid on phones too */
+@media (max-width:560px){
+  /* clear the 30px AGENDA/RULES edge tabs so nothing hides under them */
+  #sheet{ padding-left:34px; padding-right:34px; }
+  .attrs{ gap:8px; }
+  .attr .hd{ gap:7px; padding:8px 8px 5px; }
+  .attr .val{ width:42px; height:42px; font-size:32px; }
+  .attr .an{ font-size:12px; }
+  .attr .hd .cue{ display:none; }
+  .attr .skills{ padding:0 6px 6px; }
+  .skill{ font-size:11px; padding:6px 3px; gap:3px; }
+  .skill .sn{ line-height:1.2; letter-spacing:0; }
+  .skill .rt{ gap:4px; }
+  .skill .rt .cue{ display:none; }
+  .skill .sv{ font-size:17px; }
+}
+.attr{ border:1px solid var(--faint); min-width:0; }
 .attr .hd{ display:flex; align-items:center; gap:10px; padding:10px 10px 6px; cursor:pointer; }
 .attr .hd:hover{ background:var(--raise2); }
 .attr .val{ font-family:'VT323',monospace; font-size:38px; line-height:.9; color:var(--white);
@@ -107,9 +122,9 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .skill{ display:flex; justify-content:space-between; align-items:center; gap:8px;
   font-size:13px; padding:7px 6px; cursor:pointer; border-top:1px solid var(--faint); }
 .skill:hover{ background:var(--raise2); }
-.skill .sn{ color:var(--dim); text-transform:uppercase; letter-spacing:.05em; }
+.skill .sn{ color:var(--dim); text-transform:uppercase; letter-spacing:.05em; min-width:0; flex:1; overflow-wrap:break-word; }
 .skill.has .sn{ color:var(--phos); }
-.skill .rt{ display:flex; align-items:center; gap:8px; }
+.skill .rt{ display:flex; align-items:center; gap:8px; flex:none; }
 .skill .rt .cue{ color:var(--faint); font-size:10px; letter-spacing:.1em; }
 .skill:hover .rt .cue{ color:var(--amber); }
 .skill .sv{ color:var(--white); font-family:'VT323',monospace; font-size:20px; min-width:1.1em; text-align:right; }
