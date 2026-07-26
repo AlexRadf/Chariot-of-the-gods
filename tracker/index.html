@@ -96,6 +96,19 @@ body::before{
 /* embedded inside the iPad display: no splash, no footer chrome */
 body.embed #start{ display:none; }
 body.embed .tip{ display:none; }
+
+/* live dice feed — rolls from player sheets, for the GM (hidden when embedded in the iPad display, which shows its own) */
+#rollfeed{ position:absolute; top:calc(6px + env(safe-area-inset-top)); left:8px; right:8px; z-index:70;
+  display:flex; flex-direction:column; gap:4px; pointer-events:none; }
+#rollfeed .rl{ border:1px solid var(--faint); background:rgba(6,15,10,.92); padding:5px 8px;
+  font-size:11.5px; line-height:1.35; animation:rin .3s ease; }
+#rollfeed .rl.panic{ border-color:var(--alert); }
+#rollfeed .rl .who{ color:var(--amber); text-transform:uppercase; letter-spacing:.05em; }
+#rollfeed .rl .s{ font-family:'VT323',monospace; font-size:15px; color:var(--phos); }
+#rollfeed .rl.panic .s{ color:var(--alert); }
+#rollfeed .rl .dim{ color:var(--dim); }
+body.embed #rollfeed{ display:none; }
+@keyframes rin{ from{ transform:translateY(-8px); opacity:0 } to{ transform:none; opacity:1 } }
 </style>
 </head>
 <body>
@@ -116,6 +129,7 @@ body.embed .tip{ display:none; }
     </span>
   </div>
   <div class="scopewrap">
+    <div id="rollfeed" aria-hidden="true"></div>
     <canvas id="scope"></canvas>
     <div class="range" id="rangelab">RANGE 20 M</div>
     <div class="reading">
@@ -128,9 +142,10 @@ body.embed .tip{ display:none; }
     <button id="bSound" class="on">Sound</button>
     <button id="bClear">Clear</button>
   </div>
-  <div class="tip">Tap to place · drag to move · tap to remove · <a href="../display/">Main display ▲</a> · <a href="../">Terminal ◄</a></div>
+  <div class="tip">Tap to place · drag to move · tap to remove · <a href="../sheet/">Crew sheets ◆</a> · <a href="../display/">Main display ▲</a> · <a href="../">Terminal ◄</a></div>
 </div>
 
+<script src="../assets/rollbus.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -394,6 +409,28 @@ function boot(){
 }
 $("#start").addEventListener("click", boot);
 if(EMBED){ document.body.classList.add("embed"); boot(); }
+
+/* -------------------- live crew dice feed (GM) -------------------- */
+(function(){
+  if(typeof RollBus==="undefined") return;
+  if(typeof EMBED!=="undefined" && EMBED) return;   // the iPad display shows its own feed
+  const box = $("#rollfeed"); const MAX = 3;
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+  function add(o){
+    const el=document.createElement("div");
+    el.className="rl"+(o.kind==="panic"?" panic":"");
+    if(o.kind==="panic"){
+      el.innerHTML='<span class="who">'+esc(o.who)+'</span> PANIC <span class="s">'+o.panicTotal+'</span> <span class="dim">'+esc(o.panicText||"")+'</span>';
+    } else {
+      el.innerHTML='<span class="who">'+esc(o.who)+'</span> '+(o.kind==="push"?"push":"roll")+' <span class="dim">'+esc(o.label)+'</span> → <span class="s">'+o.successes+'</span><span class="dim"> succ'+(o.pushed?(" p×"+o.pushed):"")+(o.stressOnes?(" ✦"+o.stressOnes):"")+'</span>';
+    }
+    box.appendChild(el);
+    while(box.children.length>MAX) box.removeChild(box.firstChild);
+    clearTimeout(el._t); el._t = setTimeout(()=>{ if(el.parentNode) el.parentNode.removeChild(el); }, 12000);
+  }
+  RollBus.config({});
+  RollBus.on("roll", add);
+})();
 </script>
 </body>
 </html>

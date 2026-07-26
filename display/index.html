@@ -183,6 +183,19 @@ section h2{ font-size:clamp(10px,1.5vw,13px); color:var(--amber); font-weight:40
   font-size:clamp(12px,2.2vw,18px); margin-top:16px; }
 .d-error .code{ color:#4a534c; letter-spacing:.18em; font-size:clamp(10px,1.6vw,13px); margin-top:26px; line-height:1.7; }
 @keyframes glitch{0%,100%{transform:translate(0,0);opacity:1}48%{transform:translate(-2px,1px);opacity:.85}49%{transform:translate(3px,-1px);opacity:.6}50%{transform:translate(-1px,0);opacity:1}}
+
+/* live dice feed overlay — rolls made on player sheets appear here (sits below the self-destruct takeover) */
+#rolls{ position:fixed; left:10px; bottom:calc(10px + env(safe-area-inset-bottom)); z-index:70;
+  width:min(340px,72vw); display:flex; flex-direction:column-reverse; gap:6px; pointer-events:none; }
+#rolls .rl{ border:1px solid var(--faint); background:rgba(6,15,10,.94); padding:8px 11px;
+  font-size:clamp(11px,1.5vw,14px); line-height:1.4; animation:rin .35s ease; }
+#rolls .rl.panic{ border-color:var(--alert); }
+#rolls .rl .who{ color:var(--amber); text-transform:uppercase; letter-spacing:.06em; }
+#rolls .rl .s{ font-family:'VT323',monospace; font-size:clamp(16px,2.4vw,22px); color:var(--phos); }
+#rolls .rl.panic .s{ color:var(--alert); }
+#rolls .rl .dim{ color:var(--dim); }
+#rolls .rl.fade{ opacity:.4; transition:opacity 1s ease; }
+@keyframes rin{ from{ transform:translateX(-14px); opacity:0 } to{ transform:none; opacity:1 } }
 </style>
 </head>
 <body>
@@ -226,7 +239,7 @@ section h2{ font-size:clamp(10px,1.5vw,13px); color:var(--amber); font-weight:40
   <div class="cmd" id="cmd"></div>
   <div class="foot">
     <span>WEYLAND-YUTANI CORP — BUILDING BETTER WORLDS</span>
-    <span><span class="dot" id="pair" title="controller link"></span> <a href="../control/">◇ GM CONTROL</a> · <a href="../tracker/">▲ MOTION TRACKER</a> · <a href="../">◄ TERMINAL</a></span>
+    <span><span class="dot" id="pair" title="controller link"></span> <a href="../sheet/">◆ CREW SHEETS</a> · <a href="../control/">◇ GM CONTROL</a> · <a href="../tracker/">▲ MOTION TRACKER</a> · <a href="../">◄ TERMINAL</a></span>
   </div>
 </div>
 
@@ -257,6 +270,10 @@ section h2{ font-size:clamp(10px,1.5vw,13px); color:var(--amber); font-weight:40
 <div class="hot l" id="hotL"></div>
 <div class="hot r" id="hotR"></div>
 
+<!-- live crew dice feed -->
+<div id="rolls" aria-hidden="true"></div>
+
+<script src="../assets/rollbus.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -622,6 +639,28 @@ function boot(){
   try{ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }catch(e){}
 }
 $("#start").addEventListener("click", boot);
+
+/* ---------------- live crew dice feed ---------------- */
+(function(){
+  if(typeof RollBus==="undefined") return;
+  const box = $("#rolls"); const MAX = 4;
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+  function add(o){
+    const el=document.createElement("div");
+    el.className="rl"+(o.kind==="panic"?" panic":"");
+    if(o.kind==="panic"){
+      el.innerHTML='<span class="who">'+esc(o.who)+'</span> PANIC — <span class="s">'+o.panicTotal+'</span> <span class="dim">'+esc(o.panicText||"")+'</span>';
+    } else {
+      el.innerHTML='<span class="who">'+esc(o.who)+'</span> '+(o.kind==="push"?"push":"roll")+' <span class="dim">'+esc(o.label)+'</span> → <span class="s">'+o.successes+'</span> <span class="dim">succ'+(o.pushed?(" · push×"+o.pushed):"")+(o.stressOnes?(" · ✦"+o.stressOnes):"")+'</span>';
+    }
+    box.appendChild(el);
+    if(typeof AC!=="undefined" && AC && typeof blip==="function") blip(o.kind==="panic"?300:(o.successes>0?760:440), 0.05, 0.05);
+    while(box.children.length>MAX) box.removeChild(box.firstChild);
+    Array.prototype.forEach.call(box.children, (c,i)=>{ c.classList.toggle("fade", i < box.children.length-2); });
+  }
+  RollBus.config({});
+  RollBus.on("roll", add);
+})();
 </script>
 </body>
 </html>
