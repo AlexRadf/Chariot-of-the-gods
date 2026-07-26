@@ -118,6 +118,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .pip.on{ background:var(--phos); box-shadow:0 0 6px rgba(138,255,176,.5); }
 .pip.stress.on{ background:var(--amber); box-shadow:0 0 6px rgba(240,178,62,.5); }
 .pip.rad.on{ background:var(--alert); box-shadow:0 0 6px rgba(255,92,71,.5); }
+.pip.story.on{ background:var(--white); box-shadow:0 0 6px rgba(233,255,242,.6); }
 .trk{ margin-bottom:12px; }
 .trk:last-child{ margin-bottom:0; }
 .trk .lbl{ display:flex; justify-content:space-between; align-items:baseline; }
@@ -146,6 +147,12 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .wtable td.rm button{ border:0; color:var(--faint); padding:2px 6px; font-size:14px; }
 .wtable td.rm button:hover{ color:var(--alert); background:none; }
 .eq-add{ margin-top:6px; font-size:12px; padding:.4em .8em; }
+.catadd{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.catadd select{ flex:1; min-width:180px; background:var(--crt); border:1px solid var(--faint); color:var(--phos);
+  font-family:inherit; font-size:13px; padding:.5em; }
+.catadd select optgroup{ color:var(--amber); background:var(--crt); }
+.catadd select option{ color:var(--phos); background:var(--crt); }
+.catadd .eq-add{ margin-top:0; }
 .armor-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px; color:var(--dim); }
 .armor-row input{ background:var(--crt); border:1px solid var(--faint); color:var(--phos); font-family:inherit; font-size:13px; padding:.4em .6em; }
 .armor-row input.aname{ flex:1; min-width:120px; }
@@ -162,6 +169,11 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .gear-add label{ font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em; display:inline-flex; gap:4px; align-items:center; }
 .encum{ font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--dim); text-transform:none; letter-spacing:0; }
 .encum.over{ color:var(--alert); }
+.eq-empty{ color:var(--faint); font-size:12.5px; }
+#injBody td.eff{ color:var(--alert); }
+#injBody td.rm{ width:26px; text-align:center; }
+#injBody td.rm button{ border:0; color:var(--faint); padding:2px 6px; font-size:14px; }
+#injBody td.rm button:hover{ color:var(--alert); background:none; }
 
 /* roll log */
 #log{ list-style:none; display:flex; flex-direction:column; gap:6px; max-height:300px; overflow:auto; }
@@ -285,8 +297,13 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .tally .succ{ color:var(--white); font-family:'VT323',monospace; font-size:30px; }
 .tally .succ.zero{ color:var(--alert); }
 .tally .meta{ color:var(--dim); font-size:12.5px; }
-#pushBtn{ margin-top:10px; border-color:var(--amber); color:var(--amber); }
+.rollacts{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.rollacts button{ flex:1 1 auto; }
+#pushBtn{ border-color:var(--amber); color:var(--amber); }
 #pushBtn:disabled{ opacity:.35; cursor:not-allowed; border-color:var(--faint); color:var(--faint); }
+#spBtn.sp{ border-color:var(--phos); color:var(--white); }
+.injnote{ font-size:12px; color:var(--alert); margin:8px 0 2px; min-height:0; }
+.injnote:empty{ display:none; }
 .panic-flag{ margin-top:12px; border:1px solid var(--alert); background:#140606; color:var(--alert); padding:10px; font-size:13px; }
 .panic-flag button{ margin-top:8px; border-color:var(--alert); color:var(--alert); }
 .panic-out{ margin-top:8px; font-size:13px; color:var(--white); }
@@ -389,6 +406,11 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
         <div class="lbl"><span class="n">Radiation</span><span class="v" id="radVal">0</span></div>
         <div class="pips" id="radPips"></div>
       </div>
+      <div class="trk">
+        <div class="lbl"><span class="n">Story Points</span><span class="v" id="spVal">0</span></div>
+        <div class="pips" id="spPips"></div>
+        <small>Gain 1 by playing your agenda (max 3). Spend 1 on a roll to add a 6.</small>
+      </div>
     </section>
 
     <section class="panel">
@@ -402,9 +424,26 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
     </section>
   </div>
 
+  <!-- stored critical injuries -->
+  <section class="panel">
+    <h2>Critical Injuries <span class="sub">— penalties apply to your rolls automatically</span></h2>
+    <table class="rtable" id="injTable" style="display:none">
+      <thead><tr><th>d66</th><th>Injury</th><th>Effect on rolls</th><th></th></tr></thead>
+      <tbody id="injBody"></tbody>
+    </table>
+    <p id="injEmpty" class="eq-empty">No critical injuries. Roll one from Quick Rolls and add it here if you're hit while Broken.</p>
+  </section>
+
   <!-- equipment & inventory -->
   <section class="panel">
     <h2>Equipment &amp; Inventory</h2>
+
+    <div class="eq-h">Quick add</div>
+    <div class="catadd">
+      <select id="catSel" aria-label="Item catalogue"></select>
+      <button class="eq-add" id="catAdd">Add</button>
+    </div>
+    <small style="color:var(--faint); display:block; margin-top:6px">“Gear on the Montero” is the shared starting locker (5 suits, 1 of each item) — Captain Miller distributes it. Weapons drop into the weapons table, everything else into gear.</small>
 
     <div class="eq-h">Consumables</div>
     <div class="consum" id="consum"></div>
@@ -440,7 +479,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 
   <div class="footbar">
     <span class="net">Room <span class="roombox"><input id="roomIn" spellcheck="false"></span> · sync <b id="netDot">·</b></span>
-    <span><a href="../">◄ Terminal</a> · <a href="../display/">Main display</a> · <a href="../tracker/">Motion tracker</a></span>
+    <span><a href="../map/">▦ Ship map</a> · <a href="../">◄ Terminal</a> · <a href="../display/">Main display</a> · <a href="../tracker/">Motion tracker</a></span>
   </div>
 </div>
 
@@ -712,13 +751,17 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
         </span>
       </span>
     </div>
+    <div class="injnote" id="injNote"></div>
 
     <button id="rollBtn">⚄ Roll</button>
 
     <div class="result" id="result">
       <div class="dicewrap" id="dicewrap"></div>
       <div class="tally" id="tally"></div>
-      <button id="pushBtn" disabled>Push (+1 stress)</button>
+      <div class="rollacts">
+        <button id="pushBtn" disabled>Push (+1 stress)</button>
+        <button id="spBtn" class="sp" style="display:none">◆ Story point → add a 6</button>
+      </div>
       <div id="panicZone"></div>
     </div>
   </div>
@@ -840,6 +883,83 @@ const CREW = {
 };
 const ORDER = ["miller","davis","rye","cham","wilson"];
 
+/* Critical-injury modifiers, keyed by d66 value. Each maps affected skills to a
+   dice penalty that is applied automatically to matching rolls. `stress` is a
+   one-time hit applied when the injury is taken. Injuries without a mechanical
+   modifier (e.g. "can't use arm") aren't listed here — they show as notes only. */
+const CRIT_MODS = {
+  13:{ stress:1 },                          // Crippling pain
+  14:{ mobility:-2 },                        // Sprained ankle
+  15:{ observation:-2, rangedCombat:-2 },    // Blood in eyes
+  16:{ mobility:-2 },                        // Concussion
+  21:{ observation:-2 },                     // Severed ear
+  24:{ manipulation:-2 },                    // Knocked-out teeth
+  31:{ manipulation:-1, observation:-1 },    // Broken nose
+  33:{ mobility:-2, closeCombat:-2 },        // Broken ribs
+  34:{ rangedCombat:-2, observation:-2 },    // Gouged eye
+  44:{ stamina:-2, mobility:-2 },            // Punctured lung
+  51:{ mobility:-2 },                        // Busted kidney
+  61:{ stamina:-1 },                         // Ruptured jugular
+  62:{ stamina:-2 }                          // Ruptured aorta
+};
+/* Filled at boot from the reference table: { 11:{name,fatal,effect}, … } */
+const CRIT_INFO = {};
+
+/* Equipment catalogue for one-tap adding. Weapons carry bonus/damage/range/reloads
+   and drop into the weapons table; everything else drops into the gear list.
+   "Montero / scenario" items are the gear listed in Chariot of the Gods; "Standard"
+   is generic Frontier kit. Weapon stats follow the ALIEN RPG core weapon tables. */
+const CATALOG = {
+  "Weapons": [
+    { name:"M4A3 Service Pistol", bonus:"+2", damage:"1", range:"Medium", reloads:"1" },
+    { name:"Rexim RXF-M5 EVA Pistol", bonus:"+1", damage:"1", range:"Short", reloads:"3" },
+    { name:".357 Magnum Revolver", bonus:"+1", damage:"2", range:"Medium", reloads:"2" },
+    { name:"Armat M41A Pulse Rifle", bonus:"+1", damage:"2", range:"Long", reloads:"2" },
+    { name:"Weyland Storm Rifle (heavy)", bonus:"0", damage:"2", range:"Long", reloads:"1" },
+    { name:"Armat 37A2 12ga Shotgun", bonus:"+2", damage:"2", range:"Short", reloads:"2" },
+    { name:"Watatsumi DV-303 Bolt Gun", bonus:"+1", damage:"2", range:"Short", reloads:"4" },
+    { name:"M240 Incinerator Unit", bonus:"+1", damage:"Fire", range:"Short", reloads:"2" },
+    { name:"SpaceSub ASSO-400 Harpoon Gun", bonus:"+1", damage:"2", range:"Short", reloads:"" },
+    { name:"Cutting Torch", bonus:"+1", damage:"2", range:"Engaged", reloads:"" },
+    { name:"Stun Baton", bonus:"+2", damage:"1", range:"Engaged", reloads:"" },
+    { name:"Maintenance Jack", bonus:"+2", damage:"1", range:"Engaged", reloads:"" },
+    { name:"Combat Knife", bonus:"+2", damage:"1", range:"Engaged", reloads:"" }
+  ],
+  "Gear on the Montero": [
+    { name:"IRC Mk.50 Compression Suit (Air 5)" },
+    { name:"M314 Motion Tracker (Power 5)" },
+    { name:"Cutting Torch (Power 5)", bonus:"+1", damage:"2", range:"Engaged", reloads:"" },
+    { name:"Watatsumi Bolt Gun", bonus:"+1", damage:"2", range:"Short", reloads:"4" },
+    { name:"M4A3 Service Pistol", bonus:"+2", damage:"1", range:"Medium", reloads:"1" },
+    { name:"SpaceSub ASSO-400 Harpoon Gun", bonus:"+1", damage:"2", range:"Short", reloads:"" },
+    { name:"M240 Incinerator Unit", bonus:"+1", damage:"Fire", range:"Short", reloads:"2" },
+    { name:"P-5000 Power Loader", heavy:true }
+  ],
+  "Scenario gear (aboard)": [
+    { name:"Personal Medkit" },
+    { name:"Surgical Kit" },
+    { name:"Personal Data Tablet" },
+    { name:"Encrypted Key Card" },
+    { name:"Ocular Stimulants (D6 doses)" }
+  ],
+  "Standard gear": [
+    { name:"Flashlight" },
+    { name:"Compression Suit (Air Supply)" },
+    { name:"Personal Medkit" },
+    { name:"Signal Flare" },
+    { name:"Rope (10 m)" },
+    { name:"Rations (1 shift)" },
+    { name:"Neversleep Pills" },
+    { name:"Hand Welder" },
+    { name:"Sample Container" },
+    { name:"Comms Headset" },
+    { name:"Binoculars" },
+    { name:"Duct Tape" }
+  ]
+};
+const CAT_INDEX = [];   // flat list, filled at boot, referenced by <option value>
+
+
 /* GM-assigned secret roles, unlocked by codeword. */
 const SECRETS = {
   LUCAS: {
@@ -877,9 +997,22 @@ function loadState(id){
   let s = null;
   try{ s = JSON.parse(localStorage.getItem(stateKey(id))); }catch(e){}
   if(!s) s = { hp:c.STR, stress:0, rad:0, act:0, secret:null, agendaOpen:false };
+  if(typeof s.storyPoints !== "number") s.storyPoints = 0;
+  if(!Array.isArray(s.injuries)) s.injuries = [];
   if(!s.equip) s.equip = defaultEquip();
   else s.equip = Object.assign(defaultEquip(), s.equip);
+  seedEquip(s, c);
   return s;
+}
+/* import the equipment listed on the character sheet — the signature item —
+   into the inventory (idempotent, counts as a tiny item so it's weight-free). */
+function seedEquip(s, c){
+  if(c.sig && !s.equip.gear.some(g=> g.name === c.sig)){
+    s.equip.gear.unshift({ name:c.sig, sig:true });
+  }
+  (c.startingGear||[]).forEach(it=>{
+    if(!s.equip.gear.some(g=> g.name === it.name)) s.equip.gear.push(Object.assign({}, it));
+  });
 }
 function saveState(){ if(current){ try{ localStorage.setItem(stateKey(current), JSON.stringify(charState)); }catch(e){} } }
 
@@ -929,6 +1062,7 @@ function renderSheet(){
   $("#rival").textContent = c.rival;
   buildAttrs();
   buildTrackers();
+  buildInjuries();
   buildEquip();
   buildAgenda();
   renderSecret();
@@ -978,22 +1112,55 @@ function renderWeapons(){
     tb.appendChild(tr);
   });
 }
+function gearWeight(g){ return g.sig ? 0 : (g.heavy ? 2 : 1); }
 function renderGear(){
   const e = charState.equip, ul = $("#gearList"); ul.innerHTML="";
   e.gear.forEach((g,i)=>{
     const li=document.createElement("li");
-    li.innerHTML='<span>'+esc(g.name)+' <span class="gw">'+(g.heavy?"· heavy (2)":"· 1")+'</span></span>';
+    const tag = g.sig ? "· signature" : (g.heavy ? "· heavy (2)" : "· 1");
+    li.innerHTML='<span>'+esc(g.name)+' <span class="gw">'+tag+'</span></span>';
     const rb=document.createElement("button"); rb.textContent="✕"; rb.setAttribute("aria-label","remove item");
     rb.addEventListener("click", ()=>{ e.gear.splice(i,1); saveState(); renderGear(); });
     li.appendChild(rb); ul.appendChild(li);
   });
-  const load = e.gear.reduce((n,g)=> n + (g.heavy?2:1), 0);
+  const load = e.gear.reduce((n,g)=> n + gearWeight(g), 0);
   const limit = CREW[current].STR;
   const el = $("#encum");
   el.textContent = "Encumbrance "+load+" / "+limit;
   el.classList.toggle("over", load>limit);
 }
+function buildCatalog(){
+  const sel = $("#catSel"); sel.innerHTML="";
+  const ph = document.createElement("option"); ph.value=""; ph.textContent="— choose an item —"; sel.appendChild(ph);
+  Object.keys(CATALOG).forEach(group=>{
+    const og = document.createElement("optgroup"); og.label = group;
+    CATALOG[group].forEach(item=>{
+      const idx = CAT_INDEX.push(Object.assign({ _group:group }, item)) - 1;
+      const o = document.createElement("option"); o.value = idx;
+      o.textContent = item.name + (item.damage!=null ? "  ("+item.bonus+"/"+item.damage+"/"+item.range+")" : "");
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+}
+function catAdd(){
+  if(!charState.equip) return;
+  const idx = $("#catSel").value; if(idx==="") return;
+  const item = CAT_INDEX[parseInt(idx,10)]; if(!item) return;
+  if(item.damage != null){   // anything with weapon stats goes to the weapons table
+    charState.equip.weapons.push({ name:item.name, bonus:item.bonus||"", damage:item.damage||"", range:item.range||"", reloads:item.reloads||"" });
+    renderWeapons();
+  } else {
+    charState.equip.gear.push({ name:item.name, heavy:!!item.heavy });
+    renderGear();
+  }
+  saveState();
+  $("#catSel").value="";
+}
+
 function wireEquip(){
+  $("#catAdd").addEventListener("click", catAdd);
+  $("#catSel").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); catAdd(); } });
   $("#armorName").addEventListener("input", ()=>{ if(charState.equip){ charState.equip.armorName=$("#armorName").value; saveState(); } });
   $("#armorRating").addEventListener("input", ()=>{ if(charState.equip){ charState.equip.armorRating=$("#armorRating").value; saveState(); } });
   $("#wAdd").addEventListener("click", ()=>{ if(!charState.equip) return;
@@ -1040,6 +1207,50 @@ function buildTrackers(){
   $("#stVal").textContent = charState.stress;
   buildPips("#radPips", 10, charState.rad, "rad", n=>{ charState.rad=n; $("#radVal").textContent=n; saveState(); });
   $("#radVal").textContent = charState.rad;
+  buildPips("#spPips", 3, charState.storyPoints, "story", n=>{ charState.storyPoints=n; $("#spVal").textContent=n; updateStoryBtn(); saveState(); });
+  $("#spVal").textContent = charState.storyPoints;
+}
+
+/* ---- stored critical injuries ---- */
+function buildInjuries(){
+  const tb = $("#injBody"), tbl = $("#injTable"), empty = $("#injEmpty");
+  tb.innerHTML="";
+  const list = charState.injuries||[];
+  if(!list.length){ tbl.style.display="none"; empty.style.display=""; return; }
+  tbl.style.display=""; empty.style.display="none";
+  list.forEach((v,i)=>{
+    const info = CRIT_INFO[v]||{ name:"—", effect:"" };
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td>'+v+'</td><td>'+esc(info.name)+'</td><td class="eff">'+esc(injuryEffectText(v)||info.effect)+'</td>';
+    const rm=document.createElement("td"); rm.className="rm";
+    const rb=document.createElement("button"); rb.textContent="✕"; rb.setAttribute("aria-label","remove injury");
+    rb.addEventListener("click", ()=>{ charState.injuries.splice(i,1); saveState(); buildInjuries(); });
+    rm.appendChild(rb); tr.appendChild(rm); tb.appendChild(tr);
+  });
+}
+function injuryEffectText(v){
+  const m = CRIT_MODS[v]; if(!m) return "";
+  const parts=[];
+  Object.keys(m).forEach(k=>{ if(k==="stress") return; parts.push(skillLabel(k)+" "+(m[k]>0?"+":"")+m[k]); });
+  return parts.join(", ");
+}
+function skillLabel(key){
+  for(const a in SKILLS){ const f=SKILLS[a].find(s=>s[0]===key); if(f) return f[1]; }
+  return key;
+}
+function injuryModForSkill(skillKey){
+  if(!skillKey) return 0;
+  let m=0;
+  (charState.injuries||[]).forEach(v=>{ const mm=CRIT_MODS[v]; if(mm && typeof mm[skillKey]==="number") m+=mm[skillKey]; });
+  return m;
+}
+function addInjury(v){
+  charState.injuries = charState.injuries || [];
+  charState.injuries.push(v);
+  const m = CRIT_MODS[v];
+  if(m && m.stress){ charState.stress = Math.min(10, charState.stress + m.stress); }
+  saveState();
+  buildInjuries(); buildTrackers();
 }
 function buildPips(sel, max, value, cls, onChange){
   const el = $(sel); el.innerHTML="";
@@ -1156,6 +1367,7 @@ function openRoll(attr, skillKey){
   $("#result").classList.remove("on");
   $("#dicewrap").innerHTML=""; $("#tally").innerHTML=""; $("#panicZone").innerHTML="";
   $("#pushBtn").disabled = true;
+  $("#spBtn").style.display = "none";
   $("#rollModal").classList.add("on");
   refreshPool();
   document.addEventListener("keydown", rollKey);
@@ -1170,13 +1382,20 @@ function poolNow(){
   const c = CREW[current];
   const attrV = c[modalCtx.attr]||0;
   const skV = modalCtx.skillKey ? (c.skills[modalCtx.skillKey]||0) : 0;
-  let base = attrV + skV + currentMod(); if(base<0) base=0;
-  return { base, stress: Math.max(0, charState.stress) };
+  const injMod = injuryModForSkill(modalCtx.skillKey);
+  let base = attrV + skV + currentMod() + injMod; if(base<0) base=0;
+  return { base, stress: Math.max(0, charState.stress), injMod };
 }
 function refreshPool(){
   if(!modalCtx || !$("#rollModal").classList.contains("on")) return;
   const p = poolNow();
   $("#rBase").textContent = p.base; $("#rStress").textContent = p.stress; $("#rTotal").textContent = p.base+p.stress;
+  const note = $("#injNote");
+  if(p.injMod){
+    const inj = (charState.injuries||[]).filter(v=> CRIT_MODS[v] && typeof CRIT_MODS[v][modalCtx.skillKey]==="number")
+      .map(v=> (CRIT_INFO[v]&&CRIT_INFO[v].name)||("#"+v));
+    note.textContent = "Injury "+(p.injMod>0?"+":"")+p.injMod+" applied ("+inj.join(", ")+")";
+  } else note.textContent="";
 }
 $("#modUp").addEventListener("click", ()=>{ let v=Math.min(6,currentMod()+1); $("#modVal").textContent=v; refreshPool(); });
 $("#modDown").addEventListener("click", ()=>{ let v=Math.max(-3,currentMod()-1); $("#modVal").textContent=v; refreshPool(); });
@@ -1188,7 +1407,7 @@ function countOne(a){ return a.filter(v=>v===1).length; }
 
 $("#rollBtn").addEventListener("click", ()=>{
   const p = poolNow();
-  lastRoll = { label:modalCtx.label, base:rollN(p.base), stress:rollN(p.stress), pushed:0 };
+  lastRoll = { label:modalCtx.label, base:rollN(p.base), stress:rollN(p.stress), pushed:0, story:0, wasPush:false };
   const btn=$("#rollBtn"); btn.classList.add("flash"); setTimeout(()=>btn.classList.remove("flash"),400);
   paintResult(false); publishRoll("roll");
 });
@@ -1198,9 +1417,21 @@ $("#pushBtn").addEventListener("click", ()=>{
   lastRoll.stress.push(0);
   lastRoll.base = lastRoll.base.map(v=> v===6?6:d6());
   lastRoll.stress = lastRoll.stress.map(v=> v===6?6:d6());
-  lastRoll.pushed++;
+  lastRoll.pushed++; lastRoll.wasPush=true;
   paintResult(true); publishRoll("push");
 });
+/* spend a story point: add a guaranteed 6 (one automatic success) to this roll */
+$("#spBtn").addEventListener("click", ()=>{
+  if(!lastRoll || charState.storyPoints<=0) return;
+  charState.storyPoints -= 1; lastRoll.story = (lastRoll.story||0)+1;
+  lastRoll.base.push(6); buildTrackers();
+  paintResult(lastRoll.wasPush); publishRoll("roll", { story:lastRoll.story });
+});
+function updateStoryBtn(){
+  const btn=$("#spBtn");
+  const show = lastRoll && charState.storyPoints>0 && $("#rollModal").classList.contains("on") && $("#result").classList.contains("on");
+  btn.style.display = show ? "" : "none";
+}
 
 function paintResult(wasPush){
   const r = lastRoll;
@@ -1215,7 +1446,8 @@ function paintResult(wasPush){
   $("#tally").innerHTML =
     '<span class="succ'+(succ===0?' zero':'')+'">'+succ+'</span> success'+(succ===1?'':'es')+
     ' <span class="meta">· '+r.base.length+' base + '+r.stress.length+' stress'+
-    (r.pushed?(' · pushed ×'+r.pushed):'')+(stressOnes?(' · '+stressOnes+' stress ✦1'):'')+'</span>';
+    (r.pushed?(' · pushed ×'+r.pushed):'')+(r.story?(' · '+r.story+' ◆ story'):'')+
+    (stressOnes?(' · '+stressOnes+' stress ✦1'):'')+'</span>';
 
   const pz=$("#panicZone"); pz.innerHTML="";
   if(panic){
@@ -1226,6 +1458,7 @@ function paintResult(wasPush){
   }
   $("#result").classList.add("on");
   $("#pushBtn").disabled = panic || (r.base.length+r.stress.length)===0;
+  updateStoryBtn();
 }
 function dieEl(v, stress){
   const d=document.createElement("div");
@@ -1293,15 +1526,21 @@ function rollCrit(){
   const tens = d6(), units = d6(), val = tens*10 + units;
   const rows = $$("#critTable tbody tr");
   rows.forEach(r=> r.classList.remove("hit"));
-  let name="—", fatal="—", effect="";
+  const info = CRIT_INFO[val] || { name:"—", fatal:"—", effect:"" };
   const hit = rows.find(r=> r.cells[0] && r.cells[0].textContent.trim()===String(val));
-  if(hit){ hit.classList.add("hit"); name=hit.cells[1].textContent; fatal=hit.cells[2].textContent; effect=hit.cells[3].textContent; }
-  $("#critOut").innerHTML = 'd66 <b>'+val+'</b> — '+esc(name);
-  const fatalLine = (fatal && fatal!=="—") ? '<div class="fatal">Fatal: '+esc(fatal)+'</div>' : '';
+  if(hit) hit.classList.add("hit");
+  $("#critOut").innerHTML = 'd66 <b>'+val+'</b> — '+esc(info.name);
+  const fatalLine = (info.fatal && info.fatal!=="—") ? '<div class="fatal">Fatal: '+esc(info.fatal)+'</div>' : '';
+  const modLine = injuryEffectText(val) ? '<div class="sub" style="margin-top:6px">Roll penalty: '+esc(injuryEffectText(val))+'</div>' : '';
   showMisc("Critical Injury",
     '<div class="sub">2d6 → <b style="color:var(--white)">'+tens+''+units+'</b></div>'+
     '<div class="bignum">'+val+'</div>'+
-    '<div class="res"><b>'+esc(name)+'</b><br>'+esc(effect)+'</div>'+fatalLine, rollCrit);
+    '<div class="res"><b>'+esc(info.name)+'</b><br>'+esc(info.effect)+'</div>'+fatalLine+modLine+
+    '<div style="margin-top:12px"><button id="critAddBtn">＋ Add to my injuries</button></div>', rollCrit);
+  $("#critAddBtn").addEventListener("click", ()=>{
+    addInjury(val);
+    $("#critAddBtn").textContent = "Added ✓"; $("#critAddBtn").disabled = true;
+  });
 }
 
 /* ============================================================
@@ -1358,8 +1597,18 @@ function initRoom(){
   RollBus.on("roll", onRoll);
   RollBus.on("status", s=>{ const d=$("#netDot"); d.textContent=s.net?"LIVE":"local"; d.className=s.net?"":"off"; });
 }
+/* index the reference injury table so rolls and stored injuries share its text */
+function buildCritIndex(){
+  $$("#critTable tbody tr").forEach(r=>{
+    if(!r.cells[0]) return;
+    const v = parseInt(r.cells[0].textContent.trim(),10);
+    if(v) CRIT_INFO[v] = { name:r.cells[1].textContent.trim(), fatal:r.cells[2].textContent.trim(), effect:r.cells[3].textContent.trim() };
+  });
+}
 (function boot(){
   buildCards();
+  buildCritIndex();
+  buildCatalog();
   initRoom();
   wireEquip();
   const params = new URLSearchParams(location.search);
