@@ -292,6 +292,39 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .panic-out{ margin-top:8px; font-size:13px; color:var(--white); }
 .panic-out .t{ font-family:'VT323',monospace; font-size:26px; color:var(--alert); }
 
+/* quick rolls */
+.quick{ display:flex; flex-wrap:wrap; gap:8px; }
+.quick button{ flex:1 1 auto; min-width:130px; border-color:var(--dim); }
+.quick button.crit{ border-color:#5a1a14; color:var(--alert); }
+.quick button.panic{ border-color:var(--amber); color:var(--amber); }
+
+/* interactive critical-injury roller */
+.crit-roll{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:2px 0 10px; }
+.crit-roll button{ border-color:var(--alert); color:var(--alert); font-size:12px; }
+.crit-out{ font-size:12.5px; color:var(--white); min-height:1.2em; }
+.crit-out b{ color:var(--alert); }
+.rtable tr.hit td{ background:rgba(240,178,62,.16); }
+.rtable tr.hit td:first-child{ color:var(--amber); }
+
+/* misc result pop-up (panic / critical injury) */
+#miscModal{ position:fixed; inset:0; z-index:82; display:none; }
+#miscModal.on{ display:block; }
+#miscModal .veil{ position:absolute; inset:0; background:rgba(1,4,2,.82); }
+#miscModal .box{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:min(420px,92vw); max-height:88dvh; overflow:auto; background:var(--crt); border:1px solid var(--dim);
+  padding:18px; box-shadow:0 0 34px rgba(0,0,0,.75); text-align:center; }
+#miscModal .rhead{ display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+  border-bottom:2px solid var(--faint); padding-bottom:10px; text-align:left; }
+#miscModal .rhead .rt{ font-family:'VT323',monospace; font-size:24px; letter-spacing:.04em; color:var(--white); text-transform:uppercase; }
+#miscModal .rhead button{ border-color:var(--dim); font-size:12px; padding:.3em .7em; }
+#miscModal .bignum{ font-family:'VT323',monospace; font-size:64px; line-height:1; color:var(--alert); margin:14px 0 6px; }
+#miscModal .bignum.ok{ color:var(--phos); }
+#miscModal .sub{ font-size:12px; color:var(--dim); }
+#miscModal .res{ font-size:15px; color:var(--white); margin-top:8px; line-height:1.5; }
+#miscModal .res b{ color:var(--amber); }
+#miscModal .fatal{ color:var(--alert); font-size:12.5px; margin-top:6px; }
+#miscModal .again{ margin-top:14px; border-color:var(--dim); }
+
 .footbar{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; margin-top:16px;
   border-top:2px solid var(--faint); padding-top:10px; font-size:11px; letter-spacing:.08em;
   text-transform:uppercase; color:var(--faint); }
@@ -328,6 +361,18 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
   <section class="panel">
     <h2>Attributes &amp; Skills <span class="sub">— tap a skill to roll</span></h2>
     <div class="attrs" id="attrs"></div>
+  </section>
+
+  <!-- quick rolls -->
+  <section class="panel">
+    <h2>Quick Rolls</h2>
+    <div class="quick">
+      <button data-roll="STR|closeCombat">⚔ Close Attack</button>
+      <button data-roll="AGI|rangedCombat">➶ Ranged Attack</button>
+      <button data-roll="AGI|mobility">👣 Stealth</button>
+      <button class="panic" id="qPanic">Panic Roll</button>
+      <button class="crit" id="qCrit">Critical Injury</button>
+    </div>
   </section>
 
   <div class="cols">
@@ -604,8 +649,9 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
   <details class="rsec">
     <summary>Critical injuries (d66)</summary>
     <div class="rc">
-      <p style="color:var(--dim)">When you're Broken and take another hit, the GM rolls here. <b>Fatal</b> injuries need a Death Roll when the time limit runs out.</p>
-      <table class="rtable"><thead><tr><th>d66</th><th>Injury</th><th>Fatal</th><th>Effect</th></tr></thead><tbody>
+      <p style="color:var(--dim)">When you're Broken and take another hit, roll here. <b>Fatal</b> injuries need a Death Roll when the time limit runs out.</p>
+      <div class="crit-roll"><button id="critRollBtn">⚄ Roll d66</button><span class="crit-out" id="critOut"></span></div>
+      <table class="rtable" id="critTable"><thead><tr><th>d66</th><th>Injury</th><th>Fatal</th><th>Effect</th></tr></thead><tbody>
         <tr><td>11</td><td>Winded</td><td>—</td><td>None.</td></tr>
         <tr><td>12</td><td>Stunned</td><td>—</td><td>None.</td></tr>
         <tr><td>13</td><td>Crippling pain</td><td>—</td><td>Stress Level +1.</td></tr>
@@ -678,6 +724,19 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
       <button id="pushBtn" disabled>Push (+1 stress)</button>
       <div id="panicZone"></div>
     </div>
+  </div>
+</div>
+
+<!-- ============== PANIC / CRIT RESULT POP-UP ============== -->
+<div id="miscModal" role="dialog" aria-modal="true" aria-label="Result">
+  <div class="veil" data-close-misc></div>
+  <div class="box">
+    <div class="rhead">
+      <span class="rt" id="miscTitle">Result</span>
+      <button data-close-misc aria-label="Close">✕</button>
+    </div>
+    <div id="miscBody"></div>
+    <button class="again" id="miscAgain">Roll again</button>
   </div>
 </div>
 
@@ -1177,9 +1236,9 @@ function dieEl(v, stress){
   d.textContent=v; return d;
 }
 function doPanic(){
-  const die=d6(); const total=die+charState.stress;
-  $("#panicOut").innerHTML='Rolled <b>'+die+'</b> + '+charState.stress+' stress = <span class="t">'+total+'</span> — '+panicResult(total);
-  publishRoll("panic", { panicDie:die, panicTotal:total, panicText:panicResult(total) });
+  const die=d6(); const total=die+charState.stress; const text=panicResult(total);
+  $("#panicOut").innerHTML='Rolled <b>'+die+'</b> + '+charState.stress+' stress = <span class="t">'+total+'</span> — '+text;
+  publishPanic(die, total, text);
 }
 function panicResult(t){
   if(t<=6) return "Keeping it together.";
@@ -1192,6 +1251,65 @@ function panicResult(t){
   if(t===13) return "Flee.";
   if(t===14) return "Berserk — attack nearest.";
   return "Catatonic / collapse.";
+}
+
+/* ============================================================
+   QUICK ROLLS · direct panic · critical injury (d66)
+   ============================================================ */
+/* Close/Ranged Attack and Stealth are ordinary skill rolls — these
+   buttons just open the roll pop-up pre-set to the right skill. */
+$$('.quick [data-roll]').forEach(b=>{
+  const parts = b.getAttribute('data-roll').split('|');
+  b.addEventListener('click', ()=> openRoll(parts[0], parts[1]));
+});
+
+/* shared result pop-up (panic / critical injury) */
+let miscAgainFn = null;
+function showMisc(title, bodyHtml, againFn){
+  $("#miscTitle").textContent = title;
+  $("#miscBody").innerHTML = bodyHtml;
+  miscAgainFn = againFn || null;
+  $("#miscAgain").style.display = againFn ? "" : "none";
+  $("#miscModal").classList.add("on");
+  document.removeEventListener("keydown", miscKey);
+  document.addEventListener("keydown", miscKey);
+}
+function closeMisc(){ $("#miscModal").classList.remove("on"); document.removeEventListener("keydown", miscKey); }
+function miscKey(e){ if(e.key==="Escape") closeMisc(); }
+$$("[data-close-misc]").forEach(b=> b.addEventListener("click", closeMisc));
+$("#miscAgain").addEventListener("click", ()=>{ if(miscAgainFn) miscAgainFn(); });
+
+/* direct panic roll (GM can call for one any time) — broadcast to the room */
+function publishPanic(die,total,text){
+  const c = CREW[current];
+  RollBus.publish({ kind:"panic", who:c.name, role:c.role, panicDie:die, panicTotal:total, panicText:text });
+}
+$("#qPanic").addEventListener("click", rollPanicDirect);
+function rollPanicDirect(){
+  const die = d6(), total = die + charState.stress, text = panicResult(total);
+  showMisc("Panic Roll",
+    '<div class="sub">d6 <b style="color:var(--white)">'+die+'</b> + '+charState.stress+' stress</div>'+
+    '<div class="bignum'+(total<=6?' ok':'')+'">'+total+'</div>'+
+    '<div class="res">'+text+'</div>', rollPanicDirect);
+  publishPanic(die,total,text);
+}
+
+/* critical injury — rolls d66 on the reference table, highlights the row */
+$("#qCrit").addEventListener("click", rollCrit);
+$("#critRollBtn").addEventListener("click", rollCrit);
+function rollCrit(){
+  const tens = d6(), units = d6(), val = tens*10 + units;
+  const rows = $$("#critTable tbody tr");
+  rows.forEach(r=> r.classList.remove("hit"));
+  let name="—", fatal="—", effect="";
+  const hit = rows.find(r=> r.cells[0] && r.cells[0].textContent.trim()===String(val));
+  if(hit){ hit.classList.add("hit"); name=hit.cells[1].textContent; fatal=hit.cells[2].textContent; effect=hit.cells[3].textContent; }
+  $("#critOut").innerHTML = 'd66 <b>'+val+'</b> — '+esc(name);
+  const fatalLine = (fatal && fatal!=="—") ? '<div class="fatal">Fatal: '+esc(fatal)+'</div>' : '';
+  showMisc("Critical Injury",
+    '<div class="sub">2d6 → <b style="color:var(--white)">'+tens+''+units+'</b></div>'+
+    '<div class="bignum">'+val+'</div>'+
+    '<div class="res"><b>'+esc(name)+'</b><br>'+esc(effect)+'</div>'+fatalLine, rollCrit);
 }
 
 /* ============================================================
