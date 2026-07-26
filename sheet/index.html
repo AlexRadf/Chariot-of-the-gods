@@ -443,6 +443,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
       <select id="catSel" aria-label="Item catalogue"></select>
       <button class="eq-add" id="catAdd">Add</button>
     </div>
+    <small style="color:var(--faint); display:block; margin-top:6px">“Gear on the Montero” is the shared starting locker (5 suits, 1 of each item) — Captain Miller distributes it. Weapons drop into the weapons table, everything else into gear.</small>
 
     <div class="eq-h">Consumables</div>
     <div class="consum" id="consum"></div>
@@ -924,10 +925,17 @@ const CATALOG = {
     { name:"Maintenance Jack", bonus:"+2", damage:"1", range:"Engaged", reloads:"" },
     { name:"Combat Knife", bonus:"+2", damage:"1", range:"Engaged", reloads:"" }
   ],
-  "Montero / scenario gear": [
+  "Gear on the Montero": [
     { name:"IRC Mk.50 Compression Suit (Air 5)" },
-    { name:"M314 Motion Tracker" },
-    { name:"P-5000 Power Loader", heavy:true },
+    { name:"M314 Motion Tracker (Power 5)" },
+    { name:"Cutting Torch (Power 5)", bonus:"+1", damage:"2", range:"Engaged", reloads:"" },
+    { name:"Watatsumi Bolt Gun", bonus:"+1", damage:"2", range:"Short", reloads:"4" },
+    { name:"M4A3 Service Pistol", bonus:"+2", damage:"1", range:"Medium", reloads:"1" },
+    { name:"SpaceSub ASSO-400 Harpoon Gun", bonus:"+1", damage:"2", range:"Short", reloads:"" },
+    { name:"M240 Incinerator Unit", bonus:"+1", damage:"Fire", range:"Short", reloads:"2" },
+    { name:"P-5000 Power Loader", heavy:true }
+  ],
+  "Scenario gear (aboard)": [
     { name:"Personal Medkit" },
     { name:"Surgical Kit" },
     { name:"Personal Data Tablet" },
@@ -1139,7 +1147,7 @@ function catAdd(){
   if(!charState.equip) return;
   const idx = $("#catSel").value; if(idx==="") return;
   const item = CAT_INDEX[parseInt(idx,10)]; if(!item) return;
-  if(item._group==="Weapons"){
+  if(item.damage != null){   // anything with weapon stats goes to the weapons table
     charState.equip.weapons.push({ name:item.name, bonus:item.bonus||"", damage:item.damage||"", range:item.range||"", reloads:item.reloads||"" });
     renderWeapons();
   } else {
