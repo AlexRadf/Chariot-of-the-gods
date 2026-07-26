@@ -128,6 +128,41 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .kv{ font-size:13px; margin:3px 0; } .kv b{ color:var(--amber); font-weight:400; text-transform:uppercase; letter-spacing:.06em; }
 .talent{ font-size:13.5px; line-height:1.5; } .talent b{ color:var(--white); }
 
+/* equipment & inventory */
+.eq-h{ text-transform:uppercase; letter-spacing:.1em; font-size:12px; color:var(--amber); margin:14px 0 6px;
+  display:flex; align-items:baseline; justify-content:space-between; }
+.eq-h:first-of-type{ margin-top:2px; }
+.consum{ display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:8px; }
+.cons{ border:1px solid var(--faint); padding:7px 9px; display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.cons .cl{ text-transform:uppercase; letter-spacing:.08em; font-size:12px; color:var(--dim); }
+.stepper.sm button{ font-size:16px; padding:0 .5em; } .stepper.sm .mv{ min-width:1.6em; font-size:18px; }
+.wtable{ width:100%; border-collapse:collapse; font-size:12px; }
+.wtable th,.wtable td{ border:1px solid var(--faint); padding:2px; }
+.wtable th{ color:var(--dim); text-transform:uppercase; font-size:10px; letter-spacing:.05em; font-weight:400; padding:4px; }
+.wtable input{ width:100%; background:transparent; border:0; color:var(--phos); font-family:inherit; font-size:12.5px; padding:5px 6px; text-align:center; }
+.wtable input.wname{ text-align:left; }
+.wtable input:focus{ outline:1px solid var(--amber); background:var(--raise2); }
+.wtable td.rm{ width:26px; text-align:center; }
+.wtable td.rm button{ border:0; color:var(--faint); padding:2px 6px; font-size:14px; }
+.wtable td.rm button:hover{ color:var(--alert); background:none; }
+.eq-add{ margin-top:6px; font-size:12px; padding:.4em .8em; }
+.armor-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px; color:var(--dim); }
+.armor-row input{ background:var(--crt); border:1px solid var(--faint); color:var(--phos); font-family:inherit; font-size:13px; padding:.4em .6em; }
+.armor-row input.aname{ flex:1; min-width:120px; }
+.armor-row input.arate{ width:4em; text-align:center; }
+#gearList{ list-style:none; display:flex; flex-direction:column; gap:4px; margin:2px 0 8px; }
+#gearList li{ display:flex; align-items:center; justify-content:space-between; gap:8px;
+  border:1px solid var(--faint); padding:5px 9px; font-size:13px; }
+#gearList li .gw{ color:var(--dim); font-size:11px; letter-spacing:.05em; }
+#gearList li button{ border:0; color:var(--faint); padding:0 4px; font-size:14px; }
+#gearList li button:hover{ color:var(--alert); background:none; }
+.gear-add{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.gear-add input[type=text]{ flex:1; min-width:120px; background:var(--crt); border:1px solid var(--faint);
+  color:var(--phos); font-family:inherit; font-size:13px; padding:.5em .7em; }
+.gear-add label{ font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em; display:inline-flex; gap:4px; align-items:center; }
+.encum{ font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--dim); text-transform:none; letter-spacing:0; }
+.encum.over{ color:var(--alert); }
+
 /* roll log */
 #log{ list-style:none; display:flex; flex-direction:column; gap:6px; max-height:300px; overflow:auto; }
 #log li{ border:1px solid var(--faint); padding:7px 9px; font-size:12.5px; line-height:1.4; }
@@ -325,6 +360,36 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
     </section>
   </div>
 
+  <!-- equipment & inventory -->
+  <section class="panel">
+    <h2>Equipment &amp; Inventory</h2>
+
+    <div class="eq-h">Consumables</div>
+    <div class="consum" id="consum"></div>
+
+    <div class="eq-h">Weapons</div>
+    <table class="wtable">
+      <thead><tr><th class="wname">Weapon</th><th>Bonus</th><th>Damage</th><th>Range</th><th>Reloads</th><th></th></tr></thead>
+      <tbody id="wBody"></tbody>
+    </table>
+    <button class="eq-add" id="wAdd">+ Add weapon</button>
+
+    <div class="eq-h">Armor</div>
+    <div class="armor-row">
+      <input class="aname" id="armorName" placeholder="Armor name" spellcheck="false">
+      <span>Rating</span><input class="arate" id="armorRating" placeholder="0" inputmode="numeric">
+    </div>
+
+    <div class="eq-h">Gear <span class="encum" id="encum"></span></div>
+    <ul id="gearList"></ul>
+    <div class="gear-add">
+      <input type="text" id="gearIn" placeholder="Add an item…" spellcheck="false">
+      <label><input type="checkbox" id="gearHeavy"> heavy</label>
+      <button class="eq-add" id="gearAdd">Add</button>
+    </div>
+    <small style="color:var(--faint); display:block; margin-top:8px">Encumbrance limit = your Strength. Heavy items count as 2. Over the limit and you're slowed.</small>
+  </section>
+
   <!-- roll log -->
   <section class="panel">
     <h2>Roll Log</h2>
@@ -388,6 +453,24 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
   </details>
 
   <details class="rsec">
+    <summary>Difficulty &amp; story points</summary>
+    <div class="rc">
+      <h4>Difficulty modifiers</h4>
+      <table class="rtable"><tbody>
+        <tr><td>Trivial</td><td>+3</td><td>Average</td><td>±0</td></tr>
+        <tr><td>Simple</td><td>+2</td><td>Demanding</td><td>−1</td></tr>
+        <tr><td>Easy</td><td>+1</td><td>Hard</td><td>−2</td></tr>
+        <tr><td></td><td></td><td>Formidable</td><td>−3</td></tr>
+      </tbody></table>
+      <h4>Story points</h4>
+      <ul>
+        <li>Gain 1 by <b>playing your agenda</b> (max 3).</li>
+        <li>Spend 1 to <b>add a 6</b> to any roll.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="rsec">
     <summary>Stress &amp; panic</summary>
     <div class="rc">
       <h4>Panic Roll — d6 + Stress Level</h4>
@@ -441,6 +524,50 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
   </details>
 
   <details class="rsec">
+    <summary>Ranged fire &amp; cover</summary>
+    <div class="rc">
+      <h4>Attack modifiers</h4>
+      <table class="rtable"><tbody>
+        <tr><td>Aimed shot</td><td>+2</td></tr>
+        <tr><td>Engaged range</td><td>−3 / +3</td></tr>
+        <tr><td>Short range</td><td>—</td></tr>
+        <tr><td>Medium range</td><td>−1</td></tr>
+        <tr><td>Long range</td><td>−2</td></tr>
+        <tr><td>Extreme range</td><td>−3</td></tr>
+        <tr><td>Large / small target</td><td>+2 / −2</td></tr>
+        <tr><td>Dim light / darkness</td><td>−1 / −2</td></tr>
+      </tbody></table>
+      <p style="color:var(--dim)">Dim light &amp; darkness also apply to OBSERVATION.</p>
+      <h4>Cover — Armor Rating</h4>
+      <table class="rtable"><tbody>
+        <tr><td>Shrubbery</td><td>2</td></tr>
+        <tr><td>Furniture</td><td>3</td></tr>
+        <tr><td>Door</td><td>4</td></tr>
+        <tr><td>Inner bulkhead</td><td>5</td></tr>
+        <tr><td>Outer bulkhead</td><td>6</td></tr>
+        <tr><td>Armored bulkhead</td><td>7+</td></tr>
+      </tbody></table>
+    </div>
+  </details>
+
+  <details class="rsec">
+    <summary>Stealth &amp; sneak attacks</summary>
+    <div class="rc">
+      <ul>
+        <li>In stealth you move up to <b>2 zones</b> per turn. You automatically spot passive enemies in your zone or line of sight.</li>
+        <li>Sneak past or ambush: roll <b>MOBILITY vs their OBSERVATION</b> — success means a free attack.</li>
+      </ul>
+      <h4>Sneak-attack range modifier</h4>
+      <table class="rtable"><tbody>
+        <tr><td>Engaged</td><td>−2</td></tr>
+        <tr><td>Short / behind open door</td><td>−1 / +2</td></tr>
+        <tr><td>Medium</td><td>0</td></tr>
+        <tr><td>Long / Extreme</td><td>+1 / +3</td></tr>
+      </tbody></table>
+    </div>
+  </details>
+
+  <details class="rsec">
     <summary>Range &amp; time</summary>
     <div class="rc">
       <table class="rtable"><thead><tr><th>Range</th><th></th></tr></thead><tbody>
@@ -471,6 +598,51 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
       <p><b>Command</b> — +1 to the ally's roll to carry out the order.</p>
       <p><b>Manipulation</b> — no return favour · they do more · impressed (help later).</p>
       <p><b>Medical Aid</b> — recover +1 Health.</p>
+    </div>
+  </details>
+
+  <details class="rsec">
+    <summary>Critical injuries (d66)</summary>
+    <div class="rc">
+      <p style="color:var(--dim)">When you're Broken and take another hit, the GM rolls here. <b>Fatal</b> injuries need a Death Roll when the time limit runs out.</p>
+      <table class="rtable"><thead><tr><th>d66</th><th>Injury</th><th>Fatal</th><th>Effect</th></tr></thead><tbody>
+        <tr><td>11</td><td>Winded</td><td>—</td><td>None.</td></tr>
+        <tr><td>12</td><td>Stunned</td><td>—</td><td>None.</td></tr>
+        <tr><td>13</td><td>Crippling pain</td><td>—</td><td>Stress Level +1.</td></tr>
+        <tr><td>14</td><td>Sprained ankle</td><td>—</td><td>MOBILITY −2, can't run until Medical Aid.</td></tr>
+        <tr><td>15</td><td>Blood in eyes</td><td>—</td><td>OBSERVATION &amp; RANGED COMBAT −2 until Medical Aid.</td></tr>
+        <tr><td>16</td><td>Concussion</td><td>—</td><td>MOBILITY −2.</td></tr>
+        <tr><td>21</td><td>Severed ear</td><td>—</td><td>OBSERVATION −2.</td></tr>
+        <tr><td>22</td><td>Broken toes</td><td>—</td><td>Running becomes a slow action.</td></tr>
+        <tr><td>23</td><td>Broken hand</td><td>—</td><td>Can't use hand.</td></tr>
+        <tr><td>24</td><td>Knocked-out teeth</td><td>—</td><td>MANIPULATION −2.</td></tr>
+        <tr><td>25</td><td>Impaled thigh</td><td>—</td><td>Running becomes a slow action.</td></tr>
+        <tr><td>26</td><td>Slashed shoulder</td><td>—</td><td>Can't use arm.</td></tr>
+        <tr><td>31</td><td>Broken nose</td><td>—</td><td>MANIPULATION &amp; OBSERVATION −1.</td></tr>
+        <tr><td>32</td><td>Crotch hit</td><td>—</td><td>1 damage on every MOBILITY/CLOSE COMBAT roll.</td></tr>
+        <tr><td>33</td><td>Broken ribs</td><td>—</td><td>MOBILITY &amp; CLOSE COMBAT −2.</td></tr>
+        <tr><td>34</td><td>Gouged eye</td><td>—</td><td>RANGED COMBAT &amp; OBSERVATION −2.</td></tr>
+        <tr><td>35</td><td>Busted kneecap</td><td>—</td><td>Can't run, only crawl.</td></tr>
+        <tr><td>36</td><td>Broken arm</td><td>—</td><td>Can't use arm.</td></tr>
+        <tr><td>41</td><td>Broken leg</td><td>—</td><td>Can't run, only crawl.</td></tr>
+        <tr><td>42</td><td>Crushed foot</td><td>—</td><td>Can't run, only crawl.</td></tr>
+        <tr><td>43</td><td>Crushed elbow</td><td>—</td><td>Can't use arm.</td></tr>
+        <tr><td>44</td><td>Punctured lung</td><td>Yes · 1 Day</td><td>STAMINA &amp; MOBILITY −2.</td></tr>
+        <tr><td>45</td><td>Bleeding gut</td><td>Yes · 1 Shift</td><td>1 damage on every MOBILITY/CLOSE COMBAT roll.</td></tr>
+        <tr><td>46</td><td>Ruptured intestines</td><td>Yes · 1 Shift</td><td>Disease, Virulence 6.</td></tr>
+        <tr><td>51</td><td>Busted kidney</td><td>Yes · 1 Day</td><td>Can't run, only crawl; MOBILITY −2.</td></tr>
+        <tr><td>52</td><td>Arm artery cut</td><td>Yes −1 · 1 Turn</td><td>Can't use arm.</td></tr>
+        <tr><td>53</td><td>Leg artery cut</td><td>Yes −1 · 1 Turn</td><td>Running becomes a slow action.</td></tr>
+        <tr><td>54</td><td>Severed arm</td><td>Yes −1 · 1 Shift</td><td>Can't use arm (permanent).</td></tr>
+        <tr><td>55</td><td>Severed leg</td><td>Yes −1 · 1 Shift</td><td>Can't run, only crawl (permanent).</td></tr>
+        <tr><td>56</td><td>Cracked spine</td><td>—</td><td>Paralyzed neck-down; permanent without timely Medical Aid.</td></tr>
+        <tr><td>61</td><td>Ruptured jugular</td><td>Yes −1 · 1 Round</td><td>STAMINA −1.</td></tr>
+        <tr><td>62</td><td>Ruptured aorta</td><td>Yes −2 · 1 Round</td><td>STAMINA −2.</td></tr>
+        <tr><td>63</td><td>Disemboweled</td><td>Yes</td><td>Instant death.</td></tr>
+        <tr><td>64</td><td>Crushed skull</td><td>Yes</td><td>Your story ends here.</td></tr>
+        <tr><td>65</td><td>Pierced head</td><td>Yes</td><td>You die immediately.</td></tr>
+        <tr><td>66</td><td>Impaled heart</td><td>Yes</td><td>Your heart beats for the last time.</td></tr>
+      </tbody></table>
     </div>
   </details>
 
@@ -643,10 +815,15 @@ let lastRoll = null;    // active roll in the pop-up
 let modalCtx = null;    // { attr, skillKey, label }
 
 function stateKey(id){ return "cotg_sheet_" + id; }
+function defaultEquip(){ return { air:0, food:0, water:0, power:0, armorName:"", armorRating:"", weapons:[], gear:[] }; }
 function loadState(id){
-  try{ const s = JSON.parse(localStorage.getItem(stateKey(id))); if(s) return s; }catch(e){}
   const c = CREW[id];
-  return { hp:c.STR, stress:0, rad:0, act:0, secret:null, agendaOpen:false };
+  let s = null;
+  try{ s = JSON.parse(localStorage.getItem(stateKey(id))); }catch(e){}
+  if(!s) s = { hp:c.STR, stress:0, rad:0, act:0, secret:null, agendaOpen:false };
+  if(!s.equip) s.equip = defaultEquip();
+  else s.equip = Object.assign(defaultEquip(), s.equip);
+  return s;
 }
 function saveState(){ if(current){ try{ localStorage.setItem(stateKey(current), JSON.stringify(charState)); }catch(e){} } }
 
@@ -696,8 +873,79 @@ function renderSheet(){
   $("#rival").textContent = c.rival;
   buildAttrs();
   buildTrackers();
+  buildEquip();
   buildAgenda();
   renderSecret();
+}
+
+/* ============================================================
+   EQUIPMENT & INVENTORY (ALIEN RPG model)
+   ============================================================ */
+function buildEquip(){
+  const e = charState.equip;
+  // consumables
+  const cons = $("#consum"); cons.innerHTML="";
+  [["air","Air"],["food","Food"],["water","Water"],["power","Power"]].forEach(([k,lab])=>{
+    const d = document.createElement("div"); d.className="cons";
+    d.innerHTML = '<span class="cl">'+lab+'</span>'+
+      '<span class="stepper sm"><button data-d="-1" aria-label="'+lab+' down">−</button>'+
+      '<span class="mv">'+(e[k]||0)+'</span><button data-d="1" aria-label="'+lab+' up">+</button></span>';
+    d.querySelectorAll("button").forEach(b=> b.addEventListener("click", ()=>{
+      e[k] = Math.max(0, Math.min(20, (e[k]||0) + parseInt(b.getAttribute("data-d"),10)));
+      d.querySelector(".mv").textContent = e[k]; saveState();
+    }));
+    cons.appendChild(d);
+  });
+  // armor
+  $("#armorName").value = e.armorName||"";
+  $("#armorRating").value = e.armorRating||"";
+  // weapons + gear
+  renderWeapons();
+  renderGear();
+}
+function renderWeapons(){
+  const e = charState.equip, tb = $("#wBody"); tb.innerHTML="";
+  const cols = [["name","wname",""],["bonus","","+0"],["damage","","0"],["range","","—"],["reloads","","0"]];
+  e.weapons.forEach((w,i)=>{
+    const tr = document.createElement("tr");
+    cols.forEach(([field,cls,ph])=>{
+      const td=document.createElement("td");
+      const inp=document.createElement("input");
+      inp.className=cls; inp.value=w[field]||""; inp.placeholder=ph; inp.setAttribute("aria-label","weapon "+field);
+      inp.addEventListener("input", ()=>{ w[field]=inp.value; saveState(); });
+      td.appendChild(inp); tr.appendChild(td);
+    });
+    const rm=document.createElement("td"); rm.className="rm";
+    const rb=document.createElement("button"); rb.textContent="✕"; rb.setAttribute("aria-label","remove weapon");
+    rb.addEventListener("click", ()=>{ e.weapons.splice(i,1); saveState(); renderWeapons(); });
+    rm.appendChild(rb); tr.appendChild(rm);
+    tb.appendChild(tr);
+  });
+}
+function renderGear(){
+  const e = charState.equip, ul = $("#gearList"); ul.innerHTML="";
+  e.gear.forEach((g,i)=>{
+    const li=document.createElement("li");
+    li.innerHTML='<span>'+esc(g.name)+' <span class="gw">'+(g.heavy?"· heavy (2)":"· 1")+'</span></span>';
+    const rb=document.createElement("button"); rb.textContent="✕"; rb.setAttribute("aria-label","remove item");
+    rb.addEventListener("click", ()=>{ e.gear.splice(i,1); saveState(); renderGear(); });
+    li.appendChild(rb); ul.appendChild(li);
+  });
+  const load = e.gear.reduce((n,g)=> n + (g.heavy?2:1), 0);
+  const limit = CREW[current].STR;
+  const el = $("#encum");
+  el.textContent = "Encumbrance "+load+" / "+limit;
+  el.classList.toggle("over", load>limit);
+}
+function wireEquip(){
+  $("#armorName").addEventListener("input", ()=>{ if(charState.equip){ charState.equip.armorName=$("#armorName").value; saveState(); } });
+  $("#armorRating").addEventListener("input", ()=>{ if(charState.equip){ charState.equip.armorRating=$("#armorRating").value; saveState(); } });
+  $("#wAdd").addEventListener("click", ()=>{ if(!charState.equip) return;
+    charState.equip.weapons.push({ name:"", bonus:"", damage:"", range:"", reloads:"" }); saveState(); renderWeapons(); });
+  const addGear = ()=>{ if(!charState.equip) return; const v=$("#gearIn").value.trim(); if(!v) return;
+    charState.equip.gear.push({ name:v, heavy:$("#gearHeavy").checked }); $("#gearIn").value=""; $("#gearHeavy").checked=false; saveState(); renderGear(); };
+  $("#gearAdd").addEventListener("click", addGear);
+  $("#gearIn").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addGear(); } });
 }
 
 function buildAttrs(){
@@ -1003,6 +1251,7 @@ function initRoom(){
 (function boot(){
   buildCards();
   initRoom();
+  wireEquip();
   const params = new URLSearchParams(location.search);
   let start = params.get("char");
   if(!start){ try{ start = localStorage.getItem("cotg_last_char"); }catch(e){} }
