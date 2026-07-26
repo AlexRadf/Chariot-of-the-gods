@@ -147,6 +147,12 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .wtable td.rm button{ border:0; color:var(--faint); padding:2px 6px; font-size:14px; }
 .wtable td.rm button:hover{ color:var(--alert); background:none; }
 .eq-add{ margin-top:6px; font-size:12px; padding:.4em .8em; }
+.catadd{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.catadd select{ flex:1; min-width:180px; background:var(--crt); border:1px solid var(--faint); color:var(--phos);
+  font-family:inherit; font-size:13px; padding:.5em; }
+.catadd select optgroup{ color:var(--amber); background:var(--crt); }
+.catadd select option{ color:var(--phos); background:var(--crt); }
+.catadd .eq-add{ margin-top:0; }
 .armor-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px; color:var(--dim); }
 .armor-row input{ background:var(--crt); border:1px solid var(--faint); color:var(--phos); font-family:inherit; font-size:13px; padding:.4em .6em; }
 .armor-row input.aname{ flex:1; min-width:120px; }
@@ -432,6 +438,12 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
   <section class="panel">
     <h2>Equipment &amp; Inventory</h2>
 
+    <div class="eq-h">Quick add</div>
+    <div class="catadd">
+      <select id="catSel" aria-label="Item catalogue"></select>
+      <button class="eq-add" id="catAdd">Add</button>
+    </div>
+
     <div class="eq-h">Consumables</div>
     <div class="consum" id="consum"></div>
 
@@ -466,7 +478,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 
   <div class="footbar">
     <span class="net">Room <span class="roombox"><input id="roomIn" spellcheck="false"></span> · sync <b id="netDot">·</b></span>
-    <span><a href="../">◄ Terminal</a> · <a href="../display/">Main display</a> · <a href="../tracker/">Motion tracker</a></span>
+    <span><a href="../map/">▦ Ship map</a> · <a href="../">◄ Terminal</a> · <a href="../display/">Main display</a> · <a href="../tracker/">Motion tracker</a></span>
   </div>
 </div>
 
@@ -892,6 +904,54 @@ const CRIT_MODS = {
 /* Filled at boot from the reference table: { 11:{name,fatal,effect}, … } */
 const CRIT_INFO = {};
 
+/* Equipment catalogue for one-tap adding. Weapons carry bonus/damage/range/reloads
+   and drop into the weapons table; everything else drops into the gear list.
+   "Montero / scenario" items are the gear listed in Chariot of the Gods; "Standard"
+   is generic Frontier kit. Weapon stats follow the ALIEN RPG core weapon tables. */
+const CATALOG = {
+  "Weapons": [
+    { name:"M4A3 Service Pistol", bonus:"+2", damage:"1", range:"Medium", reloads:"1" },
+    { name:"Rexim RXF-M5 EVA Pistol", bonus:"+1", damage:"1", range:"Short", reloads:"3" },
+    { name:".357 Magnum Revolver", bonus:"+1", damage:"2", range:"Medium", reloads:"2" },
+    { name:"Armat M41A Pulse Rifle", bonus:"+1", damage:"2", range:"Long", reloads:"2" },
+    { name:"Weyland Storm Rifle (heavy)", bonus:"0", damage:"2", range:"Long", reloads:"1" },
+    { name:"Armat 37A2 12ga Shotgun", bonus:"+2", damage:"2", range:"Short", reloads:"2" },
+    { name:"Watatsumi DV-303 Bolt Gun", bonus:"+1", damage:"2", range:"Short", reloads:"4" },
+    { name:"M240 Incinerator Unit", bonus:"+1", damage:"Fire", range:"Short", reloads:"2" },
+    { name:"SpaceSub ASSO-400 Harpoon Gun", bonus:"+1", damage:"2", range:"Short", reloads:"" },
+    { name:"Cutting Torch", bonus:"+1", damage:"2", range:"Engaged", reloads:"" },
+    { name:"Stun Baton", bonus:"+2", damage:"1", range:"Engaged", reloads:"" },
+    { name:"Maintenance Jack", bonus:"+2", damage:"1", range:"Engaged", reloads:"" },
+    { name:"Combat Knife", bonus:"+2", damage:"1", range:"Engaged", reloads:"" }
+  ],
+  "Montero / scenario gear": [
+    { name:"IRC Mk.50 Compression Suit (Air 5)" },
+    { name:"M314 Motion Tracker" },
+    { name:"P-5000 Power Loader", heavy:true },
+    { name:"Personal Medkit" },
+    { name:"Surgical Kit" },
+    { name:"Personal Data Tablet" },
+    { name:"Encrypted Key Card" },
+    { name:"Ocular Stimulants (D6 doses)" }
+  ],
+  "Standard gear": [
+    { name:"Flashlight" },
+    { name:"Compression Suit (Air Supply)" },
+    { name:"Personal Medkit" },
+    { name:"Signal Flare" },
+    { name:"Rope (10 m)" },
+    { name:"Rations (1 shift)" },
+    { name:"Neversleep Pills" },
+    { name:"Hand Welder" },
+    { name:"Sample Container" },
+    { name:"Comms Headset" },
+    { name:"Binoculars" },
+    { name:"Duct Tape" }
+  ]
+};
+const CAT_INDEX = [];   // flat list, filled at boot, referenced by <option value>
+
+
 /* GM-assigned secret roles, unlocked by codeword. */
 const SECRETS = {
   LUCAS: {
@@ -1061,7 +1121,38 @@ function renderGear(){
   el.textContent = "Encumbrance "+load+" / "+limit;
   el.classList.toggle("over", load>limit);
 }
+function buildCatalog(){
+  const sel = $("#catSel"); sel.innerHTML="";
+  const ph = document.createElement("option"); ph.value=""; ph.textContent="— choose an item —"; sel.appendChild(ph);
+  Object.keys(CATALOG).forEach(group=>{
+    const og = document.createElement("optgroup"); og.label = group;
+    CATALOG[group].forEach(item=>{
+      const idx = CAT_INDEX.push(Object.assign({ _group:group }, item)) - 1;
+      const o = document.createElement("option"); o.value = idx;
+      o.textContent = item.name + (item.damage!=null ? "  ("+item.bonus+"/"+item.damage+"/"+item.range+")" : "");
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+}
+function catAdd(){
+  if(!charState.equip) return;
+  const idx = $("#catSel").value; if(idx==="") return;
+  const item = CAT_INDEX[parseInt(idx,10)]; if(!item) return;
+  if(item._group==="Weapons"){
+    charState.equip.weapons.push({ name:item.name, bonus:item.bonus||"", damage:item.damage||"", range:item.range||"", reloads:item.reloads||"" });
+    renderWeapons();
+  } else {
+    charState.equip.gear.push({ name:item.name, heavy:!!item.heavy });
+    renderGear();
+  }
+  saveState();
+  $("#catSel").value="";
+}
+
 function wireEquip(){
+  $("#catAdd").addEventListener("click", catAdd);
+  $("#catSel").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); catAdd(); } });
   $("#armorName").addEventListener("input", ()=>{ if(charState.equip){ charState.equip.armorName=$("#armorName").value; saveState(); } });
   $("#armorRating").addEventListener("input", ()=>{ if(charState.equip){ charState.equip.armorRating=$("#armorRating").value; saveState(); } });
   $("#wAdd").addEventListener("click", ()=>{ if(!charState.equip) return;
@@ -1509,6 +1600,7 @@ function buildCritIndex(){
 (function boot(){
   buildCards();
   buildCritIndex();
+  buildCatalog();
   initRoom();
   wireEquip();
   const params = new URLSearchParams(location.search);

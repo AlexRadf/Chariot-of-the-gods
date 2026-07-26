@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#040906">
+<title>USCSS MONTERO — DECK PLANS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   SHIP MAP VIEWER — Chariot of the Gods.
+   A pan/zoom viewer for the ship deck plans. Drag to pan,
+   wheel or pinch to zoom, or use the on-screen controls.
+   ============================================================ */
+:root{
+  --phos:#8affb0; --dim:#3d7a53; --faint:#1d3b2a;
+  --crt:#040906; --raise:#081209; --amber:#f0b23e;
+  --glow:0 0 6px rgba(138,255,176,.45);
+}
+*{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html,body{ height:100%; overflow:hidden; }
+body{
+  background:var(--crt); color:var(--phos);
+  font-family:'Share Tech Mono',ui-monospace,monospace; text-shadow:var(--glow);
+  user-select:none; -webkit-user-select:none; -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:""; position:fixed; inset:0; z-index:20; pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+
+.bar{ position:fixed; top:0; left:0; right:0; z-index:15;
+  display:flex; align-items:center; gap:12px; justify-content:space-between;
+  padding:calc(8px + env(safe-area-inset-top)) 14px 8px; background:linear-gradient(#040906,rgba(4,9,6,.7),transparent);
+  pointer-events:none; }
+.bar .id{ font-family:'VT323',monospace; font-size:clamp(20px,4.5vw,30px); letter-spacing:.05em; }
+.bar .id small{ display:block; font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--dim); letter-spacing:.16em; }
+.bar a{ color:var(--dim); text-decoration:none; font-size:12px; letter-spacing:.1em; text-transform:uppercase; pointer-events:auto; }
+.bar a:hover{ color:var(--amber); }
+
+#stage{ position:fixed; inset:0; overflow:hidden; touch-action:none; cursor:grab; }
+#stage.drag{ cursor:grabbing; }
+#img{ position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform;
+  image-rendering:auto; filter:drop-shadow(0 0 12px rgba(138,255,176,.06)); }
+
+.ctrls{ position:fixed; z-index:15; right:12px; bottom:calc(14px + env(safe-area-inset-bottom));
+  display:flex; flex-direction:column; gap:8px; }
+.ctrls button{ width:46px; height:46px; font-size:22px; background:rgba(6,15,10,.9);
+  border:1px solid var(--faint); color:var(--phos); font-family:inherit; text-shadow:var(--glow);
+  cursor:pointer; line-height:1; }
+.ctrls button:active{ background:var(--faint); }
+.ctrls .fit{ font-size:11px; letter-spacing:.06em; }
+.hint{ position:fixed; z-index:15; left:14px; bottom:calc(14px + env(safe-area-inset-bottom));
+  font-size:10px; color:var(--faint); letter-spacing:.1em; text-transform:uppercase; max-width:60vw; line-height:1.5; }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <span class="id">SHIP MAP<small>USCSS MONTERO · DECK A</small></span>
+  <span><a href="../sheet/">◆ Crew sheets</a> · <a href="../display/">▲ Display</a> · <a href="../">◄ Terminal</a></span>
+</div>
+
+<div id="stage">
+  <img id="img" src="montero-deck-a.png" alt="USCSS Montero deck plan" draggable="false">
+</div>
+
+<div class="ctrls">
+  <button id="zin" aria-label="zoom in">＋</button>
+  <button id="zout" aria-label="zoom out">−</button>
+  <button id="fit" class="fit" aria-label="fit to screen">FIT</button>
+</div>
+<div class="hint">Drag to pan · pinch or wheel to zoom</div>
+
+<script>
+const stage = document.getElementById("stage");
+const img = document.getElementById("img");
+let scale=1, tx=0, ty=0, min=0.2, max=6, natW=0, natH=0;
+
+function apply(){ img.style.transform = "translate("+tx+"px,"+ty+"px) scale("+scale+")"; }
+function fit(){
+  const w=stage.clientWidth, h=stage.clientHeight;
+  if(!natW) return;
+  scale = Math.min(w/natW, h/natH)*0.96;
+  min = scale*0.6;
+  tx = (w - natW*scale)/2;
+  ty = (h - natH*scale)/2;
+  apply();
+}
+function clampZoom(s){ return Math.max(min, Math.min(max, s)); }
+function zoomAt(cx, cy, factor){
+  const ns = clampZoom(scale*factor);
+  const k = ns/scale;
+  tx = cx - (cx - tx)*k;
+  ty = cy - (cy - ty)*k;
+  scale = ns; apply();
+}
+
+img.addEventListener("load", ()=>{ natW=img.naturalWidth; natH=img.naturalHeight; img.style.width=natW+"px"; img.style.height=natH+"px"; fit(); });
+if(img.complete && img.naturalWidth){ natW=img.naturalWidth; natH=img.naturalHeight; img.style.width=natW+"px"; img.style.height=natH+"px"; fit(); }
+addEventListener("resize", fit);
+
+/* wheel zoom */
+stage.addEventListener("wheel", e=>{ e.preventDefault();
+  const r=stage.getBoundingClientRect();
+  zoomAt(e.clientX-r.left, e.clientY-r.top, e.deltaY<0?1.12:0.89);
+}, {passive:false});
+
+/* pointer drag + pinch */
+const pts=new Map(); let pinchStart=0, pinchScale=1;
+stage.addEventListener("pointerdown", e=>{ stage.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); stage.classList.add("drag"); });
+stage.addEventListener("pointermove", e=>{
+  if(!pts.has(e.pointerId)) return;
+  const prev=pts.get(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===1){ tx += e.clientX-prev.x; ty += e.clientY-prev.y; apply(); }
+  else if(pts.size===2){
+    const a=[...pts.values()]; const d=Math.hypot(a[0].x-a[1].x, a[0].y-a[1].y);
+    if(!pinchStart){ pinchStart=d; pinchScale=scale; }
+    const r=stage.getBoundingClientRect();
+    const mx=(a[0].x+a[1].x)/2-r.left, my=(a[0].y+a[1].y)/2-r.top;
+    const target=clampZoom(pinchScale*(d/pinchStart));
+    zoomAt(mx,my, target/scale);
+  }
+});
+function up(e){ pts.delete(e.pointerId); if(pts.size<2) pinchStart=0; if(!pts.size) stage.classList.remove("drag"); }
+stage.addEventListener("pointerup", up);
+stage.addEventListener("pointercancel", up);
+
+document.getElementById("zin").addEventListener("click", ()=> zoomAt(stage.clientWidth/2, stage.clientHeight/2, 1.25));
+document.getElementById("zout").addEventListener("click", ()=> zoomAt(stage.clientWidth/2, stage.clientHeight/2, 0.8));
+document.getElementById("fit").addEventListener("click", fit);
+/* double-tap / double-click to toggle zoom */
+let lastTap=0;
+stage.addEventListener("dblclick", e=>{ const r=stage.getBoundingClientRect(); zoomAt(e.clientX-r.left, e.clientY-r.top, scale<1?2:0.5); });
+</script>
+</body>
+</html>
