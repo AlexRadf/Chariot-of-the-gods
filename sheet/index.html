@@ -96,19 +96,20 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .attrs{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 /* keep Strength / Agility / Wits / Empathy as a 2×2 grid on phones too */
 @media (max-width:560px){
-  /* clear the 30px AGENDA/RULES edge tabs so nothing hides under them */
+  /* clear the 30px AGENDA/RULES edge tabs so nothing hides under them.
+     #sheet-prefixed so these win over the later base rules. */
   #sheet{ padding-left:34px; padding-right:34px; }
-  .attrs{ gap:8px; }
-  .attr .hd{ gap:7px; padding:8px 8px 5px; }
-  .attr .val{ width:42px; height:42px; font-size:32px; }
-  .attr .an{ font-size:12px; }
-  .attr .hd .cue{ display:none; }
-  .attr .skills{ padding:0 6px 6px; }
-  .skill{ font-size:11px; padding:6px 3px; gap:3px; }
-  .skill .sn{ line-height:1.2; letter-spacing:0; }
-  .skill .rt{ gap:4px; }
-  .skill .rt .cue{ display:none; }
-  .skill .sv{ font-size:17px; }
+  #sheet .attrs{ gap:8px; }
+  #sheet .attr .hd{ gap:6px; padding:8px 7px 5px; }
+  #sheet .attr .val{ width:38px; height:38px; font-size:28px; }
+  #sheet .attr .an{ font-size:12px; }
+  #sheet .attr .hd .cue{ display:none; }
+  #sheet .attr .skills{ padding:0 5px 6px; }
+  #sheet .skill{ font-size:11px; padding:6px 3px; gap:3px; }
+  #sheet .skill .sn{ line-height:1.2; letter-spacing:0; }
+  #sheet .skill .rt{ gap:4px; }
+  #sheet .skill .rt .cue{ display:none; }
+  #sheet .skill .sv{ font-size:16px; }
 }
 .attr{ border:1px solid var(--faint); min-width:0; }
 .attr .hd{ display:flex; align-items:center; gap:10px; padding:10px 10px 6px; cursor:pointer; }
@@ -806,11 +807,12 @@ const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
 /* ============================================================
    CREW DATA — the regenerated Montero crew.
    ============================================================ */
+/* [ key, full label, short label (shown in the tight attribute grid) ] */
 const SKILLS = {
-  STR:  [["closeCombat","Close Combat"],["heavyMachinery","Heavy Machinery"],["stamina","Stamina"]],
-  AGI:  [["rangedCombat","Ranged Combat"],["mobility","Mobility"],["piloting","Piloting"]],
-  WITS: [["observation","Observation"],["survival","Survival"],["comtech","Comtech"]],
-  EMP:  [["command","Command"],["manipulation","Manipulation"],["medicalAid","Medical Aid"]]
+  STR:  [["closeCombat","Close Combat","Close Cbt"],["heavyMachinery","Heavy Machinery","Heavy Mach"],["stamina","Stamina","Stamina"]],
+  AGI:  [["rangedCombat","Ranged Combat","Ranged Cbt"],["mobility","Mobility","Mobility"],["piloting","Piloting","Piloting"]],
+  WITS: [["observation","Observation","Observ."],["survival","Survival","Survival"],["comtech","Comtech","Comtech"]],
+  EMP:  [["command","Command","Command"],["manipulation","Manipulation","Manip."],["medicalAid","Medical Aid","Med Aid"]]
 };
 const ATTR_NAME = { STR:"Strength", AGI:"Agility", WITS:"Wits", EMP:"Empathy" };
 
@@ -1195,10 +1197,10 @@ function buildAttrs(){
     const div = document.createElement("div");
     div.className="attr";
     let sk = "";
-    SKILLS[a].forEach(([key,label])=>{
+    SKILLS[a].forEach(([key,label,short])=>{
       const v = c.skills[key]||0;
-      sk += '<div class="skill'+(v?' has':'')+'" data-attr="'+a+'" data-skill="'+key+'" tabindex="0" role="button">'+
-              '<span class="sn">'+label+'</span>'+
+      sk += '<div class="skill'+(v?' has':'')+'" data-attr="'+a+'" data-skill="'+key+'" tabindex="0" role="button" title="'+label+'">'+
+              '<span class="sn">'+(short||label)+'</span>'+
               '<span class="rt"><span class="cue">ROLL ▸</span><span class="sv">'+v+'</span></span>'+
             '</div>';
     });
