@@ -237,5 +237,6 @@ $("#idIn").addEventListener("keydown", e=>{ if(e.key==="Enter") submitId(); });
 
 addEventListener("pagehide", stopCamera);
 </script>
+<script>if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("../sw.js").catch(function(){});});}</script>
 </body>
 </html>
