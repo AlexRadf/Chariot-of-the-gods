@@ -269,5 +269,6 @@ function boot(){
 $("#start").addEventListener("click", boot);
 persistRoom();   // fill the field even before activation
 </script>
+<script>if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("../sw.js").catch(function(){});});}</script>
 </body>
 </html>
