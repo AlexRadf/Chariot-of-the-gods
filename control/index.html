@@ -107,8 +107,46 @@ body::before{
 .btn .prog{ position:absolute; left:0; bottom:0; height:3px; width:0; background:var(--alert); }
 .btn .hintl{ display:block; font-size:9px; color:var(--dim); letter-spacing:.1em; margin-top:4px; }
 
-/* embedded GM motion scope (blips + NPC roller in one place) */
-.scopeframe{ display:block; width:100%; height:min(60vh,460px); border:1px solid var(--faint);
+/* NPC / event dice roller — native to this page, kept well away from the scope */
+.rsel,.rlbl{ width:100%; background:#03130b; border:1px solid var(--faint); color:var(--phos);
+  font-family:inherit; text-shadow:var(--glow); font-size:14px; padding:.55em; margin-bottom:10px; }
+.rsel{ -webkit-appearance:none; appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+  background-position:calc(100% - 16px) 1.1em,calc(100% - 11px) 1.1em; background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
+.rsel:focus,.rlbl:focus{ outline:1px solid var(--amber); }
+.rsel option{ background:#03130b; color:var(--phos); } .rsel optgroup{ background:#03130b; color:var(--amber); }
+.rlbl::placeholder{ color:var(--faint); }
+.rsteps{ display:flex; gap:8px; margin-bottom:12px; }
+.rsteps .stp{ flex:1; }
+.rsteps .k{ font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; }
+.stepper{ display:flex; align-items:center; border:1px solid var(--faint); }
+.stepper button{ border:0; background:none; color:var(--phos); font-family:inherit; text-shadow:var(--glow);
+  font-size:18px; padding:.15em .5em; cursor:pointer; }
+.stepper .v{ flex:1; text-align:center; font-family:'VT323',monospace; font-size:22px; color:var(--phos); }
+.rroll{ width:100%; background:none; border:1px solid var(--phos); color:var(--phos); font-family:inherit;
+  text-shadow:var(--glow); font-size:16px; padding:.7em; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
+.rroll:active{ background:var(--faint); }
+.dice{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.die{ width:32px; height:32px; border:1px solid var(--dim); display:flex; align-items:center; justify-content:center;
+  font-family:'VT323',monospace; font-size:20px; color:var(--phos); }
+.die.stress{ border-color:var(--amber); color:var(--amber); }
+.die.six{ background:var(--phos); color:#03170c; text-shadow:none; }
+.die.stress.six{ background:var(--amber); color:#1a1102; }
+.die.one.stress{ border-color:var(--alert); color:var(--alert); }
+.tally{ margin-top:8px; min-height:1.2em; }
+.tally .s{ font-family:'VT323',monospace; font-size:26px; color:var(--phos); }
+.tally .s.zero{ color:var(--alert); }
+.tally .m{ color:var(--dim); font-size:12px; }
+.rbc{ display:flex; align-items:center; gap:8px; margin-top:12px; font-size:12px; color:var(--dim); }
+.rnote{ font-size:11px; color:var(--faint); line-height:1.5; margin-top:8px; }
+
+/* embedded GM motion scope — collapsible so it can't catch a stray tap */
+.card.collapsible > h2{ cursor:pointer; display:flex; justify-content:space-between; align-items:center; margin-bottom:0; }
+.card.collapsible.open > h2{ margin-bottom:10px; }
+.card .caret{ color:var(--dim); font-size:11px; letter-spacing:.08em; }
+.card.collapsible:not(.open) .scopeframe,
+.card.collapsible:not(.open) .scopehint{ display:none; }
+.scopeframe{ display:block; width:100%; height:min(58vh,440px); border:1px solid var(--faint);
   background:var(--crt); }
 .scopehint{ font-size:10px; color:var(--faint); letter-spacing:.06em; text-transform:uppercase;
   line-height:1.6; margin-top:8px; }
@@ -146,12 +184,48 @@ body::before{
   </div>
 
   <div class="card">
-    <h2>Motion Tracker · Blips &amp; Rolls</h2>
-    <iframe class="scopeframe" id="scope" title="GM motion tracker" allow="autoplay"></iframe>
-    <div class="scopehint">Tap the scope to drop a contact · drag to move · tap it to remove.
-      Blips mirror live to the players' trackers and the table display on this room.
-      ⚄ Roll opens the NPC / event dice roller. ·
-      <a id="gmlink" href="#" target="_blank">Open full-screen ▲</a></div>
+    <h2>NPC / Event Roll</h2>
+    <select class="rsel" id="npcPreset">
+      <option value="">— Custom —</option>
+      <optgroup label="Xenomorph life-cycle">
+        <option data-label="Facehugger · Pounce &amp; implant" data-base="8">Facehugger — Pounce &amp; implant (8)</option>
+        <option data-label="Facehugger · Resist removal" data-base="10">Facehugger — Resist removal (10)</option>
+        <option data-label="Chestburster · Burst free" data-base="6">Chestburster — Burst free (6)</option>
+        <option data-label="Adult Alien · Ambush" data-base="10">Adult Alien — Ambush / stealth (10)</option>
+        <option data-label="Adult Alien · Claw" data-base="9">Adult Alien — Claw / strike (9)</option>
+        <option data-label="Adult Alien · Grab &amp; drag" data-base="8">Adult Alien — Grab &amp; drag off (8)</option>
+        <option data-label="Adult Alien · Tail stab" data-base="8">Adult Alien — Tail stab (8)</option>
+        <option data-label="Adult Alien · Inner jaw" data-base="10">Adult Alien — Bite / inner jaw (10)</option>
+      </optgroup>
+      <optgroup label="Crew, synthetics &amp; company">
+        <option data-label="Synthetic · Close combat" data-base="8">Synthetic (Lucas) — Close combat (8)</option>
+        <option data-label="Synthetic · Deceive" data-base="7">Synthetic (Lucas) — Deceive / manipulate (7)</option>
+        <option data-label="Synthetic · Pistol" data-base="6">Synthetic (Lucas) — Pistol (6)</option>
+        <option data-label="Cronus survivor · Firearm" data-base="6">Cronus survivor — Firearm (6)</option>
+        <option data-label="Cronus survivor · Melee" data-base="5">Cronus survivor — Melee / grab (5)</option>
+        <option data-label="Panicked crew · Wild shot" data-base="4">Panicked crew — Wild shot (4)</option>
+        <option data-label="Company agent · Command" data-base="6">Company agent — Command / manipulate (6)</option>
+      </optgroup>
+      <optgroup label="Generic difficulty">
+        <option data-label="Trivial NPC" data-base="2">Trivial NPC (2)</option>
+        <option data-label="Weak NPC" data-base="4">Weak NPC (4)</option>
+        <option data-label="Average NPC" data-base="6">Average NPC (6)</option>
+        <option data-label="Skilled NPC" data-base="8">Skilled NPC (8)</option>
+        <option data-label="Elite NPC" data-base="10">Elite NPC (10)</option>
+        <option data-label="Environment / event" data-base="5">Environment / event (5)</option>
+      </optgroup>
+    </select>
+    <input class="rlbl" id="npcLabel" placeholder="Who / what (shown on the table feed)" autocomplete="off" spellcheck="false">
+    <div class="rsteps">
+      <div class="stp"><div class="k">Base dice</div><div class="stepper" id="npcBase"><button class="dn" aria-label="base down">−</button><span class="v">6</span><button class="up" aria-label="base up">＋</button></div></div>
+      <div class="stp"><div class="k">Stress</div><div class="stepper" id="npcStress"><button class="dn" aria-label="stress down">−</button><span class="v">0</span><button class="up" aria-label="stress up">＋</button></div></div>
+      <div class="stp"><div class="k">Modifier</div><div class="stepper" id="npcMod"><button class="dn" aria-label="mod down">−</button><span class="v">0</span><button class="up" aria-label="mod up">＋</button></div></div>
+    </div>
+    <button class="rroll" id="npcRollBtn">⚄ Roll</button>
+    <div class="dice" id="npcDice"></div>
+    <div class="tally" id="npcTally"></div>
+    <label class="rbc"><input type="checkbox" id="npcBroadcast" checked> Show the result on the table feed</label>
+    <div class="rnote">Presets fill the pool in one tap — nudge any stepper after. Each 6 is a success.</div>
   </div>
 
   <div class="card">
@@ -178,10 +252,20 @@ body::before{
     </div>
   </div>
 
+  <div class="card collapsible" id="scopeCard">
+    <h2 id="scopeToggle">Motion Tracker · Blips <span class="caret" id="scopeCaret">▸ SHOW</span></h2>
+    <iframe class="scopeframe" id="scope" title="GM motion tracker" allow="autoplay"></iframe>
+    <div class="scopehint">Tap the scope to drop a contact · drag to move · tap it to remove.
+      Blips mirror live to the players' trackers and the table display on this room.
+      Kept collapsed so a stray tap can't drop a blip. ·
+      <a id="gmlink" href="#" target="_blank">Open full-screen ▲</a></div>
+  </div>
+
   <div class="feed" id="feed">STANDBY</div>
   <div class="foot"><a href="../display/">Main display ▲</a> · <a href="../tracker/">Motion tracker ▲</a> · <a href="../scan/">Scan card ◫</a></div>
 </div>
 
+<script src="../assets/rollbus.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 
@@ -199,16 +283,25 @@ function persistRoom(){
   const gm = new URL("../tracker/?gm=1&room="+encodeURIComponent(room), location.href).href;
   $("#gmlink").href = gm;
 }
-/* the embedded GM scope is only loaded once the console is activated, so it
-   doesn't start pushing blips to the room before the GM is ready. */
+/* the embedded GM scope is collapsed by default and only loaded the first time
+   it's opened, so it doesn't grab taps or push blips before the GM wants it. */
+let scopeLoaded=false;
 function syncScope(){
   const f=$("#scope"); if(!f) return;
   f.src = new URL("../tracker/?gm=1&embed=1&room="+encodeURIComponent(room), location.href).href;
+  scopeLoaded=true;
 }
+function toggleScope(){
+  const c=$("#scopeCard"), open=c.classList.toggle("open");
+  $("#scopeCaret").textContent = open ? "▾ HIDE" : "▸ SHOW";
+  if(open && !scopeLoaded) syncScope();
+}
+$("#scopeToggle").addEventListener("click", toggleScope);
 $("#room").addEventListener("change", e=>{
   const v=e.target.value.trim().toLowerCase().replace(/[^a-z0-9\-]/g,"");
   room = v || room; persistRoom(); relayConnect();
-  if($("#app").classList.contains("on")) syncScope();
+  if(typeof RollBus!=="undefined") RollBus.setRoom(room);
+  if(scopeLoaded) syncScope();
   flash("ROOM SET · "+room, "ok");
 });
 $("#bCopy").addEventListener("click", async ()=>{
@@ -286,10 +379,50 @@ $("#bAbort").addEventListener("click", ()=>{ setArmed(false); send("ABORT","ABOR
 
 function fmt(s){ return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
 
+/* -------------------- NPC / event dice roller -------------------- */
+function d6r(){ return 1+Math.floor(Math.random()*6); }
+function stepper(id, val, min, max){
+  const w=$(id), v=w.querySelector(".v"); let n=val; v.textContent=n; w._v=n;
+  const set=x=>{ n=Math.max(min,Math.min(max,x)); v.textContent=n; w._v=n; }; w._set=set;
+  w.querySelector(".dn").addEventListener("click", ()=>set(n-1));
+  w.querySelector(".up").addEventListener("click", ()=>set(n+1));
+}
+stepper("#npcBase", 6, 0, 20);
+stepper("#npcStress", 0, 0, 20);
+stepper("#npcMod", 0, -5, 10);
+$("#npcPreset").addEventListener("change", e=>{
+  const o=e.target.selectedOptions[0];
+  if(!o || !o.dataset.base) return;                 // "— Custom —" leaves everything as-is
+  $("#npcLabel").value = o.dataset.label || o.textContent.replace(/\s*\(\d+\)\s*$/,"");
+  $("#npcBase")._set(parseInt(o.dataset.base,10)||0);
+  $("#npcStress")._set(parseInt(o.dataset.stress||"0",10)||0);
+  $("#npcMod")._set(0);
+});
+$("#npcRollBtn").addEventListener("click", ()=>{
+  const base = Math.max(0, ($("#npcBase")._v||0) + ($("#npcMod")._v||0));
+  const stress = Math.max(0, $("#npcStress")._v||0);
+  const bd=[], sd=[];
+  for(let i=0;i<base;i++) bd.push(d6r());
+  for(let i=0;i<stress;i++) sd.push(d6r());
+  const succ = bd.filter(v=>v===6).length + sd.filter(v=>v===6).length;
+  const ones = sd.filter(v=>v===1).length;
+  const wrap=$("#npcDice"); wrap.innerHTML="";
+  const die=(v,s)=>{ const d=document.createElement("div"); d.className="die"+(s?" stress":"")+(v===6?" six":"")+(v===1?" one":""); d.textContent=v; return d; };
+  bd.forEach(v=> wrap.appendChild(die(v,false)));
+  sd.forEach(v=> wrap.appendChild(die(v,true)));
+  $("#npcTally").innerHTML = '<span class="s'+(succ===0?' zero':'')+'">'+succ+'</span> success'+(succ===1?'':'es')+
+    ' <span class="m">· '+bd.length+' base + '+sd.length+' stress'+(ones?(' · '+ones+' ✦1'):'')+'</span>';
+  const label = ($("#npcLabel").value||"").trim() || "GM";
+  if($("#npcBroadcast").checked && typeof RollBus!=="undefined"){
+    RollBus.publish({ kind:"roll", who:label, label:"NPC / event", successes:succ, base:bd, stress:sd, stressOnes:ones, pushed:0 });
+  }
+});
+
 /* -------------------- boot -------------------- */
 function boot(){
   $("#start").style.display="none"; $("#app").classList.add("on");
-  persistRoom(); relayConnect(); syncScope();
+  persistRoom(); relayConnect();
+  if(typeof RollBus!=="undefined") RollBus.config({ room });   // join the roll room so NPC rolls reach the table
 }
 $("#start").addEventListener("click", boot);
 persistRoom();   // fill the field even before activation
