@@ -140,6 +140,13 @@ need for play lives on their own device.
   dice, count 6s for successes, **push** to reroll for +1 stress, and make a
   **Panic Roll** when a pushed stress die comes up 1. Every roll is broadcast to
   the room (see [At the table](#at-the-table-how-the-screens-connect)).
+- **Weapons that roll themselves.** Each weapon in the kit is a card with a
+  **⌖ Fire** button: tap it and the roller opens on the right skill — **Ranged
+  Combat** for anything with a firing range, **Close Combat** for Engaged-range
+  gear — with the weapon's **bonus already applied**. Ranged weapons also track
+  **shots fired** and **reloads left**; tap **⟳ Reload** when you swap a mag
+  (it resets the shot count and spends a reload), so weapon usage and ammo are
+  easy to follow at the table.
 - **A rules window, one tap away.** An *Open ALIEN rules window* button (also a
   *rules ▸* link by the dice and a *Rules* link in the footer) pops up the full
   **Game Mother Screen** quick reference as a toggle overlay — dice & pushing,
