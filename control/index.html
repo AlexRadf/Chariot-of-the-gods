@@ -136,6 +136,7 @@ body::before{
       <button class="mini" id="bCopy">Copy link</button>
     </div>
     <div class="dlink">Open on the table screen: <a id="dlink" href="#" target="_blank"></a></div>
+    <div class="dlink">Your GM tracker (place blips): <a id="gmlink" href="#" target="_blank"></a></div>
   </div>
 
   <div class="card">
@@ -180,6 +181,8 @@ function persistRoom(){
   $("#room").value = room;
   const dl = new URL("../display/?room="+encodeURIComponent(room), location.href).href;
   const a=$("#dlink"); a.href=dl; a.textContent = "…/display/?room="+room;
+  const gm = new URL("../tracker/?gm=1&room="+encodeURIComponent(room), location.href).href;
+  const g=$("#gmlink"); g.href=gm; g.textContent = "…/tracker/?gm=1&room="+room;
 }
 $("#room").addEventListener("change", e=>{
   const v=e.target.value.trim().toLowerCase().replace(/[^a-z0-9\-]/g,"");
