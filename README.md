@@ -194,9 +194,13 @@ whole screen into the **M314 motion detector** (and back). Open the display with
 on the [GM Control](#screen-4--gm-control--self-destruct-phone-portrait) console
 show up on the table screen live. The embedded scope is **muted**, and the ship's
 own reactor hum **drops out while the tracker tab is open** so it doesn't play
-underneath. A stardate ticks and the readouts drift slowly. Crew dice rolls land
-in a **`SYSTEM LOG` panel top-right**; the rotating MU/TH/UR **notices sit
-bottom-right**.
+underneath. A stardate ticks and the readouts drift slowly.
+
+The screen is a **2×2 panel grid**: **Ship Systems** (top-left) and **Vessel
+Registry** (top-right) up top, **Notices** (bottom-left, the rotating MU/TH/UR
+messages) and the **Roll Log** (bottom-right) beneath. Every dice roll made at the
+table — crew skill checks, pushes, panics, and the GM's NPC rolls — drops into the
+Roll Log newest-first, with a blip.
 
 On the very first tap the screen runs a short **power-on diagnostic sweep**
 (systems checked off with a progress bar) before the display comes up.
@@ -232,12 +236,12 @@ for the other.
 The cards run top-to-bottom: **pairing → NPC / Event Roll → ship state →
 self-destruct → Motion Tracker**.
 
-**NPC / Event Roll** (near the top): pick a **preset** (facehugger, adult Alien
-attacks, synthetic, Cronus survivors, or a generic difficulty ladder) to fill the
-label and dice pool in one tap, or dial base + stress dice and a modifier by hand,
-then roll. Each **6** is a success; the result (optionally) pushes to the table
-dice feed for everyone to see. Presets are starting points — nudge any stepper
-before you roll.
+**NPC / Event Roll** (near the top): tap one of the **foe chips** — Facehugger,
+Adult Alien, Chestburster, Synthetic, Survivor, or a Weak / Average / Elite NPC —
+and it sets the dice pool and the name in one tap. Adjust the **Dice** or **Stress**
+steppers if you want, then hit **⚄ Roll**. Each **6** is a success; the result
+(optionally) pushes to the table's **Roll Log** for everyone to see. Two taps to a
+roll, no typing.
 
 | Control | Effect on the display |
 |---------|-----------------------|
