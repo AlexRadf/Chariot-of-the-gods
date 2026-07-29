@@ -162,6 +162,37 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .wtable td.rm{ width:26px; text-align:center; }
 .wtable td.rm button{ border:0; color:var(--faint); padding:2px 6px; font-size:14px; }
 .wtable td.rm button:hover{ color:var(--alert); background:none; }
+/* weapon cards — each with a Fire button that rolls the right combat skill */
+.wlist{ display:flex; flex-direction:column; gap:8px; }
+.wcard{ border:1px solid var(--faint); padding:8px 9px; display:flex; flex-direction:column; gap:7px; }
+.wcard.empty-ammo{ border-color:var(--alert); }
+.wc-top{ display:flex; gap:8px; align-items:center; }
+.wc-top input.wname{ flex:1; background:transparent; border:0; border-bottom:1px solid var(--faint);
+  color:var(--phos); font-family:inherit; font-size:14px; padding:3px 2px; }
+.wc-top input.wname:focus{ outline:none; border-bottom-color:var(--amber); }
+.wc-top .wc-x{ border:0; color:var(--faint); font-size:15px; padding:2px 6px; background:none; cursor:pointer; }
+.wc-top .wc-x:hover{ color:var(--alert); }
+.wc-stats{ display:flex; gap:6px; }
+.wc-stats label{ flex:1; display:flex; flex-direction:column; gap:2px; font-size:9px; color:var(--dim);
+  text-transform:uppercase; letter-spacing:.06em; text-align:center; }
+.wc-stats input{ background:var(--crt); border:1px solid var(--faint); color:var(--phos);
+  font-family:inherit; font-size:12.5px; padding:4px; text-align:center; }
+.wc-stats input:focus{ outline:1px solid var(--amber); }
+.wc-fire{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.fireBtn{ flex:1; min-width:130px; border:1px solid var(--amber); color:var(--amber); background:none;
+  font-family:inherit; font-size:14px; letter-spacing:.08em; text-transform:uppercase; padding:.6em .5em; cursor:pointer; }
+.fireBtn:active{ background:var(--faint); }
+.fireBtn .fk{ display:block; color:var(--dim); font-size:9.5px; letter-spacing:.05em; margin-top:2px; }
+.ammo{ display:flex; align-items:center; gap:10px; font-size:10px; color:var(--dim);
+  text-transform:uppercase; letter-spacing:.05em; }
+.ammo .grp{ display:flex; align-items:center; gap:4px; }
+.ammo b{ color:var(--phos); font-family:'VT323',monospace; font-size:16px; }
+.ammo .reloadBtn{ border:1px solid var(--faint); color:var(--phos); background:none; font-family:inherit;
+  font-size:11px; padding:.45em .7em; text-transform:uppercase; letter-spacing:.05em; cursor:pointer; }
+.ammo .reloadBtn:active{ background:var(--faint); }
+.ammo .reloadBtn:disabled{ opacity:.4; cursor:default; }
+.ammo .st{ border:1px solid var(--faint); color:var(--phos); background:none; font-family:inherit;
+  font-size:14px; line-height:1; padding:.15em .5em; cursor:pointer; }
 .eq-add{ margin-top:6px; font-size:12px; padding:.4em .8em; }
 .catadd{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .catadd select{ flex:1; min-width:180px; background:var(--crt); border:1px solid var(--faint); color:var(--phos);
@@ -509,11 +540,9 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
     <div class="consum" id="consum"></div>
 
     <div class="eq-h">Weapons</div>
-    <table class="wtable">
-      <thead><tr><th class="wname">Weapon</th><th>Bonus</th><th>Damage</th><th>Range</th><th>Reloads</th><th></th></tr></thead>
-      <tbody id="wBody"></tbody>
-    </table>
+    <div class="wlist" id="wBody"></div>
     <button class="eq-add" id="wAdd">+ Add weapon</button>
+    <small style="color:var(--faint); display:block; margin-top:6px">Tap <b style="color:var(--amber)">Fire</b> to roll the weapon — it uses Ranged or Close Combat with the weapon's bonus baked in. Ranged weapons track shots fired and reloads left; tap <b>Reload</b> when you swap a mag.</small>
 
     <div class="eq-h">Armor</div>
     <div class="armor-row">
@@ -1261,24 +1290,84 @@ function buildEquip(){
   renderWeapons();
   renderGear();
 }
+/* a weapon at Engaged range (or with no range set) is a Close Combat attack;
+   anything with a firing range rolls Ranged Combat. */
+function skillForWeapon(w){
+  const rng = String(w.range||"").trim().toLowerCase();
+  if(rng==="" || rng.indexOf("engaged")===0) return { attr:"STR", skill:"closeCombat" };
+  return { attr:"AGI", skill:"rangedCombat" };
+}
+function weaponBonus(w){ const m=String(w.bonus||"").match(/-?\d+/); return m ? parseInt(m[0],10) : 0; }
+function tracksAmmo(w){ const r=String(w.reloads||"").trim(); return r!=="" && isFinite(parseInt(r,10)); }
+
 function renderWeapons(){
-  const e = charState.equip, tb = $("#wBody"); tb.innerHTML="";
-  const cols = [["name","wname",""],["bonus","","+0"],["damage","","0"],["range","","—"],["reloads","","0"]];
+  const e = charState.equip, box = $("#wBody"); box.innerHTML="";
+  if(!e.weapons.length){
+    const p=document.createElement("div"); p.className="eq-empty";
+    p.textContent="No weapons yet — add one from Quick add, or “+ Add weapon”.";
+    box.appendChild(p); return;
+  }
   e.weapons.forEach((w,i)=>{
-    const tr = document.createElement("tr");
-    cols.forEach(([field,cls,ph])=>{
-      const td=document.createElement("td");
-      const inp=document.createElement("input");
-      inp.className=cls; inp.value=w[field]||""; inp.placeholder=ph; inp.setAttribute("aria-label","weapon "+field);
-      inp.addEventListener("input", ()=>{ w[field]=inp.value; saveState(); });
-      td.appendChild(inp); tr.appendChild(td);
+    const { attr, skill } = skillForWeapon(w), bon = weaponBonus(w);
+    const card=document.createElement("div"); card.className="wcard";
+
+    // name + remove
+    const top=document.createElement("div"); top.className="wc-top";
+    const nameI=document.createElement("input"); nameI.className="wname"; nameI.value=w.name||"";
+    nameI.placeholder="Weapon name"; nameI.setAttribute("aria-label","weapon name");
+    nameI.addEventListener("input", ()=>{ w.name=nameI.value; saveState(); });
+    const x=document.createElement("button"); x.className="wc-x"; x.textContent="✕"; x.setAttribute("aria-label","remove weapon");
+    x.addEventListener("click", ()=>{ e.weapons.splice(i,1); saveState(); renderWeapons(); });
+    top.appendChild(nameI); top.appendChild(x); card.appendChild(top);
+
+    // editable stats
+    const stats=document.createElement("div"); stats.className="wc-stats";
+    [["bonus","Bonus","+0"],["damage","Damage","0"],["range","Range","—"],["reloads","Reloads","—"]].forEach(([f,lab,ph])=>{
+      const l=document.createElement("label"); l.appendChild(document.createTextNode(lab));
+      const inp=document.createElement("input"); inp.value=w[f]||""; inp.placeholder=ph; inp.setAttribute("aria-label","weapon "+f);
+      inp.addEventListener("input", ()=>{ w[f]=inp.value; saveState(); });
+      if(f==="range"||f==="reloads") inp.addEventListener("change", renderWeapons);   // relabel Fire / show ammo
+      l.appendChild(inp); stats.appendChild(l);
     });
-    const rm=document.createElement("td"); rm.className="rm";
-    const rb=document.createElement("button"); rb.textContent="✕"; rb.setAttribute("aria-label","remove weapon");
-    rb.addEventListener("click", ()=>{ e.weapons.splice(i,1); saveState(); renderWeapons(); });
-    rm.appendChild(rb); tr.appendChild(rm);
-    tb.appendChild(tr);
+    card.appendChild(stats);
+
+    // fire + ammo
+    const fire=document.createElement("div"); fire.className="wc-fire";
+    const fb=document.createElement("button"); fb.className="fireBtn";
+    fb.innerHTML='⌖ Fire<span class="fk">'+esc(labelFor(attr,skill))+(bon?(" "+(bon>0?"+":"")+bon):"")+'</span>';
+    fb.addEventListener("click", ()=> openWeaponRoll(w));
+    fire.appendChild(fb);
+
+    if(tracksAmmo(w)){
+      const left=parseInt(w.reloads,10);
+      const ammo=document.createElement("div"); ammo.className="ammo";
+      const sg=document.createElement("div"); sg.className="grp";
+      sg.innerHTML='Shots <b>'+(w.shots||0)+'</b>';
+      const rlb=document.createElement("button"); rlb.className="reloadBtn"; rlb.textContent="⟳ Reload";
+      rlb.disabled = !(left>0);
+      rlb.addEventListener("click", ()=>{
+        const l=parseInt(w.reloads,10)||0; if(l>0) w.reloads=String(l-1);
+        w.shots=0; saveState(); renderWeapons();
+      });
+      const rg=document.createElement("div"); rg.className="grp";
+      rg.innerHTML='<b'+(left<=0?' style="color:var(--alert)"':'')+'>'+left+'</b> left';
+      ammo.appendChild(sg); ammo.appendChild(rlb); ammo.appendChild(rg);
+      fire.appendChild(ammo);
+    }
+    card.appendChild(fire);
+    box.appendChild(card);
   });
+}
+
+/* fire a weapon: open the roll modal on the right combat skill, bonus applied */
+function openWeaponRoll(w){
+  const { attr, skill } = skillForWeapon(w), bon = weaponBonus(w);
+  openRoll(attr, skill);
+  modalCtx.weaponRef = w;
+  modalCtx.label = (w.name||"Weapon") + " · " + labelFor(attr, skill);
+  $("#rTitle").textContent = modalCtx.label + (bon ? (" ("+(bon>0?"+":"")+bon+")") : "");
+  $("#modVal").textContent = String(bon);
+  refreshPool();
 }
 function gearWeight(g){ return g.sig ? 0 : (g.heavy ? 2 : 1); }
 function renderGear(){
@@ -1578,6 +1667,10 @@ $("#rollBtn").addEventListener("click", ()=>{
   lastRoll = { label:modalCtx.label, base:rollN(p.base), stress:rollN(p.stress), pushed:0, story:0, wasPush:false };
   const btn=$("#rollBtn"); btn.classList.add("flash"); setTimeout(()=>btn.classList.remove("flash"),400);
   paintResult(false); publishRoll("roll");
+  // firing a tracked weapon spends a shot
+  if(modalCtx && modalCtx.weaponRef && tracksAmmo(modalCtx.weaponRef)){
+    modalCtx.weaponRef.shots = (modalCtx.weaponRef.shots||0)+1; saveState(); renderWeapons();
+  }
 });
 $("#pushBtn").addEventListener("click", ()=>{
   if(!lastRoll) return;
