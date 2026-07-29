@@ -182,27 +182,38 @@ button, so players never see the switch):
   offline, reactor on standby, hull breach sealed, emergency power), the old
   Weyland science-division registry, and a glitchy, redacted system log.
 
+The Montero runs in the green house phosphor; flipping to the Cronus **shifts the
+whole palette to a cold blue**, so the derelict reads as a different machine at a
+glance.
+
 Everything on this screen is **spoiler-free** — the scenario's mysteries stay
 behind the terminal's clearance-gated modules. There is **no ship radar**;
 instead the top bar carries a visible **`SHIP | ◎ TRACKER`** button that turns the
 whole screen into the **M314 motion detector** (and back). Open the display with a
-`?room=` code and that on-iPad scope **mirrors the GM's tracker phone** — blips
-you place there show up on the table screen live. A low reactor hum runs
-underneath and a stardate ticks. It also **pops up every dice roll** made at the
-table in the corner, with a blip.
+`?room=` code and that on-iPad scope **mirrors the GM's tracker** — blips placed
+on the [GM Control](#screen-4--gm-control--self-destruct-phone-portrait) console
+show up on the table screen live. The embedded scope is **muted**, and the ship's
+own reactor hum **drops out while the tracker tab is open** so it doesn't play
+underneath. A stardate ticks and the readouts drift slowly. Crew dice rolls land
+in a **`SYSTEM LOG` panel top-right**; the rotating MU/TH/UR **notices sit
+bottom-right**.
+
+On the very first tap the screen runs a short **power-on diagnostic sweep**
+(systems checked off with a progress bar) before the display comes up.
 
 **Self-destruct.** On a signal from the [GM Control](#screen-4--gm-control--self-destruct-phone-portrait)
 phone, the display is taken over by the emergency destruct sequence: **ARMED** →
 a big **countdown** with a rising klaxon → and at zero (or on command) it cuts to
-a **SIGNAL ERROR — TRANSMISSION LOST** dead-channel screen. **Abort** returns it
-to the ship view. If the network drops, a **hidden fallback** works locally:
+a **SIGNAL ERROR — TRANSMISSION LOST** dead-channel screen. The reactor hum and interface
+blips **fall silent under the report** so only the klaxon carries. **Abort**
+returns it to the ship view. If the network drops, a **hidden fallback** works locally:
 long-press the bottom-**left** corner to arm/abort, the bottom-**right** to start
 the countdown (or cut the signal while it runs).
 
 It's ambient otherwise: nothing to operate, it just runs. Best on a plugged-in
-iPad in landscape with auto-lock off and the browser full-screen. It opens with a
-**tap to activate** panel — that first tap is what lets iOS play sound and go
-full-screen, so tap once and hand the device over.
+iPad in landscape with auto-lock off. It opens with a **tap to activate** panel —
+that first tap is what lets iOS play sound — then just fills the browser (no forced
+full-screen); use the browser's own full-screen control if you want it edge to edge.
 
 ---
 
@@ -212,18 +223,26 @@ full-screen, so tap once and hand the device over.
 https://alexradf.github.io/Chariot-of-the-gods/control/
 ```
 
-Your off-fiction remote for the Main Display. It **pairs to the display over a
-room code** and lets you, from your own phone, drive the ship state and the
-self-destruct takeover:
+Your off-fiction remote for the Main Display, and now your **one GM console**: it
+**pairs to the display over a room code** and, from your own phone, drives the ship
+state and self-destruct **and** carries the **motion-tracker blips and the NPC /
+event dice roller** in the same page — no separate tracker link to juggle.
 
 | Control | Effect on the display |
 |---------|-----------------------|
-| **Montero / Cronus** | Flip which ship state the big screen is showing. |
+| **Montero / Cronus** | Flip which ship state the big screen is showing (green ↔ blue). |
 | **10:00 / 05:00 / 01:00 / 00:10** | Pick the countdown length. |
 | **Arm** | Put the display into the armed self-destruct standby. |
 | **Start** | Begin the countdown (arm first). |
 | **Abort** | Cancel and return the display to the ship view. |
 | **Cut Signal** (hold) | Jump straight to the SIGNAL ERROR screen — hold to fire so it can't misfire. |
+
+The **Motion Tracker** card holds a live scope: **tap to drop a contact, drag to
+move it, tap to remove**, and the blips mirror out to the players' trackers and the
+table display on the same room. **⚄ Roll** opens the **NPC / event roller** — set
+base + stress dice and a modifier, roll, and (optionally) push the result to the
+table dice feed. There's also an **Open full-screen** link if you'd rather run the
+scope on its own.
 
 **Pairing:** open the control page, note its **room code**, then open the display
 with the *same* room (**Copy link** gives you the exact `…/display/?room=CODE` URL
@@ -254,8 +273,12 @@ and never drift on their own, so *you* decide when the creatures move:
 | **Drag a contact** | Slide it inward between beats to fake something closing in. |
 | **Tap a contact** | Remove that one contact. |
 | **＋ Contact** | Add a contact at a random bearing near the edge. |
-| **Sound** | Mute / unmute the ping (also buzzes the phone when a contact is right on top of you). |
+| **Sound** | The ping starts **muted**; tap to turn it on (it also buzzes the phone when a contact is right on top of you). |
 | **Clear** | Wipe the scope. |
+
+Most of the time you'll drive blips from the embedded scope on the **GM Control**
+console rather than this standalone page — but the full page is still here if you
+want the tracker on a dedicated phone.
 
 **Two-screen mode.** Add the same `?room=CODE` to two tracker links and they
 **mirror**: place and drag contacts on your own phone (`…/tracker/?room=CODE`) and

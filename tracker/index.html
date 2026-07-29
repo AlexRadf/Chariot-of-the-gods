@@ -187,7 +187,7 @@ body.gm .fs-tag.gm{ display:inline-block; color:var(--dim); }
   </div>
   <div class="controls">
     <button id="bAdd">＋ Contact</button>
-    <button id="bSound" class="on">Sound</button>
+    <button id="bSound">Sound</button>
     <button id="bClear">Clear</button>
     <button id="bRoll">⚄ Roll</button>
   </div>
@@ -221,7 +221,7 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const MAX_M = 20;              // scope radius in metres
 const GM = new URLSearchParams(location.search).get("gm")==="1";  // GM's own screen
 let unlocked = false;         // placement + controls active (GM, or failsafe)
-let soundOn = true;
+let soundOn = false;          // muted by default — the GM can turn the ping on if wanted
 
 /* -------------------- audio -------------------- */
 let AC=null;
@@ -477,9 +477,6 @@ function boot(){
     document.body.classList.add("gm"); setUnlocked(true);
     // the GM's own screen seeds one contact so there's something to work with
     addContact(-Math.PI/2 + 0.4, MAX_M*0.9); broadcast(true);
-  }
-  if(!EMBED){
-    try{ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }catch(e){}
   }
   // players / display start empty and view-only, mirroring the GM's blips over the room
 }

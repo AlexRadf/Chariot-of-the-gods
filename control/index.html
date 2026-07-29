@@ -107,6 +107,13 @@ body::before{
 .btn .prog{ position:absolute; left:0; bottom:0; height:3px; width:0; background:var(--alert); }
 .btn .hintl{ display:block; font-size:9px; color:var(--dim); letter-spacing:.1em; margin-top:4px; }
 
+/* embedded GM motion scope (blips + NPC roller in one place) */
+.scopeframe{ display:block; width:100%; height:min(60vh,460px); border:1px solid var(--faint);
+  background:var(--crt); }
+.scopehint{ font-size:10px; color:var(--faint); letter-spacing:.06em; text-transform:uppercase;
+  line-height:1.6; margin-top:8px; }
+.scopehint a{ color:var(--dim); text-decoration:none; }
+
 .feed{ text-align:center; font-size:12px; letter-spacing:.1em; color:var(--dim);
   text-transform:uppercase; min-height:1.2em; }
 .feed.ok{ color:var(--phos); } .feed.bad{ color:var(--alert); }
@@ -136,7 +143,15 @@ body::before{
       <button class="mini" id="bCopy">Copy link</button>
     </div>
     <div class="dlink">Open on the table screen: <a id="dlink" href="#" target="_blank"></a></div>
-    <div class="dlink">Your GM tracker (place blips): <a id="gmlink" href="#" target="_blank"></a></div>
+  </div>
+
+  <div class="card">
+    <h2>Motion Tracker · Blips &amp; Rolls</h2>
+    <iframe class="scopeframe" id="scope" title="GM motion tracker" allow="autoplay"></iframe>
+    <div class="scopehint">Tap the scope to drop a contact · drag to move · tap it to remove.
+      Blips mirror live to the players' trackers and the table display on this room.
+      ⚄ Roll opens the NPC / event dice roller. ·
+      <a id="gmlink" href="#" target="_blank">Open full-screen ▲</a></div>
   </div>
 
   <div class="card">
@@ -182,11 +197,19 @@ function persistRoom(){
   const dl = new URL("../display/?room="+encodeURIComponent(room), location.href).href;
   const a=$("#dlink"); a.href=dl; a.textContent = "…/display/?room="+room;
   const gm = new URL("../tracker/?gm=1&room="+encodeURIComponent(room), location.href).href;
-  const g=$("#gmlink"); g.href=gm; g.textContent = "…/tracker/?gm=1&room="+room;
+  $("#gmlink").href = gm;
+}
+/* the embedded GM scope is only loaded once the console is activated, so it
+   doesn't start pushing blips to the room before the GM is ready. */
+function syncScope(){
+  const f=$("#scope"); if(!f) return;
+  f.src = new URL("../tracker/?gm=1&embed=1&room="+encodeURIComponent(room), location.href).href;
 }
 $("#room").addEventListener("change", e=>{
   const v=e.target.value.trim().toLowerCase().replace(/[^a-z0-9\-]/g,"");
-  room = v || room; persistRoom(); relayConnect(); flash("ROOM SET · "+room, "ok");
+  room = v || room; persistRoom(); relayConnect();
+  if($("#app").classList.contains("on")) syncScope();
+  flash("ROOM SET · "+room, "ok");
 });
 $("#bCopy").addEventListener("click", async ()=>{
   const dl = new URL("../display/?room="+encodeURIComponent(room), location.href).href;
@@ -266,8 +289,7 @@ function fmt(s){ return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60
 /* -------------------- boot -------------------- */
 function boot(){
   $("#start").style.display="none"; $("#app").classList.add("on");
-  persistRoom(); relayConnect();
-  try{ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }catch(e){}
+  persistRoom(); relayConnect(); syncScope();
 }
 $("#start").addEventListener("click", boot);
 persistRoom();   // fill the field even before activation
