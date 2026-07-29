@@ -223,10 +223,21 @@ full-screen); use the browser's own full-screen control if you want it edge to e
 https://alexradf.github.io/Chariot-of-the-gods/control/
 ```
 
-Your off-fiction remote for the Main Display, and now your **one GM console**: it
+Your off-fiction remote for the Main Display, and your **one GM console**: it
 **pairs to the display over a room code** and, from your own phone, drives the ship
-state and self-destruct **and** carries the **motion-tracker blips and the NPC /
-event dice roller** in the same page — no separate tracker link to juggle.
+state and self-destruct, rolls for NPCs, and places motion-tracker blips — all on
+one page, with the roller and the scope **kept well apart** so you never fumble one
+for the other.
+
+The cards run top-to-bottom: **pairing → NPC / Event Roll → ship state →
+self-destruct → Motion Tracker**.
+
+**NPC / Event Roll** (near the top): pick a **preset** (facehugger, adult Alien
+attacks, synthetic, Cronus survivors, or a generic difficulty ladder) to fill the
+label and dice pool in one tap, or dial base + stress dice and a modifier by hand,
+then roll. Each **6** is a success; the result (optionally) pushes to the table
+dice feed for everyone to see. Presets are starting points — nudge any stepper
+before you roll.
 
 | Control | Effect on the display |
 |---------|-----------------------|
@@ -237,15 +248,12 @@ event dice roller** in the same page — no separate tracker link to juggle.
 | **Abort** | Cancel and return the display to the ship view. |
 | **Cut Signal** (hold) | Jump straight to the SIGNAL ERROR screen — hold to fire so it can't misfire. |
 
-The **Motion Tracker** card holds a live scope: **tap to drop a contact, drag to
-move it, tap to remove**, and the blips mirror out to the players' trackers and the
-table display on the same room. **⚄ Roll** opens the **NPC / event roller** — pick
-a **preset** (facehugger, adult Alien attacks, synthetic, Cronus survivors, or a
-generic difficulty) to fill the label and dice pool in one tap, or set base +
-stress dice and a modifier by hand, then roll and (optionally) push the result to
-the table dice feed. Presets are just starting points — nudge any stepper before
-you roll. There's also an **Open full-screen** link if you'd rather run the scope
-on its own.
+**Motion Tracker** (at the bottom, **collapsed by default**): tap **▸ SHOW** to
+open the live scope, then **tap to drop a contact, drag to move it, tap to
+remove** — blips mirror out to the players' trackers and the table display on the
+same room. Keeping it closed until you need it means a stray thumb can't drop a
+blip mid-roll. Tap **▾ HIDE** to tuck it away again, or **Open full-screen** to run
+the scope on its own device.
 
 **Pairing:** open the control page, note its **room code**, then open the display
 with the *same* room (**Copy link** gives you the exact `…/display/?room=CODE` URL
