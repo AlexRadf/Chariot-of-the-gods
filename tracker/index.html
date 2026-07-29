@@ -136,6 +136,13 @@ body.gm .fs-tag.gm{ display:inline-block; color:var(--dim); }
 #npc label.f{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--dim); margin-bottom:4px; }
 #npc input.lbl{ width:100%; background:#03130b; border:1px solid var(--faint); color:var(--phos); font-family:inherit; font-size:14px; padding:.5em; margin-bottom:12px; }
 #npc input.lbl:focus{ outline:1px solid var(--amber); }
+#npc select.lbl{ width:100%; background:#03130b; border:1px solid var(--faint); color:var(--phos);
+  font-family:inherit; text-shadow:var(--glow); font-size:14px; padding:.5em; margin-bottom:12px; -webkit-appearance:none; appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+  background-position:calc(100% - 16px) 1.05em,calc(100% - 11px) 1.05em; background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
+#npc select.lbl:focus{ outline:1px solid var(--amber); }
+#npc select.lbl option{ background:#03130b; color:var(--phos); }
+#npc select.lbl optgroup{ background:#03130b; color:var(--amber); }
 #npc .drow{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
 #npc .stp{ flex:1; min-width:96px; }
 #npc .stp .k{ font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; }
@@ -199,6 +206,37 @@ body.gm .fs-tag.gm{ display:inline-block; color:var(--dim); }
   <div class="veil" data-npc-close></div>
   <div class="box">
     <div class="hd"><h2>NPC / Event Roll</h2><button data-npc-close aria-label="Close">✕</button></div>
+    <label class="f" for="npcPreset">Preset (fills in the pool — edit anything after)</label>
+    <select class="lbl" id="npcPreset">
+      <option value="">— Custom —</option>
+      <optgroup label="Xenomorph life-cycle">
+        <option data-label="Facehugger · Pounce &amp; implant" data-base="8">Facehugger — Pounce &amp; implant (8)</option>
+        <option data-label="Facehugger · Resist removal" data-base="10">Facehugger — Resist removal (10)</option>
+        <option data-label="Chestburster · Burst free" data-base="6">Chestburster — Burst free (6)</option>
+        <option data-label="Adult Alien · Ambush" data-base="10">Adult Alien — Ambush / stealth (10)</option>
+        <option data-label="Adult Alien · Claw" data-base="9">Adult Alien — Claw / strike (9)</option>
+        <option data-label="Adult Alien · Grab &amp; drag" data-base="8">Adult Alien — Grab &amp; drag off (8)</option>
+        <option data-label="Adult Alien · Tail stab" data-base="8">Adult Alien — Tail stab (8)</option>
+        <option data-label="Adult Alien · Inner jaw" data-base="10">Adult Alien — Bite / inner jaw (10)</option>
+      </optgroup>
+      <optgroup label="Crew, synthetics &amp; company">
+        <option data-label="Synthetic · Close combat" data-base="8">Synthetic (Lucas) — Close combat (8)</option>
+        <option data-label="Synthetic · Deceive" data-base="7">Synthetic (Lucas) — Deceive / manipulate (7)</option>
+        <option data-label="Synthetic · Pistol" data-base="6">Synthetic (Lucas) — Pistol (6)</option>
+        <option data-label="Cronus survivor · Firearm" data-base="6">Cronus survivor — Firearm (6)</option>
+        <option data-label="Cronus survivor · Melee" data-base="5">Cronus survivor — Melee / grab (5)</option>
+        <option data-label="Panicked crew · Wild shot" data-base="4">Panicked crew — Wild shot (4)</option>
+        <option data-label="Company agent · Command" data-base="6">Company agent — Command / manipulate (6)</option>
+      </optgroup>
+      <optgroup label="Generic difficulty">
+        <option data-label="Trivial NPC" data-base="2">Trivial NPC (2)</option>
+        <option data-label="Weak NPC" data-base="4">Weak NPC (4)</option>
+        <option data-label="Average NPC" data-base="6">Average NPC (6)</option>
+        <option data-label="Skilled NPC" data-base="8">Skilled NPC (8)</option>
+        <option data-label="Elite NPC" data-base="10">Elite NPC (10)</option>
+        <option data-label="Environment / event" data-base="5">Environment / event (5)</option>
+      </optgroup>
+    </select>
     <label class="f" for="npcLabel">Who / what (shown on the table feed)</label>
     <input class="lbl" id="npcLabel" placeholder="e.g. Neomorph — Mobility" autocomplete="off" spellcheck="false">
     <div class="drow">
@@ -503,12 +541,24 @@ function d6r(){ return 1+Math.floor(Math.random()*6); }
 function stepper(id, val, min, max){
   const w=$(id), v=w.querySelector(".v"); let n=val; v.textContent=n; w._v=n;
   const set=x=>{ n=Math.max(min,Math.min(max,x)); v.textContent=n; w._v=n; };
+  w._set=set;
   w.querySelector(".dn").addEventListener("click", ()=>set(n-1));
   w.querySelector(".up").addEventListener("click", ()=>set(n+1));
 }
 stepper("#npcBase", 6, 0, 20);
 stepper("#npcStress", 0, 0, 20);
 stepper("#npcMod", 0, -5, 10);
+
+/* preset dropdown — fill the label + dice pool from a likely NPC/creature,
+   then the GM can still nudge any stepper before rolling */
+$("#npcPreset").addEventListener("change", e=>{
+  const o=e.target.selectedOptions[0];
+  if(!o || !o.dataset.base) return;                 // "— Custom —" leaves everything as-is
+  $("#npcLabel").value = o.dataset.label || o.textContent.replace(/\s*\(\d+\)\s*$/,"");
+  $("#npcBase")._set(parseInt(o.dataset.base,10)||0);
+  $("#npcStress")._set(parseInt(o.dataset.stress||"0",10)||0);
+  $("#npcMod")._set(0);
+});
 function npcOpen(){ $("#npc").classList.add("on"); $("#npcDice").innerHTML=""; $("#npcTally").innerHTML=""; document.addEventListener("keydown", npcKey); }
 function npcClose(){ $("#npc").classList.remove("on"); document.removeEventListener("keydown", npcKey); }
 function npcKey(e){ if(e.key==="Escape") npcClose(); }

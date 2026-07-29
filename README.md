@@ -239,10 +239,13 @@ event dice roller** in the same page — no separate tracker link to juggle.
 
 The **Motion Tracker** card holds a live scope: **tap to drop a contact, drag to
 move it, tap to remove**, and the blips mirror out to the players' trackers and the
-table display on the same room. **⚄ Roll** opens the **NPC / event roller** — set
-base + stress dice and a modifier, roll, and (optionally) push the result to the
-table dice feed. There's also an **Open full-screen** link if you'd rather run the
-scope on its own.
+table display on the same room. **⚄ Roll** opens the **NPC / event roller** — pick
+a **preset** (facehugger, adult Alien attacks, synthetic, Cronus survivors, or a
+generic difficulty) to fill the label and dice pool in one tap, or set base +
+stress dice and a modifier by hand, then roll and (optionally) push the result to
+the table dice feed. Presets are just starting points — nudge any stepper before
+you roll. There's also an **Open full-screen** link if you'd rather run the scope
+on its own.
 
 **Pairing:** open the control page, note its **room code**, then open the display
 with the *same* room (**Copy link** gives you the exact `…/display/?room=CODE` URL
