@@ -116,6 +116,10 @@ body::before{
 .chip:active{ background:var(--faint); }
 .chip.on{ border-color:var(--amber); color:var(--amber); background:var(--faint); }
 .chip.on b{ color:var(--amber); }
+.rlbl{ width:100%; background:#03130b; border:1px solid var(--faint); color:var(--phos);
+  font-family:inherit; text-shadow:var(--glow); font-size:14px; padding:.55em; margin-bottom:12px; }
+.rlbl:focus{ outline:1px solid var(--amber); }
+.rlbl::placeholder{ color:var(--faint); }
 .rsteps{ display:flex; gap:8px; margin-bottom:12px; }
 .rsteps .stp{ flex:1; }
 .rsteps .k{ font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; }
@@ -195,6 +199,7 @@ body::before{
       <button class="chip" data-label="Average NPC" data-base="6">Average<b>6</b></button>
       <button class="chip" data-label="Elite NPC" data-base="10">Elite<b>10</b></button>
     </div>
+    <input class="rlbl" id="npcName" placeholder="Name (optional) — e.g. Ash, Bridge hatch" autocomplete="off" spellcheck="false">
     <div class="rsteps">
       <div class="stp"><div class="k">Dice</div><div class="stepper" id="npcBase"><button class="dn" aria-label="dice down">−</button><span class="v">6</span><button class="up" aria-label="dice up">＋</button></div></div>
       <div class="stp"><div class="k">Stress</div><div class="stepper" id="npcStress"><button class="dn" aria-label="stress down">−</button><span class="v">0</span><button class="up" aria-label="stress up">＋</button></div></div>
@@ -372,7 +377,12 @@ $("#npcChips").addEventListener("click", e=>{
   const b=e.target.closest(".chip"); if(!b) return;
   $("#npcChips").querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", c===b));
   npcLabel = b.dataset.label || "GM Roll";
+  $("#npcName").value = npcLabel;                    // fill the name so you can tweak it, or clear it
   $("#npcBase")._set(parseInt(b.dataset.base,10)||0);
+});
+/* typing a custom name drops the chip highlight — it's your own NPC/event now */
+$("#npcName").addEventListener("input", ()=>{
+  $("#npcChips").querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
 });
 $("#npcRollBtn").addEventListener("click", ()=>{
   const base = Math.max(0, $("#npcBase")._v||0);
@@ -388,7 +398,7 @@ $("#npcRollBtn").addEventListener("click", ()=>{
   sd.forEach(v=> wrap.appendChild(die(v,true)));
   $("#npcTally").innerHTML = '<span class="s'+(succ===0?' zero':'')+'">'+succ+'</span> success'+(succ===1?'':'es')+
     ' <span class="m">· '+bd.length+' base + '+sd.length+' stress'+(ones?(' · '+ones+' ✦1'):'')+'</span>';
-  const label = npcLabel;
+  const label = ($("#npcName").value||"").trim() || npcLabel || "GM Roll";
   if($("#npcBroadcast").checked && typeof RollBus!=="undefined"){
     RollBus.publish({ kind:"roll", who:label, label:"NPC / event", successes:succ, base:bd, stress:sd, stressOnes:ones, pushed:0 });
   }
