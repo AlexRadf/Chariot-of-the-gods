@@ -261,8 +261,32 @@ thrown until you hit **⚄ Roll**, and only that result reaches the table.
 |-----|--------------|
 | **Cast** | Every NPC of the **Cronus** (Johns, Reid, Flynn, Cooper, Clayton, Ava 6) and the **Sotillo** (Bolaji, Pin, Bein, Horton) with their real attributes, Health, talent, gear, agenda, buddy and rival. Their skills come up as chips already totalled to **attribute + skill** — tap *Ranged Cbt 7* and the pool is set. Four attribute chips cover anything with no skill behind it. |
 | **Xenos** | The Neomorph life cycle (**Bloodburster → Neophyte → adult**) and the Abomination stages (**Revenant**, **Beluga-Head**) with Speed, Health, Armor Rating and skill pools. **⚄ Signature attack** rolls the creature's own D6 table and prints the result — then loads its Base Dice and Damage into the roller for you. **⚄ Critical injury** rolls the Xenomorph crit table for when one hits zero Health. |
-| **Events** | All 34 scripted events of **Acts I, II and III**, mandatory ones in amber, each with the skill roll and stress hit it calls for. Tap to read one, or hit **⚄ Draw an event** to have the Act pick for you. Event draws stay on your phone — they're never pushed to the table feed. |
+| **Events** | All 34 scripted events of **Acts I, II and III**, laid out as a **rough timeline** — see below. |
 | **Tables** | The scenario's stray rolls (egg sac clutches **2D6**, decompressed compartments, doses, the Turns before a Bloodburster returns) and its fixed pools — **Blast Power 12** for the Montero's detonation, **Virulence 9** for Neomorphic Motes, **Virulence 6** for the 26 Draconis Strain. |
+
+**The Events timeline.** The booklet is explicit that its events needn't all
+happen, nor happen in the order printed — so the Events tab arranges each Act
+into **phases that run top to bottom**, a rough timeline rather than a script.
+The mandatory beats form the spine; the optional ones sit in the phase where
+they land most naturally.
+
+| Act | Phases |
+|-----|--------|
+| **I — Pandora's Box** | Waking on the Montero → Closing on the derelict → Searching the dark ship → The ship wakes up → *If they try to leave* |
+| **II — The Long Night** | Taking stock → The Montero dies → Making the Cronus fly → The crew turn |
+| **III — Divided We Fall** | The ship decides → Clayton's play → Boarders → Endgame |
+
+Events that float free of the timeline say so on the row: **Any time** (works in
+any phase, often in a later Act too — *Hunter and Prey*, *Sensor Ghost Redux*)
+and **If…** (fires off a player decision rather than the clock — *Getting Out of
+Dodge?*, *Breaking Loose*, *Mutiny!*).
+
+Tap an event to read it; tap **✓** to strike it once you've run it, and the phase
+header counts off what's left. **⚄ Draw an event** then pulls an optional event
+from the **earliest phase you haven't finished**, so what you get suits where the
+group actually is instead of handing you an Act III beat during the boarding.
+Run marks survive a reload mid-session; **↺ Clear run marks** resets them for the
+next group. Draws stay on your phone — events are never pushed to the table feed.
 
 **Turned — Stage II Abomination** on the Cast tab applies the transformation from
 the booklet in one tap: **STRENGTH +3** (Health with it), **AGILITY +1**,
@@ -540,13 +564,14 @@ plain-data file — no DOM, no network, so it works offline like the rest of the
 | `NPCS` | The crews of the **Cronus** and the **Sotillo** — attributes, skills, Health, talent, gear, personal agenda, buddy and rival. `turns: false` marks anyone who never becomes an Abomination. |
 | `XENOS` | Bloodburster, Neophyte, adult Neomorph, Revenant and Beluga-Head — Speed, Health, Armor Rating, skills, and which attack table each one uses. |
 | `ATTACKS` / `CRITS` | The D6 signature-attack tables and the Xenomorph critical injury table, each row carrying its Base Dice, Damage, crit number and whether it forces a Panic Roll. |
-| `EVENTS` | All 34 Act I–III events: name, act, `mandatory`, the skill roll it calls for, any stress hit, and the text you read off the phone. |
+| `EVENTS` | All 34 Act I–III events **in timeline order**: `id`, `act`, `phase`, `mandatory`, `when` (`anytime` / `conditional`), the skill roll it calls for, any stress hit, and the text you read off the phone. Array order *is* timeline order — move an entry and it moves on the GM's screen. |
 | `TABLES` / `POOLS` | The stray D6/2D6 rolls, and the fixed pools (Blast Power, Virulence). |
 
 Helpers do the arithmetic: `GMData.pool(npc, skill)` returns attribute + skill,
 `GMData.skillsOf(npc)` builds the chip list, `GMData.stage2(npc)` applies the
-Stage II Abomination transformation, and `GMData.drawAttack(table)` /
-`GMData.drawEvent(act)` roll for you. Swap the arrays to run a different
+Stage II Abomination transformation, `GMData.phasesFor(act)` derives the timeline
+from the array, and `GMData.drawAttack(table)` / `GMData.drawEvent(act, opts)`
+roll for you. Swap the arrays to run a different
 scenario — both roller UIs are built from whatever is in here.
 
 ### The room code
