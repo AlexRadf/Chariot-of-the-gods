@@ -140,6 +140,16 @@ need for play lives on their own device.
   dice, count 6s for successes, **push** to reroll for +1 stress, and make a
   **Panic Roll** when a pushed stress die comes up 1. Every roll is broadcast to
   the room (see [At the table](#at-the-table-how-the-screens-connect)).
+- **Critical injuries that do the arithmetic.** Take a hit while Broken and
+  **⚄ Critical Injury** rolls d66, highlights the row and offers **＋ Add to my
+  injuries**. Stored injuries sit in their own panel and their penalties are
+  **applied to matching rolls automatically** — the roll pop-up names the injury
+  that's costing you dice. You can also add one **without rolling**: pick the
+  entry the Game Mother called (*"critical injury #61"* — the scenario's
+  signature attacks name them outright) from the **Add an injury** dropdown, or
+  choose **Custom…** and write your own — a name, a note, any number of
+  per-skill penalties, *Stress +1 when taken*, and a fatality clock. A custom
+  injury penalises rolls exactly like a rolled one, and survives a reload.
 - **Weapons that roll themselves.** Each weapon in the kit is a card with a
   **⌖ Fire** button: tap it and the roller opens on the right skill — **Ranged
   Combat** for anything with a firing range, **Close Combat** for Engaged-range
