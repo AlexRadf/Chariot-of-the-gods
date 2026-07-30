@@ -165,34 +165,22 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 /* weapon cards — each with a Fire button that rolls the right combat skill */
 .wlist{ display:flex; flex-direction:column; gap:8px; }
 .wcard{ border:1px solid var(--faint); padding:8px 9px; display:flex; flex-direction:column; gap:7px; }
-.wcard.empty-ammo{ border-color:var(--alert); }
 .wc-top{ display:flex; gap:8px; align-items:center; }
-.wc-top input.wname{ flex:1; background:transparent; border:0; border-bottom:1px solid var(--faint);
+.wc-top input.wname{ flex:1; min-width:0; background:transparent; border:0; border-bottom:1px solid var(--faint);
   color:var(--phos); font-family:inherit; font-size:14px; padding:3px 2px; }
 .wc-top input.wname:focus{ outline:none; border-bottom-color:var(--amber); }
 .wc-top .wc-x{ border:0; color:var(--faint); font-size:15px; padding:2px 6px; background:none; cursor:pointer; }
 .wc-top .wc-x:hover{ color:var(--alert); }
 .wc-stats{ display:flex; gap:6px; }
-.wc-stats label{ flex:1; display:flex; flex-direction:column; gap:2px; font-size:9px; color:var(--dim);
+.wc-stats label{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; font-size:9px; color:var(--dim);
   text-transform:uppercase; letter-spacing:.06em; text-align:center; }
-.wc-stats input{ background:var(--crt); border:1px solid var(--faint); color:var(--phos);
+.wc-stats input{ width:100%; min-width:0; background:var(--crt); border:1px solid var(--faint); color:var(--phos);
   font-family:inherit; font-size:12.5px; padding:4px; text-align:center; }
 .wc-stats input:focus{ outline:1px solid var(--amber); }
-.wc-fire{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.fireBtn{ flex:1; min-width:130px; border:1px solid var(--amber); color:var(--amber); background:none;
+.fireBtn{ width:100%; border:1px solid var(--amber); color:var(--amber); background:none;
   font-family:inherit; font-size:14px; letter-spacing:.08em; text-transform:uppercase; padding:.6em .5em; cursor:pointer; }
 .fireBtn:active{ background:var(--faint); }
 .fireBtn .fk{ display:block; color:var(--dim); font-size:9.5px; letter-spacing:.05em; margin-top:2px; }
-.ammo{ display:flex; align-items:center; gap:10px; font-size:10px; color:var(--dim);
-  text-transform:uppercase; letter-spacing:.05em; }
-.ammo .grp{ display:flex; align-items:center; gap:4px; }
-.ammo b{ color:var(--phos); font-family:'VT323',monospace; font-size:16px; }
-.ammo .reloadBtn{ border:1px solid var(--faint); color:var(--phos); background:none; font-family:inherit;
-  font-size:11px; padding:.45em .7em; text-transform:uppercase; letter-spacing:.05em; cursor:pointer; }
-.ammo .reloadBtn:active{ background:var(--faint); }
-.ammo .reloadBtn:disabled{ opacity:.4; cursor:default; }
-.ammo .st{ border:1px solid var(--faint); color:var(--phos); background:none; font-family:inherit;
-  font-size:14px; line-height:1; padding:.15em .5em; cursor:pointer; }
 .eq-add{ margin-top:6px; font-size:12px; padding:.4em .8em; }
 .catadd{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .catadd select{ flex:1; min-width:180px; background:var(--crt); border:1px solid var(--faint); color:var(--phos);
@@ -542,7 +530,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
     <div class="eq-h">Weapons</div>
     <div class="wlist" id="wBody"></div>
     <button class="eq-add" id="wAdd">+ Add weapon</button>
-    <small style="color:var(--faint); display:block; margin-top:6px">Tap <b style="color:var(--amber)">Fire</b> to roll the weapon — it uses Ranged or Close Combat with the weapon's bonus baked in. Ranged weapons track shots fired and reloads left; tap <b>Reload</b> when you swap a mag.</small>
+    <small style="color:var(--faint); display:block; margin-top:6px">Tap <b style="color:var(--amber)">Fire</b> to roll the weapon — it uses Ranged Combat (or Close Combat at Engaged range) with the weapon's bonus baked in. Fire full-auto by pushing the roll in the usual way.</small>
 
     <div class="eq-h">Armor</div>
     <div class="armor-row">
@@ -1040,34 +1028,34 @@ const CRIT_MODS = {
 /* Filled at boot from the reference table: { 11:{name,fatal,effect}, … } */
 const CRIT_INFO = {};
 
-/* Equipment catalogue for one-tap adding. Weapons carry bonus/damage/range/reloads
+/* Equipment catalogue for one-tap adding. Weapons carry bonus/damage/range
    and drop into the weapons table; everything else drops into the gear list.
    "Montero / scenario" items are the gear listed in Chariot of the Gods; "Standard"
    is generic Frontier kit. Weapon stats follow the ALIEN RPG core weapon tables. */
 const CATALOG = {
   "Weapons": [
-    { name:"M4A3 Service Pistol", bonus:"+2", damage:"1", range:"Medium", reloads:"1" },
-    { name:"Rexim RXF-M5 EVA Pistol", bonus:"+1", damage:"1", range:"Short", reloads:"3" },
-    { name:".357 Magnum Revolver", bonus:"+1", damage:"2", range:"Medium", reloads:"2" },
-    { name:"Armat M41A Pulse Rifle", bonus:"+1", damage:"2", range:"Long", reloads:"2" },
-    { name:"Weyland Storm Rifle (heavy)", bonus:"0", damage:"2", range:"Long", reloads:"1" },
-    { name:"Armat 37A2 12ga Shotgun", bonus:"+2", damage:"2", range:"Short", reloads:"2" },
-    { name:"Watatsumi DV-303 Bolt Gun", bonus:"+1", damage:"2", range:"Short", reloads:"4" },
-    { name:"M240 Incinerator Unit", bonus:"+1", damage:"Fire", range:"Short", reloads:"2" },
-    { name:"SpaceSub ASSO-400 Harpoon Gun", bonus:"+1", damage:"2", range:"Short", reloads:"" },
-    { name:"Cutting Torch", bonus:"+1", damage:"2", range:"Engaged", reloads:"" },
-    { name:"Stun Baton", bonus:"+2", damage:"1", range:"Engaged", reloads:"" },
-    { name:"Maintenance Jack", bonus:"+2", damage:"1", range:"Engaged", reloads:"" },
-    { name:"Combat Knife", bonus:"+2", damage:"1", range:"Engaged", reloads:"" }
+    { name:"M4A3 Service Pistol", bonus:"+2", damage:"1", range:"Medium" },
+    { name:"Rexim RXF-M5 EVA Pistol", bonus:"+1", damage:"1", range:"Short" },
+    { name:".357 Magnum Revolver", bonus:"+1", damage:"2", range:"Medium" },
+    { name:"Armat M41A Pulse Rifle", bonus:"+1", damage:"2", range:"Long" },
+    { name:"Weyland Storm Rifle (heavy)", bonus:"0", damage:"2", range:"Long" },
+    { name:"Armat 37A2 12ga Shotgun", bonus:"+2", damage:"2", range:"Short" },
+    { name:"Watatsumi DV-303 Bolt Gun", bonus:"+1", damage:"2", range:"Short" },
+    { name:"M240 Incinerator Unit", bonus:"+1", damage:"Fire", range:"Short" },
+    { name:"SpaceSub ASSO-400 Harpoon Gun", bonus:"+1", damage:"2", range:"Short" },
+    { name:"Cutting Torch", bonus:"+1", damage:"2", range:"Engaged" },
+    { name:"Stun Baton", bonus:"+2", damage:"1", range:"Engaged" },
+    { name:"Maintenance Jack", bonus:"+2", damage:"1", range:"Engaged" },
+    { name:"Combat Knife", bonus:"+2", damage:"1", range:"Engaged" }
   ],
   "Gear on the Montero": [
     { name:"IRC Mk.50 Compression Suit (Air 5)" },
     { name:"M314 Motion Tracker (Power 5)" },
-    { name:"Cutting Torch (Power 5)", bonus:"+1", damage:"2", range:"Engaged", reloads:"" },
-    { name:"Watatsumi Bolt Gun", bonus:"+1", damage:"2", range:"Short", reloads:"4" },
-    { name:"M4A3 Service Pistol", bonus:"+2", damage:"1", range:"Medium", reloads:"1" },
-    { name:"SpaceSub ASSO-400 Harpoon Gun", bonus:"+1", damage:"2", range:"Short", reloads:"" },
-    { name:"M240 Incinerator Unit", bonus:"+1", damage:"Fire", range:"Short", reloads:"2" },
+    { name:"Cutting Torch (Power 5)", bonus:"+1", damage:"2", range:"Engaged" },
+    { name:"Watatsumi Bolt Gun", bonus:"+1", damage:"2", range:"Short" },
+    { name:"M4A3 Service Pistol", bonus:"+2", damage:"1", range:"Medium" },
+    { name:"SpaceSub ASSO-400 Harpoon Gun", bonus:"+1", damage:"2", range:"Short" },
+    { name:"M240 Incinerator Unit", bonus:"+1", damage:"Fire", range:"Short" },
     { name:"P-5000 Power Loader", heavy:true }
   ],
   "Scenario gear (aboard)": [
@@ -1298,7 +1286,6 @@ function skillForWeapon(w){
   return { attr:"AGI", skill:"rangedCombat" };
 }
 function weaponBonus(w){ const m=String(w.bonus||"").match(/-?\d+/); return m ? parseInt(m[0],10) : 0; }
-function tracksAmmo(w){ const r=String(w.reloads||"").trim(); return r!=="" && isFinite(parseInt(r,10)); }
 
 function renderWeapons(){
   const e = charState.equip, box = $("#wBody"); box.innerHTML="";
@@ -1320,41 +1307,23 @@ function renderWeapons(){
     x.addEventListener("click", ()=>{ e.weapons.splice(i,1); saveState(); renderWeapons(); });
     top.appendChild(nameI); top.appendChild(x); card.appendChild(top);
 
-    // editable stats
+    // editable stats — the ALIEN weapon line: Bonus / Damage / Range
     const stats=document.createElement("div"); stats.className="wc-stats";
-    [["bonus","Bonus","+0"],["damage","Damage","0"],["range","Range","—"],["reloads","Reloads","—"]].forEach(([f,lab,ph])=>{
+    [["bonus","Bonus","+0"],["damage","Damage","0"],["range","Range","—"]].forEach(([f,lab,ph])=>{
       const l=document.createElement("label"); l.appendChild(document.createTextNode(lab));
       const inp=document.createElement("input"); inp.value=w[f]||""; inp.placeholder=ph; inp.setAttribute("aria-label","weapon "+f);
       inp.addEventListener("input", ()=>{ w[f]=inp.value; saveState(); });
-      if(f==="range"||f==="reloads") inp.addEventListener("change", renderWeapons);   // relabel Fire / show ammo
+      if(f==="range") inp.addEventListener("change", renderWeapons);   // relabel Fire (close vs ranged)
       l.appendChild(inp); stats.appendChild(l);
     });
     card.appendChild(stats);
 
-    // fire + ammo
-    const fire=document.createElement("div"); fire.className="wc-fire";
+    // fire button — rolls the right combat skill with the weapon bonus
     const fb=document.createElement("button"); fb.className="fireBtn";
     fb.innerHTML='⌖ Fire<span class="fk">'+esc(labelFor(attr,skill))+(bon?(" "+(bon>0?"+":"")+bon):"")+'</span>';
     fb.addEventListener("click", ()=> openWeaponRoll(w));
-    fire.appendChild(fb);
+    card.appendChild(fb);
 
-    if(tracksAmmo(w)){
-      const left=parseInt(w.reloads,10);
-      const ammo=document.createElement("div"); ammo.className="ammo";
-      const sg=document.createElement("div"); sg.className="grp";
-      sg.innerHTML='Shots <b>'+(w.shots||0)+'</b>';
-      const rlb=document.createElement("button"); rlb.className="reloadBtn"; rlb.textContent="⟳ Reload";
-      rlb.disabled = !(left>0);
-      rlb.addEventListener("click", ()=>{
-        const l=parseInt(w.reloads,10)||0; if(l>0) w.reloads=String(l-1);
-        w.shots=0; saveState(); renderWeapons();
-      });
-      const rg=document.createElement("div"); rg.className="grp";
-      rg.innerHTML='<b'+(left<=0?' style="color:var(--alert)"':'')+'>'+left+'</b> left';
-      ammo.appendChild(sg); ammo.appendChild(rlb); ammo.appendChild(rg);
-      fire.appendChild(ammo);
-    }
-    card.appendChild(fire);
     box.appendChild(card);
   });
 }
@@ -1405,7 +1374,7 @@ function catAdd(){
   const idx = $("#catSel").value; if(idx==="") return;
   const item = CAT_INDEX[parseInt(idx,10)]; if(!item) return;
   if(item.damage != null){   // anything with weapon stats goes to the weapons table
-    charState.equip.weapons.push({ name:item.name, bonus:item.bonus||"", damage:item.damage||"", range:item.range||"", reloads:item.reloads||"" });
+    charState.equip.weapons.push({ name:item.name, bonus:item.bonus||"", damage:item.damage||"", range:item.range||"" });
     renderWeapons();
   } else {
     charState.equip.gear.push({ name:item.name, heavy:!!item.heavy });
@@ -1421,7 +1390,7 @@ function wireEquip(){
   $("#armorName").addEventListener("input", ()=>{ if(charState.equip){ charState.equip.armorName=$("#armorName").value; saveState(); } });
   $("#armorRating").addEventListener("input", ()=>{ if(charState.equip){ charState.equip.armorRating=$("#armorRating").value; saveState(); } });
   $("#wAdd").addEventListener("click", ()=>{ if(!charState.equip) return;
-    charState.equip.weapons.push({ name:"", bonus:"", damage:"", range:"", reloads:"" }); saveState(); renderWeapons(); });
+    charState.equip.weapons.push({ name:"", bonus:"", damage:"", range:"" }); saveState(); renderWeapons(); });
   const addGear = ()=>{ if(!charState.equip) return; const v=$("#gearIn").value.trim(); if(!v) return;
     charState.equip.gear.push({ name:v, heavy:$("#gearHeavy").checked }); $("#gearIn").value=""; $("#gearHeavy").checked=false; saveState(); renderGear(); };
   $("#gearAdd").addEventListener("click", addGear);
@@ -1667,10 +1636,6 @@ $("#rollBtn").addEventListener("click", ()=>{
   lastRoll = { label:modalCtx.label, base:rollN(p.base), stress:rollN(p.stress), pushed:0, story:0, wasPush:false };
   const btn=$("#rollBtn"); btn.classList.add("flash"); setTimeout(()=>btn.classList.remove("flash"),400);
   paintResult(false); publishRoll("roll");
-  // firing a tracked weapon spends a shot
-  if(modalCtx && modalCtx.weaponRef && tracksAmmo(modalCtx.weaponRef)){
-    modalCtx.weaponRef.shots = (modalCtx.weaponRef.shots||0)+1; saveState(); renderWeapons();
-  }
 });
 $("#pushBtn").addEventListener("click", ()=>{
   if(!lastRoll) return;

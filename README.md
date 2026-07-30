@@ -143,10 +143,9 @@ need for play lives on their own device.
 - **Weapons that roll themselves.** Each weapon in the kit is a card with a
   **⌖ Fire** button: tap it and the roller opens on the right skill — **Ranged
   Combat** for anything with a firing range, **Close Combat** for Engaged-range
-  gear — with the weapon's **bonus already applied**. Ranged weapons also track
-  **shots fired** and **reloads left**; tap **⟳ Reload** when you swap a mag
-  (it resets the shot count and spends a reload), so weapon usage and ammo are
-  easy to follow at the table.
+  gear — with the weapon's **bonus already applied**. Fire full-auto by *pushing*
+  the roll as normal. (Per the ALIEN RPG, ammunition isn't counted — there's no
+  reload tracker.)
 - **A rules window, one tap away.** An *Open ALIEN rules window* button (also a
   *rules ▸* link by the dice and a *Rules* link in the footer) pops up the full
   **Game Mother Screen** quick reference as a toggle overlay — dice & pushing,
@@ -245,10 +244,11 @@ self-destruct → Motion Tracker**.
 
 **NPC / Event Roll** (near the top): tap one of the **foe chips** — Facehugger,
 Adult Alien, Chestburster, Synthetic, Survivor, or a Weak / Average / Elite NPC —
-and it sets the dice pool and the name in one tap. Adjust the **Dice** or **Stress**
-steppers if you want, then hit **⚄ Roll**. Each **6** is a success; the result
-(optionally) pushes to the table's **Roll Log** for everyone to see. Two taps to a
-roll, no typing.
+and it sets the dice pool and the name in one tap. Or type your own in the
+**Name (optional)** box for a specific NPC or event (e.g. *Ash*, *bridge hatch*) —
+it's what shows on the table feed. Adjust the **Dice** or **Stress** steppers if
+you want, then hit **⚄ Roll**. Each **6** is a success; the result (optionally)
+pushes to the table's **Roll Log** for everyone to see.
 
 | Control | Effect on the display |
 |---------|-----------------------|
