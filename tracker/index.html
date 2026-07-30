@@ -212,33 +212,9 @@ body.gm .fs-tag.gm{ display:inline-block; color:var(--dim); }
     <label class="f" for="npcPreset">Preset (fills in the pool — edit anything after)</label>
     <select class="lbl" id="npcPreset">
       <option value="">— Custom —</option>
-      <optgroup label="Xenomorph life-cycle">
-        <option data-label="Facehugger · Pounce &amp; implant" data-base="8">Facehugger — Pounce &amp; implant (8)</option>
-        <option data-label="Facehugger · Resist removal" data-base="10">Facehugger — Resist removal (10)</option>
-        <option data-label="Chestburster · Burst free" data-base="6">Chestburster — Burst free (6)</option>
-        <option data-label="Adult Alien · Ambush" data-base="10">Adult Alien — Ambush / stealth (10)</option>
-        <option data-label="Adult Alien · Claw" data-base="9">Adult Alien — Claw / strike (9)</option>
-        <option data-label="Adult Alien · Grab &amp; drag" data-base="8">Adult Alien — Grab &amp; drag off (8)</option>
-        <option data-label="Adult Alien · Tail stab" data-base="8">Adult Alien — Tail stab (8)</option>
-        <option data-label="Adult Alien · Inner jaw" data-base="10">Adult Alien — Bite / inner jaw (10)</option>
-      </optgroup>
-      <optgroup label="Crew, synthetics &amp; company">
-        <option data-label="Synthetic · Close combat" data-base="8">Synthetic (Lucas) — Close combat (8)</option>
-        <option data-label="Synthetic · Deceive" data-base="7">Synthetic (Lucas) — Deceive / manipulate (7)</option>
-        <option data-label="Synthetic · Pistol" data-base="6">Synthetic (Lucas) — Pistol (6)</option>
-        <option data-label="Cronus survivor · Firearm" data-base="6">Cronus survivor — Firearm (6)</option>
-        <option data-label="Cronus survivor · Melee" data-base="5">Cronus survivor — Melee / grab (5)</option>
-        <option data-label="Panicked crew · Wild shot" data-base="4">Panicked crew — Wild shot (4)</option>
-        <option data-label="Company agent · Command" data-base="6">Company agent — Command / manipulate (6)</option>
-      </optgroup>
-      <optgroup label="Generic difficulty">
-        <option data-label="Trivial NPC" data-base="2">Trivial NPC (2)</option>
-        <option data-label="Weak NPC" data-base="4">Weak NPC (4)</option>
-        <option data-label="Average NPC" data-base="6">Average NPC (6)</option>
-        <option data-label="Skilled NPC" data-base="8">Skilled NPC (8)</option>
-        <option data-label="Elite NPC" data-base="10">Elite NPC (10)</option>
-        <option data-label="Environment / event" data-base="5">Environment / event (5)</option>
-      </optgroup>
+      <!-- Filled at load from assets/gmdata.js: the scenario's own cast, creatures,
+           signature attacks and fixed pools. The full stat blocks, the Act events and
+           the D6 tables live on the GM Control console (/control/). -->
     </select>
     <label class="f" for="npcLabel">Who / what (shown on the table feed)</label>
     <input class="lbl" id="npcLabel" placeholder="e.g. Neomorph — Mobility" autocomplete="off" spellcheck="false">
@@ -256,6 +232,7 @@ body.gm .fs-tag.gm{ display:inline-block; color:var(--dim); }
 </div>
 
 <script src="../assets/rollbus.js"></script>
+<script src="../assets/gmdata.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -552,8 +529,49 @@ stepper("#npcBase", 6, 0, 20);
 stepper("#npcStress", 0, 0, 20);
 stepper("#npcMod", 0, -5, 10);
 
-/* preset dropdown — fill the label + dice pool from a likely NPC/creature,
-   then the GM can still nudge any stepper before rolling */
+/* preset dropdown — built from the scenario data in assets/gmdata.js so the
+   quick roller on the scope offers the same real pools as the GM console:
+   every NPC's skills (attribute + skill), each creature's skills (skill level
+   alone), their signature attacks, and the scenario's fixed pools. */
+(function(){
+  if(typeof GMData==="undefined") return;
+  const sel=$("#npcPreset");
+  function group(label){ const g=document.createElement("optgroup"); g.label=label; sel.appendChild(g); return g; }
+  function opt(g, label, dice, text){
+    const o=document.createElement("option");
+    o.dataset.label=label; o.dataset.base=dice;
+    o.textContent=(text||label)+" ("+dice+")";
+    g.appendChild(o);
+  }
+  /* the cast, grouped by ship */
+  const byGroup={};
+  GMData.NPCS.forEach(n=>{ (byGroup[n.group]=byGroup[n.group]||[]).push(n); });
+  Object.keys(byGroup).forEach(name=>{
+    const g=group(name);
+    byGroup[name].forEach(n=>{
+      GMData.skillsOf(n).forEach(s=>{
+        opt(g, n.name+" · "+s.name, s.pool, n.name+" — "+s.name);
+      });
+    });
+  });
+  /* creatures: skills, then every signature attack that rolls dice */
+  const gx=group("Neomorphs & Abominations");
+  GMData.XENOS.forEach(x=>{
+    GMData.xenoSkillsOf(x).forEach(s=> opt(gx, x.name+" · "+s.name, s.pool, x.name+" — "+s.name));
+  });
+  Object.keys(GMData.ATTACKS).forEach(k=>{
+    const t=GMData.ATTACKS[k], g=group(t.name);
+    t.rows.forEach(r=>{
+      if(!r.dice) return;                                  // hiss / roar / escape roll nothing
+      opt(g, r.name, r.dice, r.roll+" — "+r.name+" · Dmg "+r.damage);
+      if(r.bonus) opt(g, r.name+" (bonus)", r.bonus.dice, r.roll+" — "+r.name+" bonus · Dmg "+r.bonus.damage);
+    });
+  });
+  /* Blast Power, Virulence */
+  const gp=group("Fixed pools");
+  GMData.POOLS.forEach(p=> opt(gp, p.name, p.dice));
+})();
+
 $("#npcPreset").addEventListener("change", e=>{
   const o=e.target.selectedOptions[0];
   if(!o || !o.dataset.base) return;                 // "— Custom —" leaves everything as-is
