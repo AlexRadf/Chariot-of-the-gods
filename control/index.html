@@ -108,6 +108,33 @@ body::before{
 .btn .hintl{ display:block; font-size:9px; color:var(--dim); letter-spacing:.1em; margin-top:4px; }
 
 /* NPC / event dice roller — native to this page, kept well away from the scope */
+.tabs{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px; }
+.tabs button{ background:none; border:1px solid var(--faint); color:var(--dim); font-family:inherit;
+  text-shadow:var(--glow); font-size:11px; letter-spacing:.08em; padding:.6em .2em;
+  text-transform:uppercase; cursor:pointer; }
+.tabs button.on{ border-color:var(--amber); color:var(--amber); background:var(--faint); }
+.pane{ display:none; }
+.pane.on{ display:block; }
+.rsel{ width:100%; background:#03130b; border:1px solid var(--faint); color:var(--phos);
+  font-family:inherit; text-shadow:var(--glow); font-size:14px; padding:.55em; margin-bottom:10px;
+  -webkit-appearance:none; appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+  background-position:calc(100% - 15px) 1.1em,calc(100% - 10px) 1.1em; background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
+.rsel:focus{ outline:1px solid var(--amber); }
+.rsel option{ background:#03130b; color:var(--phos); }
+.rsel optgroup{ background:#03130b; color:var(--amber); }
+/* the stat line under a picked NPC / creature */
+.statline{ border:1px solid var(--faint); padding:8px 9px; margin-bottom:10px; line-height:1.55; }
+.statline .nm{ color:var(--amber); text-transform:uppercase; letter-spacing:.07em; font-size:13px; }
+.statline .rl{ color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
+.statline .st{ font-family:'VT323',monospace; font-size:18px; color:var(--phos); letter-spacing:.04em; margin-top:3px; }
+.statline .st b{ color:var(--dim); font-weight:400; font-size:12px; font-family:inherit; letter-spacing:.06em; }
+.statline .ar{ font-size:12px; color:var(--phos); letter-spacing:.05em; margin-top:3px; }
+.statline .ar b{ color:var(--dim); font-weight:400; font-size:11px; letter-spacing:.06em; }
+.statline .ds{ font-size:11px; color:var(--dim); line-height:1.5; margin-top:5px; }
+/* the reference block under the chips reads as prose, so it stays legible */
+#castMeta, #xenoMeta, #poolMeta{ color:var(--dim); }
+#castMeta b, #xenoMeta b, #poolMeta b{ color:var(--faint); font-weight:400; text-transform:uppercase; letter-spacing:.08em; font-size:10px; }
 .chips{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
 .chip{ display:flex; justify-content:space-between; align-items:center; gap:8px;
   background:none; border:1px solid var(--faint); color:var(--phos); font-family:inherit;
@@ -143,6 +170,39 @@ body::before{
 .tally .m{ color:var(--dim); font-size:12px; }
 .rbc{ display:flex; align-items:center; gap:8px; margin-top:12px; font-size:12px; color:var(--dim); }
 .rnote{ font-size:11px; color:var(--faint); line-height:1.5; margin-top:8px; }
+
+/* draw buttons (signature attacks, crits, events, tables) + their results */
+.drawrow{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+.drawrow.one{ grid-template-columns:1fr; }
+.dbtn{ background:none; border:1px solid var(--dim); color:var(--phos); font-family:inherit;
+  text-shadow:var(--glow); font-size:13px; letter-spacing:.06em; padding:.7em .3em;
+  text-transform:uppercase; cursor:pointer; }
+.dbtn:active{ background:var(--faint); }
+.dbtn.hot{ border-color:var(--amber); color:var(--amber); }
+.draw{ border:1px solid var(--faint); padding:9px 10px; margin-bottom:10px; line-height:1.55; display:none; }
+.draw.on{ display:block; animation:rin .25s ease; }
+.draw .dh{ display:flex; align-items:baseline; gap:8px; margin-bottom:4px; }
+.draw .d6{ font-family:'VT323',monospace; font-size:24px; color:var(--amber); min-width:1.1em; }
+.draw .dn{ color:var(--amber); text-transform:uppercase; letter-spacing:.07em; font-size:13px; }
+.draw .dt{ font-size:12px; color:var(--phos); line-height:1.6; }
+.draw .dm{ font-size:11px; color:var(--dim); margin-top:5px; letter-spacing:.05em; text-transform:uppercase; }
+.draw .dm .warn{ color:var(--alert); }
+@keyframes rin{ from{ transform:translateY(-6px); opacity:0 } to{ transform:none; opacity:1 } }
+
+/* event browser */
+.evlist{ max-height:min(46vh,380px); overflow:auto; border:1px solid var(--faint); }
+.ev{ border-bottom:1px solid var(--faint); }
+.ev:last-child{ border-bottom:0; }
+.ev > .evh{ display:flex; align-items:center; gap:8px; padding:.65em .7em; cursor:pointer; }
+.ev > .evh .evn{ flex:1; font-size:13px; letter-spacing:.03em; }
+.ev.man > .evh .evn{ color:var(--amber); }
+.ev .tag{ font-size:9px; letter-spacing:.1em; text-transform:uppercase; border:1px solid currentColor;
+  padding:1px 4px; color:var(--dim); }
+.ev.man .tag{ color:var(--amber); }
+.ev .evb{ display:none; padding:0 .7em .7em; font-size:12px; color:var(--phos); line-height:1.6; }
+.ev.open .evb{ display:block; }
+.ev.hit{ background:var(--faint); }
+.ev .evr{ display:block; font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em; margin-top:6px; }
 
 /* embedded GM motion scope — collapsible so it can't catch a stray tap */
 .card.collapsible > h2{ cursor:pointer; display:flex; justify-content:space-between; align-items:center; margin-bottom:0; }
@@ -189,26 +249,67 @@ body::before{
 
   <div class="card">
     <h2>NPC / Event Roll</h2>
-    <div class="chips" id="npcChips">
-      <button class="chip" data-label="Facehugger" data-base="8">Facehugger<b>8</b></button>
-      <button class="chip" data-label="Adult Alien" data-base="9">Adult Alien<b>9</b></button>
-      <button class="chip" data-label="Chestburster" data-base="6">Chestburster<b>6</b></button>
-      <button class="chip" data-label="Synthetic" data-base="8">Synthetic<b>8</b></button>
-      <button class="chip" data-label="Survivor" data-base="6">Survivor<b>6</b></button>
-      <button class="chip" data-label="Weak NPC" data-base="4">Weak<b>4</b></button>
-      <button class="chip" data-label="Average NPC" data-base="6">Average<b>6</b></button>
-      <button class="chip" data-label="Elite NPC" data-base="10">Elite<b>10</b></button>
+    <div class="tabs" id="gmTabs">
+      <button data-tab="cast" class="on">Cast</button>
+      <button data-tab="xeno">Xenos</button>
+      <button data-tab="events">Events</button>
+      <button data-tab="tables">Tables</button>
     </div>
-    <input class="rlbl" id="npcName" placeholder="Name (optional) — e.g. Ash, Bridge hatch" autocomplete="off" spellcheck="false">
+
+    <!-- CAST — the crews of the Cronus and the Sotillo, straight from the booklet -->
+    <div class="pane on" data-pane="cast">
+      <select class="rsel" id="castPick" aria-label="Pick an NPC"></select>
+      <div class="statline" id="castStat"></div>
+      <label class="rbc" style="margin:0 0 10px"><input type="checkbox" id="castTurned"> Turned — Stage II Abomination</label>
+      <div class="chips" id="castSkills"></div>
+      <div class="rnote" id="castMeta"></div>
+    </div>
+
+    <!-- XENOS — Neomorph life cycle and the Abomination stages -->
+    <div class="pane" data-pane="xeno">
+      <select class="rsel" id="xenoPick" aria-label="Pick a creature"></select>
+      <div class="statline" id="xenoStat"></div>
+      <div class="chips" id="xenoSkills"></div>
+      <div class="drawrow">
+        <button class="dbtn hot" id="bAtk">⚄ Signature attack</button>
+        <button class="dbtn" id="bCrit">⚄ Critical injury</button>
+      </div>
+      <div class="draw" id="xenoDraw"></div>
+      <div class="rnote" id="xenoMeta"></div>
+    </div>
+
+    <!-- EVENTS — every scripted beat of the three Acts -->
+    <div class="pane" data-pane="events">
+      <div class="seg" id="actSeg">
+        <button data-act="1" class="on">Act I</button>
+        <button data-act="2">Act II</button>
+        <button data-act="3">Act III</button>
+      </div>
+      <div class="drawrow one"><button class="dbtn hot" id="bEvent">⚄ Draw an event</button></div>
+      <div class="evlist" id="evList"></div>
+      <div class="rnote">Amber = mandatory. Tap any event to read it. Draws stay on this phone — events are never pushed to the table feed.</div>
+    </div>
+
+    <!-- TABLES — the scenario's odd little rolls and its fixed dice pools -->
+    <div class="pane" data-pane="tables">
+      <div class="chips" id="tblChips"></div>
+      <div class="draw" id="tblDraw"></div>
+      <div class="rnote" style="margin:0 0 8px">Fixed pools — these load into the roller below:</div>
+      <div class="chips" id="poolChips"></div>
+      <div class="rnote" id="poolMeta"></div>
+    </div>
+
+    <input class="rlbl" id="npcName" placeholder="Who / what — e.g. Reid · Ranged Combat" autocomplete="off" spellcheck="false">
     <div class="rsteps">
       <div class="stp"><div class="k">Dice</div><div class="stepper" id="npcBase"><button class="dn" aria-label="dice down">−</button><span class="v">6</span><button class="up" aria-label="dice up">＋</button></div></div>
       <div class="stp"><div class="k">Stress</div><div class="stepper" id="npcStress"><button class="dn" aria-label="stress down">−</button><span class="v">0</span><button class="up" aria-label="stress up">＋</button></div></div>
+      <div class="stp"><div class="k">Mod</div><div class="stepper" id="npcMod"><button class="dn" aria-label="mod down">−</button><span class="v">0</span><button class="up" aria-label="mod up">＋</button></div></div>
     </div>
     <button class="rroll" id="npcRollBtn">⚄ Roll</button>
     <div class="dice" id="npcDice"></div>
     <div class="tally" id="npcTally"></div>
     <label class="rbc"><input type="checkbox" id="npcBroadcast" checked> Show the result on the table feed</label>
-    <div class="rnote">Tap a foe to set the dice, adjust if needed, then roll. Each 6 is a success.</div>
+    <div class="rnote">Humans roll attribute + skill; creatures roll their skill level alone. Each 6 is a success.</div>
   </div>
 
   <div class="card">
@@ -249,6 +350,7 @@ body::before{
 </div>
 
 <script src="../assets/rollbus.js"></script>
+<script src="../assets/gmdata.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 
@@ -362,8 +464,13 @@ $("#bAbort").addEventListener("click", ()=>{ setArmed(false); send("ABORT","ABOR
 
 function fmt(s){ return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
 
-/* -------------------- NPC / event dice roller -------------------- */
+/* -------------------- NPC / event dice roller --------------------
+   The pools, the creatures, the signature attacks and every Act event
+   come from assets/gmdata.js, which holds the scenario's own numbers.
+   Tapping anything here only *loads* the roller — nothing is thrown
+   until you hit ⚄ Roll, and only that result reaches the table. */
 function d6r(){ return 1+Math.floor(Math.random()*6); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
 function stepper(id, val, min, max){
   const w=$(id), v=w.querySelector(".v"); let n=val; v.textContent=n; w._v=n;
   const set=x=>{ n=Math.max(min,Math.min(max,x)); v.textContent=n; w._v=n; }; w._set=set;
@@ -372,20 +479,252 @@ function stepper(id, val, min, max){
 }
 stepper("#npcBase", 6, 0, 20);
 stepper("#npcStress", 0, 0, 20);
-let npcLabel = "GM Roll";
-$("#npcChips").addEventListener("click", e=>{
-  const b=e.target.closest(".chip"); if(!b) return;
-  $("#npcChips").querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", c===b));
-  npcLabel = b.dataset.label || "GM Roll";
-  $("#npcName").value = npcLabel;                    // fill the name so you can tweak it, or clear it
-  $("#npcBase")._set(parseInt(b.dataset.base,10)||0);
+stepper("#npcMod", 0, -5, 10);
+
+/* load a pool into the roller: label + base dice, modifier reset */
+function loadPool(label, dice, opts){
+  opts = opts || {};
+  $("#npcName").value = label || "";
+  $("#npcBase")._set(Math.max(0, dice|0));
+  $("#npcMod")._set(0);
+  if(opts.stress != null) $("#npcStress")._set(Math.max(0, opts.stress|0));
+  $("#npcDice").innerHTML=""; $("#npcTally").innerHTML="";
+  flash("POOL · "+(label||"GM")+" — "+Math.max(0,dice|0)+"D", "ok");
+}
+function chip(label, right, on){
+  const b=document.createElement("button");
+  b.className="chip"+(on?" on":""); b.type="button";
+  b.innerHTML = esc(label) + (right!=null ? '<b>'+esc(right)+'</b>' : "");
+  return b;
+}
+
+/* -------------------- tab strip -------------------- */
+$("#gmTabs").addEventListener("click", e=>{
+  const b=e.target.closest("button[data-tab]"); if(!b) return;
+  $("#gmTabs").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x===b));
+  document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on", p.dataset.pane===b.dataset.tab));
 });
-/* typing a custom name drops the chip highlight — it's your own NPC/event now */
-$("#npcName").addEventListener("input", ()=>{
-  $("#npcChips").querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
-});
+
+/* -------------------- CAST: Cronus & Sotillo crews -------------------- */
+(function(){
+  if(typeof GMData==="undefined") return;
+  const sel=$("#castPick"); const groups={};
+  GMData.NPCS.forEach(n=>{ (groups[n.group]=groups[n.group]||[]).push(n); });
+  Object.keys(groups).forEach(g=>{
+    const og=document.createElement("optgroup"); og.label=g;
+    groups[g].forEach(n=>{
+      const o=document.createElement("option");
+      o.value=n.id; o.textContent=n.name+" — "+n.role;
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+
+  function render(){
+    const base=GMData.npc(sel.value);
+    if(!base) return;
+    const turned = $("#castTurned").checked && base.turns;
+    const n = turned ? GMData.stage2(base) : base;
+    const a = n.attr;
+    $("#castStat").innerHTML =
+      '<div class="nm">'+esc(turned ? base.name+" · Stage II" : (base.full||base.name))+'</div>'+
+      '<div class="rl">'+esc(turned ? GMData.STAGE2.name : base.role+" · "+base.ship)+
+        (base.personality && !turned ? ' · '+esc(base.personality) : '')+'</div>'+
+      '<div class="st">STR '+a.STR+' · AGI '+a.AGI+' · WITS '+a.WITS+' · EMP '+a.EMP+
+        ' <b>HEALTH</b> '+n.health+(turned?' <b>SPEED</b> 2':'')+'</div>'+
+      '<div class="ds">'+esc(n.note||"")+'</div>';
+
+    const wrap=$("#castSkills"); wrap.innerHTML="";
+    const skills=GMData.skillsOf(n);
+    if(!skills.length) wrap.innerHTML='<div class="rnote">No usable skills left.</div>';
+    skills.forEach(s=>{
+      const b=chip(s.short, s.pool);
+      b.addEventListener("click", ()=>{
+        wrap.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+        b.classList.add("on");
+        loadPool((turned? base.name+" (Stage II)" : base.name)+" · "+s.name, s.pool);
+      });
+      wrap.appendChild(b);
+    });
+    /* a plain attribute roll, for anything with no skill behind it */
+    ["STR","AGI","WITS","EMP"].forEach(k=>{
+      const b=chip(GMData.ATTR_NAME[k], a[k]);
+      b.addEventListener("click", ()=>{
+        wrap.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+        b.classList.add("on");
+        loadPool((turned? base.name+" (Stage II)" : base.name)+" · "+GMData.ATTR_NAME[k], a[k]);
+      });
+      wrap.appendChild(b);
+    });
+
+    $("#castMeta").innerHTML = turned
+      ? esc(GMData.STAGE2.note)
+      : "<b>Talent</b> "+esc(base.talent)+" · <b>Gear</b> "+esc(base.gear)+
+        "<br><b>Agenda</b> "+esc(base.agenda)+
+        "<br><b>Buddy</b> "+esc(base.buddy)+" · <b>Rival</b> "+esc(base.rival);
+  }
+  sel.addEventListener("change", ()=>{ $("#castTurned").checked=false; render(); });
+  $("#castTurned").addEventListener("change", e=>{
+    const b=GMData.npc(sel.value);
+    if(e.target.checked && b && !b.turns){
+      e.target.checked=false;
+      flash(b.name.toUpperCase()+" DOESN'T TURN", "bad");
+      return;
+    }
+    render();
+  });
+  sel.value="johns"; render();
+})();
+
+/* -------------------- XENOS: Neomorphs & Abominations -------------------- */
+(function(){
+  if(typeof GMData==="undefined") return;
+  const sel=$("#xenoPick"), groups={};
+  GMData.XENOS.forEach(x=>{ (groups[x.group]=groups[x.group]||[]).push(x); });
+  Object.keys(groups).forEach(g=>{
+    const og=document.createElement("optgroup"); og.label=g;
+    groups[g].forEach(x=>{
+      const o=document.createElement("option");
+      o.value=x.id; o.textContent=x.stage+" — "+x.name;
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+
+  function current(){ return GMData.xeno(sel.value); }
+  function render(){
+    const x=current(); if(!x) return;
+    $("#xenoStat").innerHTML =
+      '<div class="nm">'+esc(x.name)+'</div>'+
+      '<div class="rl">'+esc(x.stage+" · "+x.group)+'</div>'+
+      '<div class="st"><b>SPEED</b> '+x.speed+' <b>HEALTH</b> '+x.health+'</div>'+
+      '<div class="ar"><b>Armor Rating</b> '+esc(x.armor)+'</div>'+
+      '<div class="ds">'+esc(x.note||"")+'</div>';
+    const wrap=$("#xenoSkills"); wrap.innerHTML="";
+    GMData.xenoSkillsOf(x).forEach(s=>{
+      const b=chip(s.short, s.pool);
+      b.addEventListener("click", ()=>{
+        wrap.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+        b.classList.add("on");
+        loadPool(x.name+" · "+s.name, s.pool);
+      });
+      wrap.appendChild(b);
+    });
+    $("#xenoMeta").innerHTML = esc(x.special||"")+
+      "<br>Speed "+x.speed+" — two zones per point in stealth mode, and one initiative card (a fast + a slow action) per point in combat.";
+    $("#xenoDraw").classList.remove("on");
+  }
+  sel.addEventListener("change", render);
+
+  /* show a drawn table row, and load its attack pool into the roller */
+  function showDraw(who, res, tableName){
+    const e=res.entry, box=$("#xenoDraw");
+    let meta=[];
+    if(e.dice) meta.push(e.dice+" base dice · Damage "+e.damage);
+    if(e.bonus) meta.push("then "+e.bonus.dice+"D Damage "+e.bonus.damage+" ("+e.bonus.note+")");
+    if(e.crit) meta.push('<span class="warn">crit '+e.crit+'</span>');
+    if(e.panic) meta.push('<span class="warn">panic roll</span>');
+    box.innerHTML =
+      '<div class="dh"><span class="d6">'+res.roll+'</span><span class="dn">'+esc(e.name)+'</span></div>'+
+      '<div class="dt">'+esc(e.text)+'</div>'+
+      (meta.length ? '<div class="dm">'+meta.join(" · ")+'</div>' : '')+
+      '<div class="dm" style="color:var(--faint)">'+esc(tableName)+'</div>';
+    box.classList.add("on");
+    if(e.dice) loadPool(who+" · "+e.name, e.dice);
+    else flash("▸ "+e.name.toUpperCase(), "ok");
+  }
+  $("#bAtk").addEventListener("click", ()=>{
+    const x=current(); if(!x) return;
+    showDraw(x.name, GMData.drawAttack(x.attacks), GMData.ATTACKS[x.attacks].name);
+  });
+  $("#bCrit").addEventListener("click", ()=>{
+    const x=current(); if(!x) return;
+    const res=GMData.drawCrit(), e=res.entry, box=$("#xenoDraw");
+    box.innerHTML =
+      '<div class="dh"><span class="d6">'+res.roll+'</span><span class="dn">'+esc(e.name)+'</span></div>'+
+      '<div class="dt">'+esc(e.text)+'</div>'+
+      '<div class="dm" style="color:var(--faint)">'+esc(GMData.CRITS.name)+' · '+esc(x.name)+'</div>';
+    box.classList.add("on");
+    flash("▸ CRIT · "+e.name.toUpperCase(), "ok");
+  });
+  sel.value="neomorph"; render();
+})();
+
+/* -------------------- EVENTS: Acts I, II, III -------------------- */
+(function(){
+  if(typeof GMData==="undefined") return;
+  let act=1;
+  function paint(){
+    const list=$("#evList"); list.innerHTML="";
+    GMData.eventsFor(act).forEach(ev=>{
+      const el=document.createElement("div");
+      el.className="ev"+(ev.mandatory?" man":"");
+      el.innerHTML =
+        '<div class="evh"><span class="evn">'+esc(ev.name)+'</span>'+
+          (ev.mandatory?'<span class="tag">Must</span>':'')+
+          (ev.roll?'<span class="tag">Roll</span>':'')+'</div>'+
+        '<div class="evb">'+esc(ev.text)+
+          (ev.roll?'<span class="evr">◈ '+esc(ev.roll)+'</span>':'')+
+          (ev.stress?'<span class="evr">✦ Stress '+esc(ev.stress)+'</span>':'')+'</div>';
+      el.querySelector(".evh").addEventListener("click", ()=>{
+        el.classList.toggle("open");
+        list.querySelectorAll(".ev.hit").forEach(x=>x.classList.remove("hit"));
+      });
+      list.appendChild(el);
+    });
+  }
+  $("#actSeg").addEventListener("click", e=>{
+    const b=e.target.closest("button[data-act]"); if(!b) return;
+    $("#actSeg").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x===b));
+    act=parseInt(b.dataset.act,10)||1; paint();
+  });
+  $("#bEvent").addEventListener("click", ()=>{
+    const ev=GMData.drawEvent(act); if(!ev) return;
+    const list=$("#evList");
+    const nodes=[...list.querySelectorAll(".ev")];
+    const i=GMData.eventsFor(act).indexOf(ev);
+    nodes.forEach(n=>{ n.classList.remove("hit","open"); });
+    const el=nodes[i]; if(!el) return;
+    el.classList.add("hit","open");
+    el.scrollIntoView({ block:"nearest", behavior:"smooth" });
+    flash("▸ "+ev.name.toUpperCase()+(ev.mandatory?" · MANDATORY":""), "ok");
+  });
+  paint();
+})();
+
+/* -------------------- TABLES: the scenario's odd little rolls -------------------- */
+(function(){
+  if(typeof GMData==="undefined") return;
+  const tw=$("#tblChips"), box=$("#tblDraw");
+  GMData.TABLES.forEach(t=>{
+    const b=chip(t.name, t.dice);
+    b.addEventListener("click", ()=>{
+      let total=0, dice=[];
+      for(let i=0;i<t.n;i++){ const v=GMData.d6(); dice.push(v); total+=v; }
+      box.innerHTML =
+        '<div class="dh"><span class="d6">'+total+'</span><span class="dn">'+esc(t.name)+'</span></div>'+
+        '<div class="dt">'+esc(t.note)+'</div>'+
+        '<div class="dm">'+esc(t.dice)+' → '+dice.join(" + ")+'</div>';
+      box.classList.add("on");
+      flash("▸ "+t.name.toUpperCase()+" · "+total, "ok");
+    });
+    tw.appendChild(b);
+  });
+  const pw=$("#poolChips");
+  GMData.POOLS.forEach(p=>{
+    const b=chip(p.name, p.dice);
+    b.addEventListener("click", ()=>{
+      pw.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+      b.classList.add("on");
+      $("#poolMeta").textContent = p.note;
+      loadPool(p.name, p.dice);
+    });
+    pw.appendChild(b);
+  });
+})();
+
 $("#npcRollBtn").addEventListener("click", ()=>{
-  const base = Math.max(0, $("#npcBase")._v||0);
+  const base = Math.max(0, ($("#npcBase")._v||0) + ($("#npcMod")._v||0));
   const stress = Math.max(0, $("#npcStress")._v||0);
   const bd=[], sd=[];
   for(let i=0;i<base;i++) bd.push(d6r());
@@ -398,7 +737,7 @@ $("#npcRollBtn").addEventListener("click", ()=>{
   sd.forEach(v=> wrap.appendChild(die(v,true)));
   $("#npcTally").innerHTML = '<span class="s'+(succ===0?' zero':'')+'">'+succ+'</span> success'+(succ===1?'':'es')+
     ' <span class="m">· '+bd.length+' base + '+sd.length+' stress'+(ones?(' · '+ones+' ✦1'):'')+'</span>';
-  const label = ($("#npcName").value||"").trim() || npcLabel || "GM Roll";
+  const label = ($("#npcName").value||"").trim() || "GM Roll";
   if($("#npcBroadcast").checked && typeof RollBus!=="undefined"){
     RollBus.publish({ kind:"roll", who:label, label:"NPC / event", successes:succ, base:bd, stress:sd, stressOnes:ones, pushed:0 });
   }

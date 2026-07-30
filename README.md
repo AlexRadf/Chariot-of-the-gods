@@ -242,13 +242,28 @@ for the other.
 The cards run top-to-bottom: **pairing → NPC / Event Roll → ship state →
 self-destruct → Motion Tracker**.
 
-**NPC / Event Roll** (near the top): tap one of the **foe chips** — Facehugger,
-Adult Alien, Chestburster, Synthetic, Survivor, or a Weak / Average / Elite NPC —
-and it sets the dice pool and the name in one tap. Or type your own in the
-**Name (optional)** box for a specific NPC or event (e.g. *Ash*, *bridge hatch*) —
-it's what shows on the table feed. Adjust the **Dice** or **Stress** steppers if
-you want, then hit **⚄ Roll**. Each **6** is a success; the result (optionally)
-pushes to the table's **Roll Log** for everyone to see.
+**NPC / Event Roll** (near the top) is the scenario itself, loaded in — the real
+stat blocks, signature attacks, Act events and odd little tables out of *Chariot
+of the Gods*, in four tabs. Tapping anything only **loads the roller**; nothing is
+thrown until you hit **⚄ Roll**, and only that result reaches the table.
+
+| Tab | What's in it |
+|-----|--------------|
+| **Cast** | Every NPC of the **Cronus** (Johns, Reid, Flynn, Cooper, Clayton, Ava 6) and the **Sotillo** (Bolaji, Pin, Bein, Horton) with their real attributes, Health, talent, gear, agenda, buddy and rival. Their skills come up as chips already totalled to **attribute + skill** — tap *Ranged Cbt 7* and the pool is set. Four attribute chips cover anything with no skill behind it. |
+| **Xenos** | The Neomorph life cycle (**Bloodburster → Neophyte → adult**) and the Abomination stages (**Revenant**, **Beluga-Head**) with Speed, Health, Armor Rating and skill pools. **⚄ Signature attack** rolls the creature's own D6 table and prints the result — then loads its Base Dice and Damage into the roller for you. **⚄ Critical injury** rolls the Xenomorph crit table for when one hits zero Health. |
+| **Events** | All 34 scripted events of **Acts I, II and III**, mandatory ones in amber, each with the skill roll and stress hit it calls for. Tap to read one, or hit **⚄ Draw an event** to have the Act pick for you. Event draws stay on your phone — they're never pushed to the table feed. |
+| **Tables** | The scenario's stray rolls (egg sac clutches **2D6**, decompressed compartments, doses, the Turns before a Bloodburster returns) and its fixed pools — **Blast Power 12** for the Montero's detonation, **Virulence 9** for Neomorphic Motes, **Virulence 6** for the 26 Draconis Strain. |
+
+**Turned — Stage II Abomination** on the Cast tab applies the transformation from
+the booklet in one tap: **STRENGTH +3** (Health with it), **AGILITY +1**,
+**EMPATHY 1**, **Speed 2**, and the chips it can no longer use — Empathy skills,
+firearms, tech — simply disappear. Cooper is refused, because he doesn't turn:
+he births a Bloodburster.
+
+Under the tabs sits the shared roller. The **Who / what** box is what shows on
+the table feed, and **Dice / Stress / Mod** are yours to nudge before rolling.
+Each **6** is a success; the result (optionally) pushes to the table's **Roll
+Log** for everyone to see.
 
 | Control | Effect on the display |
 |---------|-----------------------|
@@ -301,6 +316,12 @@ and never drift on their own, so *you* decide when the creatures move:
 Most of the time you'll drive blips from the embedded scope on the **GM Control**
 console rather than this standalone page — but the full page is still here if you
 want the tracker on a dedicated phone.
+
+Running the tracker in GM mode (`?gm=1`) also gives you a **⚄ Roll** button: a
+cut-down version of the console's roller whose preset list is built from the same
+[`assets/gmdata.js`](assets/gmdata.js) — every NPC's skills, each creature's
+skills, the signature attacks that roll dice, and the fixed pools. The full stat
+blocks, the Act events and the D6 tables live on the **GM Control** console.
 
 **Two-screen mode.** Add the same `?room=CODE` to two tracker links and they
 **mirror**: place and drag contacts on your own phone (`…/tracker/?room=CODE`) and
@@ -400,6 +421,7 @@ live automatically. `.nojekyll` tells Pages to serve the files as-is.
 | [`control/`](control/) | The **GM Control** remote — a phone page that pairs to the display and drives the self-destruct sequence. |
 | [`tracker/`](tracker/) | The **M314 motion tracker** — the mobile scope with hand-placed contacts and a synthesized proximity ping. |
 | [`assets/rollbus.js`](assets/rollbus.js) | The shared **roll bus** — makes a dice roll on one device show up on every screen in the room. |
+| [`assets/gmdata.js`](assets/gmdata.js) | The **GM data** — the scenario's NPCs, creatures, signature-attack tables, Act events and dice pools, shared by the GM console and the tracker's quick roller. |
 | [`qr/`](qr/) | Per-crew access-card QR codes, PNG **and** SVG (e.g. `qr/reynolds-8654.png`). |
 | [`cards/access-cards.html`](cards/access-cards.html) | Print-ready sheet of all nine terminal cards. |
 | [`scripts/generate_qr.py`](scripts/generate_qr.py) | Regenerates the codes and card sheet for any site URL. |
@@ -497,6 +519,25 @@ Near the top of the `<script>` block:
 
 To reskin the whole scenario with your own crew, rewrite `CREW` and `SECRETS`;
 the dice, trackers, agenda toggle and rules window all follow the data.
+
+### The GM's side of the table (`assets/gmdata.js`)
+
+Everything the GM console and the tracker's quick roller offer comes out of one
+plain-data file — no DOM, no network, so it works offline like the rest of the kit:
+
+| Export | Holds |
+|--------|-------|
+| `NPCS` | The crews of the **Cronus** and the **Sotillo** — attributes, skills, Health, talent, gear, personal agenda, buddy and rival. `turns: false` marks anyone who never becomes an Abomination. |
+| `XENOS` | Bloodburster, Neophyte, adult Neomorph, Revenant and Beluga-Head — Speed, Health, Armor Rating, skills, and which attack table each one uses. |
+| `ATTACKS` / `CRITS` | The D6 signature-attack tables and the Xenomorph critical injury table, each row carrying its Base Dice, Damage, crit number and whether it forces a Panic Roll. |
+| `EVENTS` | All 34 Act I–III events: name, act, `mandatory`, the skill roll it calls for, any stress hit, and the text you read off the phone. |
+| `TABLES` / `POOLS` | The stray D6/2D6 rolls, and the fixed pools (Blast Power, Virulence). |
+
+Helpers do the arithmetic: `GMData.pool(npc, skill)` returns attribute + skill,
+`GMData.skillsOf(npc)` builds the chip list, `GMData.stage2(npc)` applies the
+Stage II Abomination transformation, and `GMData.drawAttack(table)` /
+`GMData.drawEvent(act)` roll for you. Swap the arrays to run a different
+scenario — both roller UIs are built from whatever is in here.
 
 ### The room code
 
