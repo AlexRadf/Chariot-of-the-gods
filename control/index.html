@@ -189,12 +189,25 @@ body::before{
 .draw .dm .warn{ color:var(--alert); }
 @keyframes rin{ from{ transform:translateY(-6px); opacity:0 } to{ transform:none; opacity:1 } }
 
-/* event browser */
+/* event browser — the Act's phases run top to bottom as a rough timeline */
 .evlist{ max-height:min(46vh,380px); overflow:auto; border:1px solid var(--faint); }
+.evphase{ display:flex; align-items:center; gap:8px; padding:.5em .7em;
+  background:var(--faint); border-bottom:1px solid var(--faint);
+  font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); }
+.evphase .num{ font-family:'VT323',monospace; font-size:15px; color:var(--amber); letter-spacing:0; }
+.evphase .pn{ flex:1; }
+.evphase .pc{ color:var(--faint); letter-spacing:.06em; }
+.evphase.done .pn{ text-decoration:line-through; }
 .ev{ border-bottom:1px solid var(--faint); }
 .ev:last-child{ border-bottom:0; }
 .ev > .evh{ display:flex; align-items:center; gap:8px; padding:.65em .7em; cursor:pointer; }
 .ev > .evh .evn{ flex:1; font-size:13px; letter-spacing:.03em; }
+/* strike out what you've already run — Draw skips these */
+.ev.done > .evh .evn{ color:var(--faint); text-decoration:line-through; }
+.ev.done > .evh .tag{ opacity:.4; }
+.ev .tick{ background:none; border:1px solid var(--faint); color:var(--faint); font-family:inherit;
+  font-size:11px; line-height:1; padding:.25em .45em; cursor:pointer; }
+.ev.done .tick{ border-color:var(--phos); color:var(--phos); }
 .ev.man > .evh .evn{ color:var(--amber); }
 .ev .tag{ font-size:9px; letter-spacing:.1em; text-transform:uppercase; border:1px solid currentColor;
   padding:1px 4px; color:var(--dim); }
@@ -285,9 +298,9 @@ body::before{
         <button data-act="2">Act II</button>
         <button data-act="3">Act III</button>
       </div>
-      <div class="drawrow one"><button class="dbtn hot" id="bEvent">⚄ Draw an event</button></div>
+      <div class="drawrow"><button class="dbtn hot" id="bEvent">⚄ Draw an event</button><button class="dbtn" id="bEvReset">↺ Clear run marks</button></div>
       <div class="evlist" id="evList"></div>
-      <div class="rnote">Amber = mandatory. Tap any event to read it. Draws stay on this phone — events are never pushed to the table feed.</div>
+      <div class="rnote">The Act runs top to bottom in phases — a rough timeline, not a script. Amber = mandatory. Tap an event to read it, or tap ✓ to strike it once you've run it. <b>Draw</b> then picks an optional event from the earliest phase you haven't finished, so it suits where the group actually is. Draws stay on this phone — events are never pushed to the table feed.</div>
     </div>
 
     <!-- TABLES — the scenario's odd little rolls and its fixed dice pools -->
@@ -650,27 +663,62 @@ $("#gmTabs").addEventListener("click", e=>{
   sel.value="neomorph"; render();
 })();
 
-/* -------------------- EVENTS: Acts I, II, III -------------------- */
+/* -------------------- EVENTS: Acts I, II, III --------------------
+   The Act is laid out as a rough timeline: phases run top to bottom, the
+   mandatory beats form the spine, optional ones sit where they land most
+   naturally. Tick an event once you've run it and it's struck out and
+   skipped by Draw — which pulls from the earliest phase you haven't
+   finished, so what you get suits where the group actually is. */
 (function(){
   if(typeof GMData==="undefined") return;
   let act=1;
+
+  /* which events have been run — survives a reload mid-session */
+  const RUN_KEY="cotg-gm-events-run";
+  let run=new Set();
+  try{ (JSON.parse(localStorage.getItem(RUN_KEY))||[]).forEach(id=>run.add(id)); }catch(e){}
+  function saveRun(){ try{ localStorage.setItem(RUN_KEY, JSON.stringify([...run])); }catch(e){} }
+
+  const ROMAN=["","I","II","III"];
   function paint(){
     const list=$("#evList"); list.innerHTML="";
-    GMData.eventsFor(act).forEach(ev=>{
-      const el=document.createElement("div");
-      el.className="ev"+(ev.mandatory?" man":"");
-      el.innerHTML =
-        '<div class="evh"><span class="evn">'+esc(ev.name)+'</span>'+
-          (ev.mandatory?'<span class="tag">Must</span>':'')+
-          (ev.roll?'<span class="tag">Roll</span>':'')+'</div>'+
-        '<div class="evb">'+esc(ev.text)+
-          (ev.roll?'<span class="evr">◈ '+esc(ev.roll)+'</span>':'')+
-          (ev.stress?'<span class="evr">✦ Stress '+esc(ev.stress)+'</span>':'')+'</div>';
-      el.querySelector(".evh").addEventListener("click", ()=>{
-        el.classList.toggle("open");
-        list.querySelectorAll(".ev.hit").forEach(x=>x.classList.remove("hit"));
+    const events=GMData.eventsFor(act);
+    GMData.phasesFor(act).forEach((phase,pi)=>{
+      const inPhase=events.filter(e=>e.phase===phase);
+      const left=inPhase.filter(e=>!run.has(e.id)).length;
+
+      const h=document.createElement("div");
+      h.className="evphase"+(left?"":" done");
+      h.innerHTML='<span class="num">'+ROMAN[act]+'.'+(pi+1)+'</span>'+
+        '<span class="pn">'+esc(phase)+'</span>'+
+        '<span class="pc">'+(left ? (inPhase.length-left)+"/"+inPhase.length : "done")+'</span>';
+      list.appendChild(h);
+
+      inPhase.forEach(ev=>{
+        const el=document.createElement("div");
+        el.className="ev"+(ev.mandatory?" man":"")+(run.has(ev.id)?" done":"");
+        el.dataset.id=ev.id;
+        el.innerHTML =
+          '<div class="evh"><span class="evn">'+esc(ev.name)+'</span>'+
+            (ev.mandatory?'<span class="tag">Must</span>':'')+
+            (ev.when==="anytime"?'<span class="tag">Any time</span>':'')+
+            (ev.when==="conditional"?'<span class="tag">If…</span>':'')+
+            (ev.roll?'<span class="tag">Roll</span>':'')+
+            '<button class="tick" aria-label="mark as run">✓</button></div>'+
+          '<div class="evb">'+esc(ev.text)+
+            (ev.roll?'<span class="evr">◈ '+esc(ev.roll)+'</span>':'')+
+            (ev.stress?'<span class="evr">✦ Stress '+esc(ev.stress)+'</span>':'')+'</div>';
+        el.querySelector(".evh").addEventListener("click", e=>{
+          if(e.target.closest(".tick")) return;              // the tick isn't a "read me"
+          el.classList.toggle("open");
+          list.querySelectorAll(".ev.hit").forEach(x=>x.classList.remove("hit"));
+        });
+        el.querySelector(".tick").addEventListener("click", ()=>{
+          if(run.has(ev.id)) run.delete(ev.id); else run.add(ev.id);
+          saveRun(); paint();
+        });
+        list.appendChild(el);
       });
-      list.appendChild(el);
     });
   }
   $("#actSeg").addEventListener("click", e=>{
@@ -679,15 +727,18 @@ $("#gmTabs").addEventListener("click", e=>{
     act=parseInt(b.dataset.act,10)||1; paint();
   });
   $("#bEvent").addEventListener("click", ()=>{
-    const ev=GMData.drawEvent(act); if(!ev) return;
+    const ev=GMData.drawEvent(act, { skip:run, optionalOnly:true });
+    if(!ev){ flash("ACT "+ROMAN[act]+" — NO OPTIONAL EVENTS LEFT", "bad"); return; }
     const list=$("#evList");
-    const nodes=[...list.querySelectorAll(".ev")];
-    const i=GMData.eventsFor(act).indexOf(ev);
-    nodes.forEach(n=>{ n.classList.remove("hit","open"); });
-    const el=nodes[i]; if(!el) return;
+    list.querySelectorAll(".ev").forEach(n=> n.classList.remove("hit","open"));
+    const el=list.querySelector('.ev[data-id="'+ev.id+'"]'); if(!el) return;
     el.classList.add("hit","open");
     el.scrollIntoView({ block:"nearest", behavior:"smooth" });
-    flash("▸ "+ev.name.toUpperCase()+(ev.mandatory?" · MANDATORY":""), "ok");
+    flash("▸ "+ev.name.toUpperCase()+" · "+ev.phase.toUpperCase(), "ok");
+  });
+  $("#bEvReset").addEventListener("click", ()=>{
+    run.clear(); saveRun(); paint();
+    flash("RUN MARKS CLEARED", "ok");
   });
   paint();
 })();

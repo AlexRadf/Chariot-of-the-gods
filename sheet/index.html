@@ -205,6 +205,27 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .encum{ font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--dim); text-transform:none; letter-spacing:0; }
 .encum.over{ color:var(--alert); }
 .eq-empty{ color:var(--faint); font-size:12.5px; }
+/* custom critical injury builder — only shown when "Custom…" is picked */
+.injcustom{ display:none; margin-top:10px; border:1px solid var(--faint); padding:10px; }
+.injcustom.on{ display:block; }
+.inj-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:6px; }
+.inj-row .k{ font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em; }
+.inj-row input[type=text]{ flex:1; min-width:140px; background:var(--crt); border:1px solid var(--faint);
+  color:var(--phos); font-family:inherit; font-size:13px; padding:.4em .6em; }
+.inj-row input.fatalin{ flex:0 1 150px; min-width:110px; }
+.inj-row input[type=text]:disabled{ opacity:.4; }
+.inj-row select{ background:var(--crt); border:1px solid var(--faint); color:var(--phos);
+  font-family:inherit; font-size:13px; padding:.4em .5em; }
+.inj-row label{ font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em;
+  display:inline-flex; gap:4px; align-items:center; }
+.inj-row .eq-add{ margin-top:0; }
+.penlist{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+.penlist .pen{ display:inline-flex; align-items:center; gap:6px; border:1px solid var(--amber);
+  color:var(--amber); font-size:11.5px; padding:.25em .5em; letter-spacing:.04em; }
+.penlist .pen button{ background:none; border:0; color:inherit; font-family:inherit; cursor:pointer;
+  font-size:12px; padding:0 2px; }
+.rtable td .effnote{ display:block; color:var(--dim); }
+.rtable td .efffatal{ display:block; color:var(--alert); }
 #injBody td.eff{ color:var(--alert); }
 #injBody td.rm{ width:26px; text-align:center; }
 #injBody td.rm button{ border:0; color:var(--faint); padding:2px 6px; font-size:14px; }
@@ -510,7 +531,42 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
       <thead><tr><th>d66</th><th>Injury</th><th>Effect on rolls</th><th></th></tr></thead>
       <tbody id="injBody"></tbody>
     </table>
-    <p id="injEmpty" class="eq-empty">No critical injuries. Roll one from Quick Rolls and add it here if you're hit while Broken.</p>
+    <p id="injEmpty" class="eq-empty">No critical injuries. Roll one from Quick Rolls, pick the one your Game Mother calls, or write your own below.</p>
+
+    <div class="eq-h">Add an injury</div>
+    <div class="catadd">
+      <select id="injSel" aria-label="Critical injury to add"></select>
+      <button class="eq-add" id="injAdd">Add</button>
+    </div>
+    <small style="color:var(--faint); display:block; margin-top:6px">When the Game Mother calls a number — “critical injury #61” — pick it here instead of rolling. Its penalty starts applying to your rolls straight away.</small>
+
+    <div id="injCustom" class="injcustom">
+      <div class="inj-row">
+        <input type="text" id="injName" placeholder="Injury name — e.g. Acid burn, left hand" spellcheck="false">
+      </div>
+      <div class="inj-row">
+        <input type="text" id="injEffect" placeholder="What it does (optional note)…" spellcheck="false">
+      </div>
+      <div class="inj-row">
+        <span class="k">Penalty</span>
+        <select id="injSkill" aria-label="Skill to penalise"></select>
+        <select id="injMod" aria-label="Dice modifier">
+          <option value="-1">−1</option>
+          <option value="-2" selected>−2</option>
+          <option value="-3">−3</option>
+          <option value="-4">−4</option>
+          <option value="1">+1</option>
+        </select>
+        <button class="eq-add" id="injPenAdd">＋</button>
+      </div>
+      <div class="penlist" id="injPens"></div>
+      <div class="inj-row">
+        <label><input type="checkbox" id="injStress"> Stress +1 when taken</label>
+        <label><input type="checkbox" id="injFatal"> Fatal</label>
+        <input type="text" id="injFatalTxt" class="fatalin" placeholder="e.g. −1 · 1 Turn" spellcheck="false" disabled>
+      </div>
+      <small style="color:var(--faint); display:block">Penalties you add here are applied to those rolls automatically, exactly like a d66 injury.</small>
+    </div>
   </section>
 
   <!-- equipment & inventory -->
@@ -1437,27 +1493,56 @@ function buildTrackers(){
   $("#spVal").textContent = charState.storyPoints;
 }
 
-/* ---- stored critical injuries ---- */
+/* ---- stored critical injuries ----
+   An entry is either a d66 number (looked up in CRIT_INFO / CRIT_MODS) or a
+   custom object the player built: { name, effect, mods:{skill:n}, stress,
+   fatal }. These four readers hide the difference from everything else, so a
+   Game-Mother-invented injury penalises rolls exactly like a rolled one. */
+function injIsCustom(e){ return e && typeof e === "object"; }
+function injCode(e){ return injIsCustom(e) ? "GM" : e; }
+function injName(e){
+  if(injIsCustom(e)) return e.name || "Injury";
+  return (CRIT_INFO[e] && CRIT_INFO[e].name) || "—";
+}
+function injMods(e){
+  if(injIsCustom(e)) return e.mods || {};
+  return CRIT_MODS[e] || {};
+}
+function injNote(e){
+  if(injIsCustom(e)) return e.effect || "";
+  return (CRIT_INFO[e] && CRIT_INFO[e].effect) || "";
+}
+function injFatal(e){
+  const f = injIsCustom(e) ? e.fatal : (CRIT_INFO[e] && CRIT_INFO[e].fatal);
+  return (f && f !== "—") ? f : "";
+}
+
 function buildInjuries(){
   const tb = $("#injBody"), tbl = $("#injTable"), empty = $("#injEmpty");
   tb.innerHTML="";
   const list = charState.injuries||[];
   if(!list.length){ tbl.style.display="none"; empty.style.display=""; return; }
   tbl.style.display=""; empty.style.display="none";
-  list.forEach((v,i)=>{
-    const info = CRIT_INFO[v]||{ name:"—", effect:"" };
+  list.forEach((e,i)=>{
+    const pen = injuryEffectText(e), note = injNote(e), fatal = injFatal(e);
     const tr=document.createElement("tr");
-    tr.innerHTML='<td>'+v+'</td><td>'+esc(info.name)+'</td><td class="eff">'+esc(injuryEffectText(v)||info.effect)+'</td>';
+    tr.innerHTML='<td>'+esc(injCode(e))+'</td><td>'+esc(injName(e))+'</td>'+
+      '<td class="eff">'+esc(pen || (note ? "" : "—"))+
+        (note ? '<span class="effnote">'+esc(note)+'</span>' : '')+
+        (fatal ? '<span class="efffatal">Fatal: '+esc(fatal)+'</span>' : '')+
+      '</td>';
     const rm=document.createElement("td"); rm.className="rm";
     const rb=document.createElement("button"); rb.textContent="✕"; rb.setAttribute("aria-label","remove injury");
     rb.addEventListener("click", ()=>{ charState.injuries.splice(i,1); saveState(); buildInjuries(); });
     rm.appendChild(rb); tr.appendChild(rm); tb.appendChild(tr);
   });
 }
-function injuryEffectText(v){
-  const m = CRIT_MODS[v]; if(!m) return "";
+/* typographic minus, to match the reference tables */
+function fmtMod(n){ return n>0 ? ("+"+n) : ("−"+Math.abs(n)); }
+function injuryEffectText(e){
+  const m = injMods(e); if(!m) return "";
   const parts=[];
-  Object.keys(m).forEach(k=>{ if(k==="stress") return; parts.push(skillLabel(k)+" "+(m[k]>0?"+":"")+m[k]); });
+  Object.keys(m).forEach(k=>{ if(k==="stress") return; parts.push(skillLabel(k)+" "+fmtMod(m[k])); });
   return parts.join(", ");
 }
 function skillLabel(key){
@@ -1467,17 +1552,95 @@ function skillLabel(key){
 function injuryModForSkill(skillKey){
   if(!skillKey) return 0;
   let m=0;
-  (charState.injuries||[]).forEach(v=>{ const mm=CRIT_MODS[v]; if(mm && typeof mm[skillKey]==="number") m+=mm[skillKey]; });
+  (charState.injuries||[]).forEach(e=>{
+    const mm=injMods(e);
+    if(mm && typeof mm[skillKey]==="number") m+=mm[skillKey];
+  });
   return m;
 }
-function addInjury(v){
+function addInjury(e){
   charState.injuries = charState.injuries || [];
-  charState.injuries.push(v);
-  const m = CRIT_MODS[v];
+  charState.injuries.push(e);
+  const m = injMods(e);
   if(m && m.stress){ charState.stress = Math.min(10, charState.stress + m.stress); }
   saveState();
   buildInjuries(); buildTrackers();
 }
+/* ---- adding an injury by hand ----
+   Two ways in: pick the d66 entry the Game Mother called (the scenario's
+   signature attacks name them outright — "critical injury #61"), or build a
+   custom one with its own name, note and automatic roll penalties. */
+let customPens = {};                                  // { skillKey: modifier }
+
+function buildInjuryPicker(){
+  const sel = $("#injSel");
+  sel.innerHTML="";
+  const og = document.createElement("optgroup"); og.label = "d66 critical injuries";
+  Object.keys(CRIT_INFO).map(Number).sort((a,b)=>a-b).forEach(v=>{
+    const o=document.createElement("option");
+    o.value=String(v);
+    o.textContent = v + " — " + CRIT_INFO[v].name + (injFatal(v) ? " (fatal)" : "");
+    og.appendChild(o);
+  });
+  sel.appendChild(og);
+  const oc=document.createElement("option"); oc.value="custom"; oc.textContent="Custom…";
+  sel.appendChild(oc);
+
+  const ss = $("#injSkill"); ss.innerHTML="";
+  for(const a in SKILLS){
+    const g=document.createElement("optgroup"); g.label = ATTR_NAME[a];
+    SKILLS[a].forEach(s=>{
+      const o=document.createElement("option"); o.value=s[0]; o.textContent=s[1]; g.appendChild(o);
+    });
+    ss.appendChild(g);
+  }
+}
+function renderPens(){
+  const box=$("#injPens"); box.innerHTML="";
+  Object.keys(customPens).forEach(k=>{
+    const el=document.createElement("span"); el.className="pen";
+    el.textContent = skillLabel(k)+" "+fmtMod(customPens[k]);
+    const b=document.createElement("button"); b.textContent="✕"; b.setAttribute("aria-label","remove penalty");
+    b.addEventListener("click", ()=>{ delete customPens[k]; renderPens(); });
+    el.appendChild(b); box.appendChild(el);
+  });
+}
+function resetCustomInjury(){
+  customPens = {}; renderPens();
+  $("#injName").value=""; $("#injEffect").value=""; $("#injFatalTxt").value="";
+  $("#injStress").checked=false; $("#injFatal").checked=false; $("#injFatalTxt").disabled=true;
+}
+function wireInjuries(){
+  buildInjuryPicker();
+  $("#injSel").addEventListener("change", ()=>{
+    $("#injCustom").classList.toggle("on", $("#injSel").value==="custom");
+  });
+  $("#injPenAdd").addEventListener("click", ()=>{
+    customPens[$("#injSkill").value] = parseInt($("#injMod").value,10);
+    renderPens();
+  });
+  $("#injFatal").addEventListener("change", e=>{
+    $("#injFatalTxt").disabled = !e.target.checked;
+    if(!e.target.checked) $("#injFatalTxt").value="";
+  });
+  $("#injAdd").addEventListener("click", ()=>{
+    if(!current) return;
+    const v = $("#injSel").value;
+    if(v!=="custom"){ addInjury(parseInt(v,10)); return; }
+    const name = ($("#injName").value||"").trim();
+    if(!name){ $("#injName").focus(); return; }
+    const mods = Object.assign({}, customPens);
+    if($("#injStress").checked) mods.stress = 1;
+    addInjury({
+      name,
+      effect: ($("#injEffect").value||"").trim(),
+      mods,
+      fatal: $("#injFatal").checked ? (($("#injFatalTxt").value||"").trim() || "Yes") : ""
+    });
+    resetCustomInjury();
+  });
+}
+
 function buildPips(sel, max, value, cls, onChange){
   const el = $(sel); el.innerHTML="";
   for(let i=1;i<=max;i++){
@@ -1618,9 +1781,10 @@ function refreshPool(){
   $("#rBase").textContent = p.base; $("#rStress").textContent = p.stress; $("#rTotal").textContent = p.base+p.stress;
   const note = $("#injNote");
   if(p.injMod){
-    const inj = (charState.injuries||[]).filter(v=> CRIT_MODS[v] && typeof CRIT_MODS[v][modalCtx.skillKey]==="number")
-      .map(v=> (CRIT_INFO[v]&&CRIT_INFO[v].name)||("#"+v));
-    note.textContent = "Injury "+(p.injMod>0?"+":"")+p.injMod+" applied ("+inj.join(", ")+")";
+    const inj = (charState.injuries||[])
+      .filter(e=> typeof injMods(e)[modalCtx.skillKey]==="number")
+      .map(injName);
+    note.textContent = "Injury "+fmtMod(p.injMod)+" applied ("+inj.join(", ")+")";
   } else note.textContent="";
 }
 $("#modUp").addEventListener("click", ()=>{ let v=Math.min(6,currentMod()+1); $("#modVal").textContent=v; refreshPool(); });
@@ -1834,6 +1998,7 @@ function buildCritIndex(){
 (function boot(){
   buildCards();
   buildCritIndex();
+  wireInjuries();          // needs CRIT_INFO, so it follows buildCritIndex
   buildCatalog();
   initRoom();
   wireEquip();

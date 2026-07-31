@@ -16,8 +16,9 @@
                    roller can load the pool for you
      · CRITS       the D6 critical injury table for Xenomorphs
      · EVENTS      every scripted event of Acts I, II and III,
-                   flagged mandatory or optional, with the skill
-                   roll each one calls for
+                   laid out on a rough timeline of phases, flagged
+                   mandatory or optional, with the skill roll each
+                   one calls for
      · TABLES      the scenario's odd little rolls — egg sac
                    clutches, decompressed compartments, doses,
                    Blast Power, Virulence
@@ -38,7 +39,10 @@
      GMData.npc(id) / GMData.xeno(id)
      GMData.d6() / GMData.pick(arr)
      GMData.drawAttack(tableKey)  -> {roll, entry}
-     GMData.drawEvent(act)        -> a random event from that Act
+     GMData.eventsFor(act)        -> that Act's events, in timeline order
+     GMData.phasesFor(act)        -> that Act's phases, in order
+     GMData.drawEvent(act, opts)  -> an event, from the earliest phase
+                                     that still has one (see the function)
    ============================================================ */
 (function (global) {
   "use strict";
@@ -307,80 +311,137 @@
 
   /* ============================================================
      EVENTS — the GM's arsenal of drama, Acts I–III
+
+     The booklet is explicit that these need not all happen, nor happen in
+     the order printed. What follows is a *rough timeline* rather than a
+     script: each Act is broken into phases that run top to bottom, with
+     the mandatory beats forming the spine and the optional ones sitting in
+     the phase where they land most naturally. Events that float free of
+     the timeline carry `when`:
+
+       "anytime"     — works in any phase, and often in a later Act too
+       "conditional" — fires off a player decision, not off the clock
+
+     Array order IS timeline order; phasesFor() derives the phase list
+     from it, so moving an entry moves it on the GM's screen.
      ============================================================ */
   var EVENTS = [
-    /* ------------------------- ACT I ------------------------- */
-    { act: 1, name: "Ping", mandatory: false, roll: "COMTECH",
+    /* ------------------------- ACT I: PANDORA'S BOX ------------------------- */
+    { act: 1, phase: "Waking on the Montero", id: "ping",
+      name: "Ping", mandatory: false, roll: "COMTECH",
       text: "MU/TH/UR 6500 reports a ship closing on the Montero when there is none. A sensor diagnosis puts it down to a malfunction, nothing more. (It isn't.)" },
-    { act: 1, name: "Nobody's Home", mandatory: true, roll: "COMTECH",
+    { act: 1, phase: "Waking on the Montero", id: "nobody-home",
+      name: "Nobody's Home", mandatory: true, roll: "COMTECH",
       text: "Sutter's World answers no hails and its beacon tower never pings back — because the Montero is nowhere near the colony. The star charts are off. They are in deep space, between stars." },
-    { act: 1, name: "New Orders", mandatory: true,
+    { act: 1, phase: "Waking on the Montero", id: "new-orders",
+      name: "New Orders", mandatory: true,
       text: "Mother wants a word with Captain Miller: a distress call from an unknown ship, too garbled to identify. The crew must triangulate it and investigate — company rules, or they forfeit every share." },
-    { act: 1, name: "Brace for Impact", mandatory: false, roll: "PILOTING −2",
+
+    { act: 1, phase: "Closing on the derelict", id: "brace-for-impact",
+      name: "Brace for Impact", mandatory: false, roll: "PILOTING −2",
       text: "A starless patch grows in the viewport — a derelict running dark, on a collision course. Failure means severe damage: the FTL drive crippled, explosive decompression in some sections, at least 18 hours (three Shifts) of repairs. The crew are unharmed." },
-    { act: 1, name: "Ghost Ship", mandatory: true,
+    { act: 1, phase: "Closing on the derelict", id: "ghost-ship",
+      name: "Ghost Ship", mandatory: true,
       text: "The derelict is the USCSS Cronus, a Weyland SEV M3 Heliades-class launched in 2110 and missing for three quarters of a century, dark but for a looping SOS. Salvage is mandated: 1. recover data and samples, 2. escort her to a W-Y facility, 3. save her crew. Hand out the deck plans." },
-    { act: 1, name: "Boarding Party", mandatory: true, roll: "PILOTING, then MOBILITY or HEAVY MACHINERY",
+    { act: 1, phase: "Closing on the derelict", id: "boarding-party",
+      name: "Boarding Party", mandatory: true, roll: "PILOTING, then MOBILITY or HEAVY MACHINERY",
       text: "Match speed and course, then spacewalk across or rig the umbilical — the Cronus's main airlock is damaged either way. Someone has to decide who stays behind. Once aboard: stealth mode, and roll air supply after every Turn." },
-    { act: 1, name: "The Headless Man", mandatory: false, stress: "+1 all present",
+
+    { act: 1, phase: "Searching the dark ship", id: "headless-man",
+      name: "The Headless Man", mandatory: false, stress: "+1 all present",
       text: "A slumped body in a spacesuit, brain matter on the wall behind it, a Model 37A2 shotgun beside it — and the arms are too long, tearing the compression suit at the forearms. He was a Stage II Abomination with wits enough left to end it. One reload of shells on him, more in the weapon." },
-    { act: 1, name: "I've Got Movement", mandatory: false, stress: "+1 all present",
+    { act: 1, phase: "Searching the dark ship", id: "movement",
+      name: "I've Got Movement", mandatory: false, stress: "+1 all present",
       text: "Motion trackers pick up blips a few zones off that vanish before anyone reaches them. It's the damaged android Ava wandering the ship, or an adult Neomorph woken by the boarding party — or both." },
-    { act: 1, name: "Egg Sacs Afoot", mandatory: false, roll: "OBSERVATION (Analysis)",
+    { act: 1, phase: "Searching the dark ship", id: "egg-sacs",
+      name: "Egg Sacs Afoot", mandatory: false, roll: "OBSERVATION (Analysis)",
       text: "Neomorphic Egg Sacs beyond the ones in the room descriptions. Harmless while the suits stay on. A Scientist can Analyze them to learn more." },
-    { act: 1, name: "Hunter and Prey", mandatory: false,
+    { act: 1, phase: "Searching the dark ship", id: "hunter-prey",
+      name: "Hunter and Prey", mandatory: false, when: "anytime",
       text: "An adult Neomorph hibernating aboard is woken by the crew's arrival and begins to stalk them. It can strike at any time — and this event works just as well in Act II or III." },
-    { act: 1, name: "Sensor Ghost Redux", mandatory: false,
-      text: "Repair the bridge sensor station and it pings a nearby ship that doesn't appear to exist. It's the Sotillo shadowing them, but nobody can learn that yet. Pays off in Act III." },
-    { act: 1, name: "Mother Awakes", mandatory: true,
+    { act: 1, phase: "Searching the dark ship", id: "sensor-ghost-redux",
+      name: "Sensor Ghost Redux", mandatory: false, when: "anytime",
+      text: "Repair the bridge sensor station and it pings a nearby ship that doesn't appear to exist. It's the Sotillo shadowing them, but nobody can learn that yet. Works in Act II as well, and pays off in Act III." },
+
+    { act: 1, phase: "The ship wakes up", id: "mother-awakes",
+      name: "Mother Awakes", mandatory: true,
       text: "The Cronus's MU/TH/UR 2000 comes online in reaction to the boarders, powering the reactor and life support. Temperature climbs, lights come up, vapor hazes the corridors, and after a few Turns the cold and darkness effects lift. The air scrubbers roar into life but deliver nothing — the carbon filters need repairs." },
-    { act: 1, name: "Sleep of Ages", mandatory: true, roll: "MEDICAL AID (one per survivor)",
+    { act: 1, phase: "The ship wakes up", id: "sleep-of-ages",
+      name: "Sleep of Ages", mandatory: true, roll: "MEDICAL AID (one per survivor)",
       text: "“Warning, cryochambers deactivated.” Over a few Turns the five surviving Cronus crew thaw out — Johns, Reid, Cooper, Flynn and Clayton — amnesiac and acutely disoriented. Each needs medical attention to start recovering, preferably in the Medlab." },
-    { act: 1, name: "Mother of All Migraines", mandatory: true, stress: "Panic Roll, all present",
+    { act: 1, phase: "The ship wakes up", id: "migraines",
+      name: "Mother of All Migraines", mandatory: true, stress: "Panic Roll, all present",
       text: "Cooper's migraines become nonsense, then seizures, then a Bloodburster tearing out through his skull. All present make an immediate Panic Roll. The newborn attacks the nearest PC, then flees into a duct at the first damage — and returns within a few Turns fully grown. Play it in stealth mode." },
-    { act: 1, name: "Getting Out of Dodge?", mandatory: false,
-      text: "If the crew try to leave the Cronus behind, MU/TH/UR 6500 triggers the destruction of the Montero under Special Order 966. Run “T-Minus Ten Minutes” now." },
 
-    /* ------------------------- ACT II ------------------------- */
-    { act: 2, name: "Partial Truths", mandatory: true,
+    { act: 1, phase: "If they try to leave", id: "out-of-dodge",
+      name: "Getting Out of Dodge?", mandatory: false, when: "conditional",
+      text: "If the crew try to leave the Cronus behind, MU/TH/UR 6500 triggers the destruction of the Montero under Special Order 966. Run “T-Minus Ten Minutes” now, an Act early." },
+
+    /* ------------------------- ACT II: THE LONG NIGHT ------------------------- */
+    { act: 2, phase: "Taking stock", id: "partial-truths",
+      name: "Partial Truths", mandatory: true,
       text: "Johns describes LV-1113 and the ancient ruins — Clayton cuts in to call it archaeology. The team brought back artifacts and, with them, spores. Everyone was inoculated, so Johns is confused… until Cooper's still-full syringe turns up in his pocket. Flynn wants anyone who's been out of their suit inoculated immediately." },
-    { act: 2, name: "Bad Air", mandatory: false,
+    { act: 2, phase: "Taking stock", id: "bad-air",
+      name: "Bad Air", mandatory: false,
       text: "Nobody aboard can take a deep breath — the air is stale and heavy with carbon dioxide. Johns knows why: after decades the filters in the central air scrubber shaft need replacing." },
-    { act: 2, name: "T-Minus Ten Minutes", mandatory: true, roll: "PILOTING −2", stress: "+1 all PCs",
-      text: "Mother, direct to their comms: “Displacement Drive malfunction. Cascade failure imminent. Fission reactor overload in T-minus ten minutes.” She counts down every minute, then every second under thirty. It cannot be stopped — she triggered it herself under Special Order 966. The Montero must be sent away on autopilot; a failed roll and the blast causes explosive decompression in D6 compartments of the Cronus. (Can fire in Act I.)" },
-    { act: 2, name: "Breaking Loose", mandatory: false, roll: "HEAVY MACHINERY (cutting torch) or STRENGTH",
-      text: "The passageway umbilical won't decouple while the countdown runs. Others can help. If every roll fails, the Cronus tears free under engine power — and takes structural damage doing it." },
-    { act: 2, name: "No Money", mandatory: false, roll: "STRENGTH or HEAVY MACHINERY, per tank",
-      text: "Someone — Rye or Miller, and they'll insist if they're NPCs — wants the Tritium saved. The Daisy carries ten tanks. A failed roll drops one: roll a Stress Die, and a ✦ destroys the Daisy and kills everyone in the hold. Anything caught outside when the Montero goes takes Blast Power 12." },
-    { act: 2, name: "Change of Plans", mandatory: true, roll: "COMTECH · HEAVY MACHINERY",
-      text: "The Cronus is the only way home now. Comm array: spacewalk, four Turns, COMTECH — with a Stage IV Abomination hibernating on the outer hull. Engines: spacewalk, three Turns, HEAVY MACHINERY — and Reactor Control has to be cleared first. Air scrubbers: filters. Spring other events while they work." },
-    { act: 2, name: "Aggressive Tendencies", mandatory: true, stress: "Panic Roll, attacked PC",
-      text: "The inoculation turns them. One Cronus crew member attacks without warning, in a rage, with no regard for their own survival and no reasoning with them. Then one or two more turn — head-on, or vanishing to stalk and return as Stage III. Keep Clayton back; she has a role in Act III." },
-    { act: 2, name: "Encountering Ava", mandatory: false,
-      text: "A body slumped against a corridor wall — whole, unlike the others. Lift her and the back of her head is slick with white. Repair the wound (rulebook p. 77) and Ava helps: she knows the ship, and the creatures disregard her because she smells wrong." },
-    { act: 2, name: "Infected", mandatory: false, roll: "Sickness Roll vs Virulence 6 (optional)", stress: "+1 per infected PC",
-      text: "A PC's skin starts to itch and their head splits — Stage I. Shortly after, Stage II and the rage. Hand over the “Infected Agenda” and “Effects of Infection” cards, let them play out one attack, then take the character over as an NPC and give the player Ava or a Cronus survivor. Lucas can't be infected; don't take Wilson early." },
-    { act: 2, name: "You Can't Handle the Truth", mandatory: false,
-      text: "Ava tells them what the inoculation really does, and that anyone who took the cure could still turn — though they have a chance to resist. She also reveals what's aboard: Agent A0-3959X.91–15. Clayton's precious “artifacts” are weapons." },
 
-    /* ------------------------- ACT III ------------------------- */
-    { act: 3, name: "Going Home", mandatory: false, roll: "COMTECH",
+    { act: 2, phase: "The Montero dies", id: "t-minus-ten",
+      name: "T-Minus Ten Minutes", mandatory: true, roll: "PILOTING −2", stress: "+1 all PCs",
+      text: "Mother, direct to their comms: “Displacement Drive malfunction. Cascade failure imminent. Fission reactor overload in T-minus ten minutes.” She counts down every minute, then every second under thirty. It cannot be stopped — she triggered it herself under Special Order 966. The Montero must be sent away on autopilot; a failed roll and the blast causes explosive decompression in D6 compartments of the Cronus." },
+    { act: 2, phase: "The Montero dies", id: "breaking-loose",
+      name: "Breaking Loose", mandatory: false, when: "conditional", roll: "HEAVY MACHINERY (cutting torch) or STRENGTH",
+      text: "Only if the ships are joined by the passageway umbilical: it won't decouple while the countdown runs. Others can help. If every roll fails, the Cronus tears free under engine power — and takes structural damage doing it." },
+    { act: 2, phase: "The Montero dies", id: "no-money",
+      name: "No Money", mandatory: false, when: "conditional", roll: "STRENGTH or HEAVY MACHINERY, per tank",
+      text: "Someone — Rye or Miller, and they'll insist if they're NPCs — wants the Tritium saved. The Daisy carries ten tanks. A failed roll drops one: roll a Stress Die, and a ✦ destroys the Daisy and kills everyone in the hold. Anything caught outside when the Montero goes takes Blast Power 12." },
+
+    { act: 2, phase: "Making the Cronus fly", id: "change-of-plans",
+      name: "Change of Plans", mandatory: true, roll: "COMTECH · HEAVY MACHINERY",
+      text: "The Cronus is the only way home now. Comm array: spacewalk, four Turns, COMTECH — with a Stage IV Abomination hibernating on the outer hull. Engines: spacewalk, three Turns, HEAVY MACHINERY — and Reactor Control has to be cleared first. Air scrubbers: filters. Spring other events while they work." },
+    { act: 2, phase: "Making the Cronus fly", id: "ava",
+      name: "Encountering Ava", mandatory: false,
+      text: "A body slumped against a corridor wall — whole, unlike the others. Lift her and the back of her head is slick with white. Repair the wound (rulebook p. 77) and Ava helps: she knows the ship, and the creatures disregard her because she smells wrong." },
+
+    { act: 2, phase: "The crew turn", id: "aggressive-tendencies",
+      name: "Aggressive Tendencies", mandatory: true, stress: "Panic Roll, attacked PC",
+      text: "The inoculation turns them. One Cronus crew member attacks without warning, in a rage, with no regard for their own survival and no reasoning with them. Then one or two more turn — head-on, or vanishing to stalk and return as Stage III. Keep Clayton back; she has a role in Act III." },
+    { act: 2, phase: "The crew turn", id: "infected",
+      name: "Infected", mandatory: false, roll: "Sickness Roll vs Virulence 6 (optional)", stress: "+1 per infected PC",
+      text: "A PC's skin starts to itch and their head splits — Stage I. Shortly after, Stage II and the rage. Hand over the “Infected Agenda” and “Effects of Infection” cards, let them play out one attack, then take the character over as an NPC and give the player Ava or a Cronus survivor. Lucas can't be infected; don't take Wilson early." },
+    { act: 2, phase: "The crew turn", id: "cant-handle-truth",
+      name: "You Can't Handle the Truth", mandatory: false,
+      text: "Once Ava is repaired, she tells them what the inoculation really does, and that anyone who took the cure could still turn — though they have a chance to resist. She also reveals what's aboard: Agent A0-3959X.91–15. Clayton's precious “artifacts” are weapons." },
+
+    /* ------------------------- ACT III: DIVIDED WE FALL ------------------------- */
+    { act: 3, phase: "The ship decides", id: "going-home",
+      name: "Going Home", mandatory: false, roll: "COMTECH",
       text: "The engines come back online and MU/TH/UR 2000 immediately locks a course for Earth. The mainframe is under Special Order 966 to bring the Cronus home. No PC can override it." },
-    { act: 3, name: "Medicinal Purposes", mandatory: false,
+
+    { act: 3, phase: "Clayton's play", id: "medicinal-purposes",
+      name: "Medicinal Purposes", mandatory: false,
       text: "Clayton pitches the strain as priceless — cancer, a host of diseases, and a cure that would make the spores harmless if it could be perfected. These things aren't native to LV-1113; they could be on countless worlds. Let the crew react. She will defend herself if attacked." },
-    { act: 3, name: "Mutiny!", mandatory: false, roll: "MANIPULATION",
+    { act: 3, phase: "Clayton's play", id: "mutiny",
+      name: "Mutiny!", mandatory: false, when: "conditional", roll: "MANIPULATION",
       text: "Resist her and Clayton starts buying people — Wilson first, if he lives. She wants the 26 Draconis syringes from the Medlab, cash and her MCD cube from the safe, and as much Agent A0-3959X.91–15 loaded into the EEV as she can manage. Failing all that, she'll kidnap Flynn and run." },
-    { act: 3, name: "The Infection Spreads", mandatory: false,
+    { act: 3, phase: "Clayton's play", id: "infection-spreads",
+      name: "The Infection Spreads", mandatory: false,
       text: "While they're busy with Clayton, more PCs succumb to the inoculation — turning player after player into an antagonist, possibly until a single unturned PC is left." },
-    { act: 3, name: "Prepare to be Boarded", mandatory: false,
+
+    { act: 3, phase: "Boarders", id: "prepare-boarded",
+      name: "Prepare to be Boarded", mandatory: false, when: "conditional",
       text: "A heavy clang against the hull: the marauder Sotillo has docked and is blasting through the airlock. No compression suits, and no idea what they've walked into. Optional — use it for a twist, a longer game, or replacement PCs; skip it if the finale is already landing." },
-    { act: 3, name: "Who's on Whose Side Now?", mandatory: false,
+    { act: 3, phase: "Boarders", id: "whose-side",
+      name: "Who's on Whose Side Now?", mandatory: false,
       text: "Clayton tries to buy the marauders; Bolaji weighs the paycheck against letting these things loose on the Frontier. The PCs have no bargaining chip — but they might board the Sotillo and take her. Her crew can be infected on the Cronus, or turn if they take the inoculation." },
-    { act: 3, name: "Contamination Protocol", mandatory: false, roll: "HEAVY MACHINERY (EEV locks)",
+
+    { act: 3, phase: "Endgame", id: "contamination-protocol",
+      name: "Contamination Protocol", mandatory: false, roll: "HEAVY MACHINERY (EEV locks)",
       text: "Lucas moves to stop Weyland-Yutani getting the strain by any means — a confrontation with Clayton is near certain, and sabotaging the Cronus is on the table. Destroy his body and he uploads to the mainframe, triggers a reactor overload and freezes the locks on Clayton's EEV (a Turn of work to release)." },
-    { act: 3, name: "Run as Fast as You Can", mandatory: false, roll: "PILOTING −2 (Sotillo)",
+    { act: 3, phase: "Endgame", id: "run-as-fast",
+      name: "Run as Fast as You Can", mandatory: false, roll: "PILOTING −2 (Sotillo)",
       text: "One way or another the Cronus most likely dies. The EEV pod survives automatically; on the Sotillo a failed roll destroys her FTL drive and leaves her adrift. Read “Surviving the Blast” and let them think it's over." },
-    { act: 3, name: "It Isn't Over Until It's Over", mandatory: false, stress: "+1 all inside",
+    { act: 3, phase: "Endgame", id: "it-isnt-over",
+      name: "It Isn't Over Until It's Over", mandatory: false, stress: "+1 all inside",
       text: "Stage III or IV Abominations rode out on the Sotillo's hull. Two fists slam the cockpit viewport; on the fourth blow a hairline crack splinters across it. Closing the viewport shields has a good chance of maiming or killing one. Leave them out there and they cripple the ship, and she drifts too." }
     ];
 
@@ -495,11 +556,45 @@
   }
   function drawCrit() { return tableRoll(CRITS); }
 
+  /* Events of an Act, in timeline order (the array's own order). */
   function eventsFor(act) {
     return EVENTS.filter(function (e) { return e.act === act; });
   }
-  function drawEvent(act) {
-    return pick(eventsFor(act));
+
+  /* The Act's phases, in the order they run, derived from the array so the
+     data stays the single source of truth. */
+  function phasesFor(act) {
+    var out = [];
+    eventsFor(act).forEach(function (e) {
+      var p = e.phase || "";
+      if (out.indexOf(p) === -1) out.push(p);
+    });
+    return out;
+  }
+
+  /* Draw an event, timeline-aware.
+       opts.skip         array/Set of event ids already run
+       opts.optionalOnly skip the mandatory spine (default false)
+       opts.phase        confine the draw to one phase
+     With none of those it's a plain random pick, as before. Otherwise it
+     draws from the EARLIEST phase that still has an eligible event, so what
+     you get suits where the group actually is rather than the whole Act. */
+  function drawEvent(act, opts) {
+    opts = opts || {};
+    var skip = opts.skip;
+    var has = skip && typeof skip.has === "function"
+      ? function (id) { return skip.has(id); }
+      : function (id) { return !!skip && skip.indexOf(id) !== -1; };
+
+    var pool = eventsFor(act).filter(function (e) {
+      if (opts.phase && e.phase !== opts.phase) return false;
+      if (opts.optionalOnly && e.mandatory) return false;
+      return !has(e.id);
+    });
+    if (!pool.length) return null;
+
+    var first = pool[0].phase;
+    return pick(pool.filter(function (e) { return e.phase === first; }));
   }
 
   global.GMData = {
@@ -508,6 +603,7 @@
     ATTACKS: ATTACKS, CRITS: CRITS, EVENTS: EVENTS, TABLES: TABLES, POOLS: POOLS,
     npc: npc, xeno: xeno, pool: pool, skillsOf: skillsOf, xenoSkillsOf: xenoSkillsOf,
     stage2: stage2, drawAttack: drawAttack, drawCrit: drawCrit, tableRoll: tableRoll,
-    eventsFor: eventsFor, drawEvent: drawEvent, d6: d6, pick: pick
+    eventsFor: eventsFor, phasesFor: phasesFor, drawEvent: drawEvent,
+    d6: d6, pick: pick
   };
 })(window);
