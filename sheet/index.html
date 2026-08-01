@@ -149,10 +149,18 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .eq-h{ text-transform:uppercase; letter-spacing:.1em; font-size:12px; color:var(--amber); margin:14px 0 6px;
   display:flex; align-items:baseline; justify-content:space-between; }
 .eq-h:first-of-type{ margin-top:2px; }
-.consum{ display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:8px; }
-.cons{ border:1px solid var(--faint); padding:7px 9px; display:flex; align-items:center; justify-content:space-between; gap:6px; }
-.cons .cl{ text-transform:uppercase; letter-spacing:.08em; font-size:12px; color:var(--dim); }
-.stepper.sm button{ font-size:16px; padding:0 .5em; } .stepper.sm .mv{ min-width:1.6em; font-size:18px; }
+.consum{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; }
+/* grid (not flex) so every stepper sits flush to its cell's right edge — the labels vary in
+   width (AIR vs WATER) and space-between made the +/- controls jump about between rows */
+.cons{ border:1px solid var(--faint); padding:7px 9px; display:grid;
+  grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:6px; min-width:0; }
+.cons .cl{ text-transform:uppercase; letter-spacing:.08em; font-size:12px; color:var(--dim);
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cons .stepper{ justify-self:end; }
+/* fixed-width buttons: Share Tech Mono has no U+2212, so the minus falls back to a
+   proportional system face and used to render wider than the plus */
+.stepper.sm button{ font-size:16px; padding:0; width:1.9em; text-align:center; letter-spacing:0; }
+.stepper.sm .mv{ min-width:1.5em; font-size:18px; }
 .wtable{ width:100%; border-collapse:collapse; font-size:12px; }
 .wtable th,.wtable td{ border:1px solid var(--faint); padding:2px; }
 .wtable th{ color:var(--dim); text-transform:uppercase; font-size:10px; letter-spacing:.05em; font-weight:400; padding:4px; }
