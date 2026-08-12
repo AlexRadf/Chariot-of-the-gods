@@ -189,6 +189,31 @@ body::before{
 .draw .dm .warn{ color:var(--alert); }
 @keyframes rin{ from{ transform:translateY(-6px); opacity:0 } to{ transform:none; opacity:1 } }
 
+/* initiative deck — the ten cards, dealt from this phone */
+.initbar{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:9px;
+  font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); }
+.initbar b{ font-family:'VT323',monospace; font-size:20px; color:var(--amber);
+  font-weight:400; letter-spacing:0; margin-left:5px; }
+.initlist{ border:1px solid var(--faint); margin-bottom:10px; }
+.initlist .none{ padding:.9em .7em; font-size:11px; color:var(--faint); text-align:center;
+  letter-spacing:.08em; text-transform:uppercase; }
+.irow{ display:flex; align-items:center; gap:9px; padding:.45em .5em; border-bottom:1px solid var(--faint); }
+.irow:last-child{ border-bottom:0; }
+.irow.now{ background:var(--faint); }
+.irow .ic{ font-family:'VT323',monospace; font-size:23px; line-height:1.2; width:1.55em;
+  text-align:center; border:1px solid var(--dim); color:var(--phos); cursor:pointer; }
+.irow.now .ic{ border-color:var(--amber); color:var(--amber); }
+.irow.sel .ic{ background:var(--amber); color:#1a1102; text-shadow:none; }
+.irow .iw{ flex:1; min-width:0; font-size:13px; letter-spacing:.03em;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.irow.now .iw{ color:var(--amber); }
+.irow .iw em{ font-style:normal; color:var(--dim); font-size:10.5px; letter-spacing:.06em; }
+.irow .ib{ border:0; background:none; color:var(--dim); font-family:inherit;
+  font-size:15px; line-height:1; padding:.45em .5em; cursor:pointer; }
+.irow .ib:active{ color:var(--phos); }
+.initadd{ display:flex; gap:8px; align-items:stretch; margin-bottom:10px; }
+.initadd .rsel{ flex:1; min-width:0; margin:0; }
+
 /* event browser — the Act's phases run top to bottom as a rough timeline */
 .evlist{ max-height:min(46vh,380px); overflow:auto; border:1px solid var(--faint); }
 .evphase{ display:flex; align-items:center; gap:8px; padding:.5em .7em;
@@ -326,6 +351,33 @@ body::before{
   </div>
 
   <div class="card">
+    <h2>Initiative Deck</h2>
+    <div class="initbar">
+      <span>Round <b id="initRound">—</b></span>
+      <span>Cards left <b id="initLeft">10</b></span>
+    </div>
+    <div class="initlist" id="initList"></div>
+    <div class="initadd">
+      <select class="rsel" id="initPick" aria-label="Who to deal in"></select>
+      <button class="mini" id="initAdd">＋ Deal in</button>
+    </div>
+    <input class="rlbl" id="initOther" placeholder="…or a name of your own — e.g. Guard" autocomplete="off" spellcheck="false">
+    <div class="drawrow">
+      <button class="dbtn" id="initPrev">◀ Back</button>
+      <button class="dbtn hot" id="initNext">Next ▶</button>
+    </div>
+    <div class="drawrow">
+      <button class="dbtn" id="initNew">↺ New fight</button>
+      <button class="dbtn" id="initEnd">■ End fight</button>
+    </div>
+    <div class="rnote">Ten cards, 1–10 — lowest acts first and the order stands for the whole
+      fight. Speed 2+ creatures are dealt a card per point and act on each of them. Players can
+      draw for themselves from their sheets; the order shows on the table display as it fills.
+      Tap a card number to pick it up, tap another to trade the two. <b>↻</b> redeals one
+      combatant, <b>✕</b> drops them.</div>
+  </div>
+
+  <div class="card">
     <h2>Display Ship State</h2>
     <div class="seg" id="shipSeg">
       <button data-ship="montero" class="on">◄ Montero</button>
@@ -364,6 +416,7 @@ body::before{
 
 <script src="../assets/rollbus.js"></script>
 <script src="../assets/gmdata.js"></script>
+<script src="../assets/initiative.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 
@@ -794,11 +847,129 @@ $("#npcRollBtn").addEventListener("click", ()=>{
   }
 });
 
+/* -------------------- INITIATIVE DECK --------------------
+   This phone is the dealer. It holds the ten cards, draws for
+   everyone in the fight and publishes the running order to the
+   sheets and the table display. A player tapping "draw" on their
+   own sheet asks *this* deck for a card, so two people can never
+   end up on the same number. */
+let DECK=null;        // the dealer, live from boot
+let deckSel=null;     // a card picked up, waiting to be traded
+
+function buildDeckPicker(){
+  if(typeof GMData==="undefined") return;
+  const sel=$("#initPick");
+  const group=(label, rows)=>{
+    const og=document.createElement("optgroup"); og.label=label;
+    rows.forEach(([val,text])=>{
+      const o=document.createElement("option"); o.value=val; o.textContent=text; og.appendChild(o);
+    });
+    sel.appendChild(og);
+  };
+  group("Montero crew", GMData.PCS.map(p=>["pc:"+p.id, p.name+" — "+p.role]));
+  const crews={};
+  GMData.NPCS.forEach(n=>{ (crews[n.group]=crews[n.group]||[]).push(n); });
+  Object.keys(crews).forEach(g=>{
+    group(g, crews[g].map(n=>["npc:"+n.id, n.name+" — "+n.role]));
+  });
+  group("Creatures", GMData.XENOS.map(x=>
+    ["xeno:"+x.id, x.name+(x.speed>1 ? " — Speed "+x.speed : "")]));
+}
+/* turn a picker value into a combatant the deck understands */
+function deckEntry(val){
+  const bits=String(val||"").split(":"), id=bits[1];
+  if(bits[0]==="pc"){
+    const p=GMData.PCS.filter(x=>x.id===id)[0];
+    return p && { who:p.name, role:p.role, type:"pc", speed:1 };
+  }
+  if(bits[0]==="npc"){
+    const n=GMData.npc(id);
+    return n && { who:n.name, role:n.role, type:"npc", speed:1 };
+  }
+  if(bits[0]==="xeno"){
+    const x=GMData.xeno(id);
+    return x && { who:x.name, role:x.stage, type:"xeno", speed:x.speed||1 };
+  }
+  return null;
+}
+function paintDeck(st){
+  const list=$("#initList"), cards=Initiative.order(st);
+  $("#initRound").textContent = st.active ? st.round : "—";
+  $("#initLeft").textContent  = st.deckLeft + (st.decks>1 ? " · deck "+st.decks : "");
+  if(!cards.length){
+    list.innerHTML='<div class="none">No fight in progress — deal someone in</div>';
+    return;
+  }
+  list.innerHTML="";
+  cards.forEach(c=>{
+    const row=document.createElement("div");
+    row.className="irow"+(c.id===st.turnId?" now":"")+(c.id===deckSel?" sel":"");
+    row.dataset.id=c.id; row.dataset.gid=c.gid;
+    row.innerHTML=
+      '<span class="ic">'+c.n+'</span>'+
+      '<span class="iw">'+(c.type==="pc"?"◆ ":"")+esc(c.who)+
+        (c.of>1?' <em>'+c.part+'/'+c.of+'</em>':'')+
+        (c.role?' <em>'+esc(c.role)+'</em>':'')+'</span>'+
+      '<button class="ib" data-act="redraw" aria-label="redeal">↻</button>'+
+      '<button class="ib" data-act="drop" aria-label="remove">✕</button>';
+    list.appendChild(row);
+  });
+}
+$("#initList").addEventListener("click", e=>{
+  const row=e.target.closest(".irow"); if(!row || !DECK) return;
+  const btn=e.target.closest(".ib");
+  if(btn){
+    deckSel=null;
+    if(btn.dataset.act==="redraw") DECK.redraw(row.dataset.gid);
+    else DECK.remove(row.dataset.gid);
+    return;
+  }
+  if(!e.target.closest(".ic")) return;
+  const id=row.dataset.id;
+  if(!deckSel){ deckSel=id; paintDeck(DECK.state()); flash("CARD IN HAND — TAP ANOTHER TO TRADE","ok"); }
+  else if(deckSel===id){ deckSel=null; paintDeck(DECK.state()); }
+  else { const first=deckSel; deckSel=null; DECK.swap(first,id); flash("CARDS TRADED","ok"); }
+});
+$("#initAdd").addEventListener("click", ()=>{
+  if(!DECK) return;
+  const typed=$("#initOther").value.trim();
+  const entry = typed ? { who:typed, role:"", type:"npc", speed:1 } : deckEntry($("#initPick").value);
+  if(!entry){ flash("PICK SOMEONE TO DEAL IN","bad"); return; }
+  DECK.add(entry); $("#initOther").value="";
+  flash("DEALT IN · "+entry.who.toUpperCase(), "ok");
+});
+$("#initNext").addEventListener("click", ()=>{
+  if(!DECK) return;
+  const cards=DECK.order();
+  if(!cards.length){ flash("NOBODY IN THE FIGHT","bad"); return; }
+  DECK.next();
+  const st=DECK.state(), now=cards.filter(c=>c.id===st.turnId)[0] || DECK.order()[0];
+  flash("▸ "+String(now.who).toUpperCase()+" · CARD "+now.n, "ok");
+});
+$("#initPrev").addEventListener("click", ()=>{ if(DECK) DECK.prev(); });
+$("#initNew").addEventListener("click", ()=>{
+  if(!DECK) return;
+  deckSel=null; DECK.begin();
+  flash(DECK.order().length ? "NEW FIGHT — CARDS REDEALT" : "NEW FIGHT — DEAL SOMEONE IN", "ok");
+});
+$("#initEnd").addEventListener("click", ()=>{
+  if(!DECK) return;
+  deckSel=null; DECK.end(); flash("FIGHT OVER — DECK CLEARED", "ok");
+});
+
 /* -------------------- boot -------------------- */
 function boot(){
   $("#start").style.display="none"; $("#app").classList.add("on");
   persistRoom(); relayConnect();
   if(typeof RollBus!=="undefined") RollBus.config({ room });   // join the roll room so NPC rolls reach the table
+  if(typeof Initiative!=="undefined" && typeof RollBus!=="undefined"){
+    DECK = Initiative.deal(RollBus, { onChange: paintDeck });  // the deck lives here
+    paintDeck(DECK.state());
+  }
+}
+buildDeckPicker();
+if(typeof Initiative!=="undefined"){        // show the empty deck before activation
+  paintDeck({ active:false, round:1, turnId:null, cards:[], deckLeft:Initiative.SIZE, decks:1 });
 }
 $("#start").addEventListener("click", boot);
 persistRoom();   // fill the field even before activation

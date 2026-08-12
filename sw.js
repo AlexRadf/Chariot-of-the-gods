@@ -18,7 +18,7 @@
      · Google Fonts        -> cache-first at runtime
    Bump CACHE to force a refresh of everything.
    ============================================================ */
-const CACHE = "cotg-offline-v2";
+const CACHE = "cotg-offline-v3";
 
 /* Core files, relative to this worker's scope (the site root). */
 const CORE = [
@@ -32,6 +32,7 @@ const CORE = [
   "./control/", "./control/index.html",
   "./cards/access-cards.html",
   "./assets/rollbus.js",
+  "./assets/initiative.js",
   "./assets/gmdata.js",
   "./assets/jsqr.js"
 ];

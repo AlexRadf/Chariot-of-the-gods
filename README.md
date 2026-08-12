@@ -26,9 +26,9 @@ https://alexradf.github.io/Chariot-of-the-gods/
 | Screen | URL | Who holds it | What it is |
 |--------|-----|--------------|------------|
 | **Access Terminal** | `/` | Players, at "consoles" | Boots up as a Cronus crew member from a card `?id=`. Shows that crew member's inbox and clearance-gated ship systems. This is how the derelict's story is discovered. |
-| **Crew Sheets** | `/sheet/` | Each player | The players' own Montero characters — stats, talent, per-Act agenda, condition trackers, and a full ALIEN dice roller. |
+| **Crew Sheets** | `/sheet/` | Each player | The players' own Montero characters — stats, talent, per-Act agenda, condition trackers, their initiative card, and a full ALIEN dice roller. |
 | **Main Display** | `/display/` | Middle of the table (iPad) | The MU/TH/UR 6500 ship computer: two ship states (Montero / Cronus), ambient systems and registry, an on-screen motion-detector tab, and a self-destruct takeover. |
-| **GM Control** | `/control/` | The Game Mother (phone) | An off-fiction remote that pairs to the display and drives the self-destruct sequence (arm → countdown → signal-lost). |
+| **GM Control** | `/control/` | The Game Mother (phone) | An off-fiction remote that pairs to the display: rolls for the NPCs, deals the initiative deck, and drives the self-destruct sequence (arm → countdown → signal-lost). |
 | **Motion Tracker** | `/tracker/` | The Game Mother (phone) | The M314 scope for the reveal moments — you hand-place the blips and walk them in; players watch them close. |
 
 **Two crews, don't mix them up.** The *Access Terminal* cards are the **Cronus's
@@ -156,10 +156,17 @@ need for play lives on their own device.
   gear — with the weapon's **bonus already applied**. Fire full-auto by *pushing*
   the roll as normal. (Per the ALIEN RPG, ammunition isn't counted — there's no
   reload tracker.)
+- **Your initiative card.** An **Initiative** panel sits under the quick rolls.
+  Tap **⚄ Draw a card** when a fight starts and the Game Mother's deck deals you
+  one of the ten — your number fills the panel, the running order appears beneath
+  it, and the panel lights amber with **▶ YOUR MOVE** when your card comes up, so
+  nobody has to ask "am I up yet?". **✕ Drop out** hands the card back. (See
+  [the initiative deck](#the-initiative-deck) for how it's dealt.)
 - **A rules window, one tap away.** An *Open ALIEN rules window* button (also a
   *rules ▸* link by the dice and a *Rules* link in the footer) pops up the full
   **Game Mother Screen** quick reference as a toggle overlay — dice & pushing,
-  the complete Panic table, stress triggers, time & range, slow/fast actions,
+  the complete Panic table, stress triggers, initiative & the round,
+  time & range, slow/fast actions,
   ranged & cover mods, stealth, every skill's stunts, synthetic and xenomorph
   rules, and the full d66 critical-injury table. Collapsible, closes on
   <kbd>Esc</kbd> or a tap outside.
@@ -218,6 +225,11 @@ messages) and the **Roll Log** (bottom-right) beneath. Every dice roll made at t
 table — crew skill checks, pushes, panics, and the GM's NPC rolls — drops into the
 Roll Log newest-first, with a blip.
 
+**Initiative.** While a fight is running, a strip of the drawn
+[initiative cards](#the-initiative-deck) slides in along the bottom — the whole
+order low card first, whoever is acting lit in amber, spent cards dimmed, and the
+round number beside it. It disappears again the moment the GM ends the fight.
+
 On the very first tap the screen runs a short **power-on diagnostic sweep**
 (systems checked off with a progress bar) before the display comes up.
 
@@ -249,8 +261,8 @@ state and self-destruct, rolls for NPCs, and places motion-tracker blips — all
 one page, with the roller and the scope **kept well apart** so you never fumble one
 for the other.
 
-The cards run top-to-bottom: **pairing → NPC / Event Roll → ship state →
-self-destruct → Motion Tracker**.
+The cards run top-to-bottom: **pairing → NPC / Event Roll → Initiative Deck →
+ship state → self-destruct → Motion Tracker**.
 
 **NPC / Event Roll** (near the top) is the scenario itself, loaded in — the real
 stat blocks, signature attacks, Act events and odd little tables out of *Chariot
@@ -298,6 +310,30 @@ Under the tabs sits the shared roller. The **Who / what** box is what shows on
 the table feed, and **Dice / Stress / Mod** are yours to nudge before rolling.
 Each **6** is a success; the result (optionally) pushes to the table's **Roll
 Log** for everyone to see.
+
+**Initiative Deck.** Your phone holds the ALIEN RPG deck of ten — one card per
+combatant, **lowest acts first**, and the order stands for the whole fight. Pick
+anyone out of the roster (**the Montero crew**, every NPC of the Cronus and the
+Sotillo, or any creature) and tap **＋ Deal in**; or type a name of your own for a
+nobody with a shotgun. A creature with **Speed 2 or more** is dealt a card per
+point and appears in the order once for each, marked *1/3*, *2/3*, *3/3*.
+
+| Control | What it does |
+|---------|--------------|
+| **＋ Deal in** | Draw a card for whoever is picked (or typed), starting the fight if none is running. |
+| **Next ▶ / ◀ Back** | Step the marker through the order; past the last card the round ticks over. |
+| **tap a card number** | Picks that card up; tap another and the two **trade cards** — the by-agreement swap, done for you. |
+| **↻** | Redeal that one combatant: their card goes back into the deck and they draw again. |
+| **✕** | Drop them out of the fight — their card returns to the deck. |
+| **↺ New fight** | Same faces, fresh shuffle, everyone redraws, round back to 1. |
+| **■ End fight** | Clear the deck and take the order off the table screen. |
+
+Players can deal *themselves* in from their sheets — a tap on their **⚄ Draw a
+card** reaches your deck, takes the next card off it and shows up in this list
+with a **◆**, so two people can never end up on the same number. The running
+order mirrors to the **Main Display** as it fills. Past ten combatants a second
+deck comes out and the *Cards left* readout says which deck you're on; matching
+numbers act in the order they were drawn.
 
 | Control | Effect on the display |
 |---------|-----------------------|
@@ -392,9 +428,27 @@ four links (e.g. `…/sheet/?room=blackstar`, `…/display/?room=blackstar`). Gi
 each table a different code to keep them apart. If the network is blocked, rolls
 still work locally — nothing is lost on the device that made them.
 
+### The initiative deck
+
+The same bus carries the **deck of ten**, and the [GM Control](#screen-4--gm-control--self-destruct-phone-portrait)
+console is the dealer. It holds the cards, draws for everyone in the fight, and
+publishes the running order to every screen on the room:
+
+- **the GM's own list** — the order with the marker on whoever is acting,
+- **each player's sheet** — their own card, plus **▶ YOUR MOVE** when it's theirs,
+- **the Main Display** — the strip along the bottom for the whole table to read.
+
+Because one screen deals, nobody can end up on the same number: a player tapping
+**⚄ Draw a card** is asking the GM's deck for one. That does mean **the GM
+Control page has to be open on the same room** for the sheets' draw button to
+answer — if it isn't, the sheet says so and the Game Mother can deal everyone in
+from her console instead. Nothing about the deck is stored anywhere: end the
+fight (or close the console) and it's gone.
+
 > **Privacy note.** The ntfy topic is public to anyone who knows the room code,
-> and it only ever carries dice results (who rolled what) — never the agendas or
-> secret roles, which stay on each player's own device. Pick a hard-to-guess room
+> and it only ever carries dice results (who rolled what) and the initiative
+> order (who drew which card) — never the agendas or secret roles, which stay on
+> each player's own device. Pick a hard-to-guess room
 > code if that matters to you.
 
 ---
@@ -417,6 +471,9 @@ A rough flow showing how the pieces come into play — adapt freely.
 - **Act II — the truth.** More terminal cards deepen the mystery (Security deck
   maps, the Company's orders). Nudge players to switch their agenda to **Act II**.
   Stress climbs, pushes start triggering **Panic Rolls** — visible to everyone.
+  When the first fight breaks out, deal the **initiative deck** from the console
+  — players draw on their own sheets, you deal in the creature, and the order
+  runs along the bottom of the table screen.
   Break out the **Motion Tracker** for the first "something's moving" beat; flip
   the display to its **◎ TRACKER** tab (with a shared `?room=`) so the scope
   mirrors onto the table screen.
@@ -452,9 +509,10 @@ live automatically. `.nojekyll` tells Pages to serve the files as-is.
 | [`index.html`](index.html) | The **Access Terminal** — markup, styling, story data, and logic in one file. |
 | [`sheet/`](sheet/) | The **player crew sheets** — pick a character, track Health/Stress, read your per-Act agenda, roll dice that broadcast to the room, and open the rules window. |
 | [`display/`](display/) | The **MU/TH/UR 6500 main display** — the ambient bridge screen for an iPad, with two ship states, an on-screen motion-detector tab, and the self-destruct takeover. |
-| [`control/`](control/) | The **GM Control** remote — a phone page that pairs to the display and drives the self-destruct sequence. |
+| [`control/`](control/) | The **GM Control** remote — a phone page that pairs to the display, rolls for the scenario's cast, deals the initiative deck, and drives the self-destruct sequence. |
 | [`tracker/`](tracker/) | The **M314 motion tracker** — the mobile scope with hand-placed contacts and a synthesized proximity ping. |
-| [`assets/rollbus.js`](assets/rollbus.js) | The shared **roll bus** — makes a dice roll on one device show up on every screen in the room. |
+| [`assets/rollbus.js`](assets/rollbus.js) | The shared **roll bus** — makes a dice roll on one device show up on every screen in the room, and carries the initiative traffic with it. |
+| [`assets/initiative.js`](assets/initiative.js) | The **initiative deck** — the ten cards, dealt on the GM console and mirrored to the sheets and the table display. |
 | [`assets/gmdata.js`](assets/gmdata.js) | The **GM data** — the scenario's NPCs, creatures, signature-attack tables, Act events and dice pools, shared by the GM console and the tracker's quick roller. |
 | [`qr/`](qr/) | Per-crew access-card QR codes, PNG **and** SVG (e.g. `qr/reynolds-8654.png`). |
 | [`cards/access-cards.html`](cards/access-cards.html) | Print-ready sheet of all nine terminal cards. |
@@ -561,6 +619,7 @@ plain-data file — no DOM, no network, so it works offline like the rest of the
 
 | Export | Holds |
 |--------|-------|
+| `PCS` | The players' own crew, names and careers only — what the GM's initiative roster offers for anyone away from their sheet. Their real stats live in `sheet/index.html`. |
 | `NPCS` | The crews of the **Cronus** and the **Sotillo** — attributes, skills, Health, talent, gear, personal agenda, buddy and rival. `turns: false` marks anyone who never becomes an Abomination. |
 | `XENOS` | Bloodburster, Neophyte, adult Neomorph, Revenant and Beluga-Head — Speed, Health, Armor Rating, skills, and which attack table each one uses. |
 | `ATTACKS` / `CRITS` | The D6 signature-attack tables and the Xenomorph critical injury table, each row carrying its Base Dice, Damage, crit number and whether it forces a Panic Roll. |
@@ -603,6 +662,7 @@ want to change the built-in default.
 | Terminal shows `ACCESS DENIED` on a crew link | The `?id=` was dropped or altered — some chat apps strip query strings; check the full URL survived. |
 | A page 404s | Pages hasn't finished its first deploy, or **Settings → Pages → Source** isn't set to **GitHub Actions**. |
 | Rolls don't appear on other devices | The devices aren't on the same **room code**, or the network blocks ntfy.sh. Match the room code in each footer; rolls still show locally regardless. |
+| **⚄ Draw a card** on a sheet gets no answer | The deck is dealt by the **GM Control** page — it has to be open on the same room code. Otherwise deal that player in from the console. |
 | Sync says **local** instead of **LIVE** | The browser couldn't reach ntfy.sh (offline, or a restrictive network). Same-device screens still sync; cross-device won't until the connection is back. |
 | A player can't see their secret agenda | The codeword must be entered exactly (`LUCAS` / `INFECTED`); it's stored per device, so it won't follow them to a different phone. |
 | QR codes open the wrong address | They were generated for a different URL — rerun `scripts/generate_qr.py` with your real site URL. |

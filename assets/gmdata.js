@@ -32,6 +32,7 @@
 
    Public API (window.GMData):
      GMData.SKILLS            ordered skill list w/ attribute
+     GMData.PCS               the players' crew, names only
      GMData.NPCS / XENOS / ATTACKS / CRITS / EVENTS / TABLES
      GMData.pool(npc, skillKey)   -> Base Dice for that NPC
      GMData.skillsOf(npc)         -> [{key,name,attr,pool}, …]
@@ -66,6 +67,19 @@
   SKILLS.forEach(function (s) { SKILL_BY_KEY[s.key] = s; });
 
   var ATTR_NAME = { STR: "Strength", AGI: "Agility", WITS: "Wits", EMP: "Empathy" };
+
+  /* ----------------------------------------------------------
+     The players' own crew — names only, so the GM can deal them
+     an initiative card for anyone away from their sheet. Their
+     real stats live on the sheets themselves.
+     ---------------------------------------------------------- */
+  var PCS = [
+    { id: "miller", name: "Cpt. Vanessa Miller", role: "Officer" },
+    { id: "davis",  name: "Leah Davis",          role: "Pilot" },
+    { id: "rye",    name: "Kayla Rye",           role: "Roughneck" },
+    { id: "cham",   name: "Lyron Cham",          role: "Roughneck" },
+    { id: "wilson", name: "John J. Wilson",      role: "Company Agent" }
+  ];
 
   /* ============================================================
      NON-PLAYER CHARACTERS  (booklet pp. 8–13)
@@ -599,7 +613,7 @@
 
   global.GMData = {
     SKILLS: SKILLS, SKILL_BY_KEY: SKILL_BY_KEY, ATTR_NAME: ATTR_NAME,
-    NPCS: NPCS, XENOS: XENOS, STAGE2: STAGE2,
+    PCS: PCS, NPCS: NPCS, XENOS: XENOS, STAGE2: STAGE2,
     ATTACKS: ATTACKS, CRITS: CRITS, EVENTS: EVENTS, TABLES: TABLES, POOLS: POOLS,
     npc: npc, xeno: xeno, pool: pool, skillsOf: skillsOf, xenoSkillsOf: xenoSkillsOf,
     stage2: stage2, drawAttack: drawAttack, drawCrit: drawCrit, tableRoll: tableRoll,
