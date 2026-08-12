@@ -239,6 +239,36 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 #injBody td.rm button{ border:0; color:var(--faint); padding:2px 6px; font-size:14px; }
 #injBody td.rm button:hover{ color:var(--alert); background:none; }
 
+/* initiative — your card off the shared deck of ten */
+.iwrap{ display:flex; gap:14px; align-items:stretch; }
+.icard{ flex:none; width:84px; border:1px solid var(--dim); display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:10px 4px; }
+.icard .n{ font-family:'VT323',monospace; font-size:52px; line-height:.85; color:var(--dim); }
+.icard .k{ font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin-top:6px; }
+.icard.has{ border-color:var(--amber); }
+.icard.has .n{ color:var(--white); }
+.icard.has .k{ color:var(--dim); }
+#initPanel.mine .icard{ border-color:var(--amber); box-shadow:0 0 16px rgba(240,178,62,.3); }
+#initPanel.mine .icard .n{ color:var(--amber); }
+.iside{ flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start;
+  justify-content:center; gap:10px; }
+.istat{ font-size:13px; color:var(--dim); line-height:1.5; }
+.istat b{ color:var(--phos); font-weight:400; }
+.istat .dim{ color:var(--faint); }
+.istat .go{ color:var(--amber); letter-spacing:.08em; text-transform:uppercase; }
+/* the order reads straight down, so "how far away am I?" needs no thinking */
+.iorder{ list-style:none; display:flex; flex-direction:column; gap:5px; margin-top:12px;
+  max-height:240px; overflow:auto; }
+.iorder li{ display:flex; gap:8px; align-items:baseline; border:1px solid var(--faint);
+  padding:4px 8px; font-size:12.5px; color:var(--dim); }
+.iorder li .n{ font-family:'VT323',monospace; font-size:17px; color:var(--phos);
+  min-width:1.4em; text-align:right; }
+.iorder li .dim{ color:var(--faint); }
+.iorder li.me{ background:var(--raise2); color:var(--phos); }
+.iorder li.now{ border-color:var(--amber); color:var(--amber); }
+.iorder li.now .n{ color:var(--amber); }
+.iorder li.gone{ opacity:.45; }
+
 /* roll log */
 #log{ list-style:none; display:flex; flex-direction:column; gap:6px; max-height:300px; overflow:auto; }
 #log li{ border:1px solid var(--faint); padding:7px 9px; font-size:12.5px; line-height:1.4; }
@@ -497,6 +527,19 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
     </div>
   </section>
 
+  <!-- initiative — your card off the Game Mother's deck -->
+  <section class="panel" id="initPanel">
+    <h2>Initiative <span class="sub">— one card off the deck of ten</span></h2>
+    <div class="iwrap">
+      <div class="icard" id="initCard"><span class="n">—</span><span class="k">no card</span></div>
+      <div class="iside">
+        <div class="istat" id="initStat">No fight in progress.</div>
+        <button id="initDraw">⚄ Draw a card</button>
+      </div>
+    </div>
+    <ol class="iorder" id="initOrder"></ol>
+  </section>
+
   <div class="cols">
     <section class="panel">
       <h2>Condition</h2>
@@ -716,6 +759,23 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
         <li>you face something truly terrifying.</li>
       </ul>
       <p style="color:var(--dim)">Stress only comes down with rest, a safe moment, or when the GM says the pressure lifts.</p>
+    </div>
+  </details>
+
+  <details class="rsec">
+    <summary>Initiative &amp; the round</summary>
+    <div class="rc">
+      <ul>
+        <li>When a fight starts, everyone in it draws one card from a deck of ten numbered <b>1–10</b>.</li>
+        <li><b>Lowest number acts first</b>, then up through the order.</li>
+        <li>You keep that card for the <b>whole fight</b> — nobody redraws each round.</li>
+        <li>On your card you take <b>one slow action and one fast action</b>.</li>
+        <li>The Game Mother draws for the enemy — one card per creature, or one for a whole group.</li>
+        <li>Anything with <b>Speed 2 or more</b> draws a card per point of Speed and acts on each of them.</li>
+        <li>Two of you can <b>trade cards</b> if you both agree and your Game Mother allows it.</li>
+      </ul>
+      <p style="color:var(--dim)">Tap <b>⚄ Draw a card</b> on the Initiative panel and the Game
+        Mother's deck deals you one — the whole table sees the order.</p>
     </div>
   </details>
 
@@ -942,6 +1002,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 </div>
 
 <script src="../assets/rollbus.js"></script>
+<script src="../assets/initiative.js"></script>
 <script>
 "use strict";
 const $ = s => document.querySelector(s);
@@ -1980,6 +2041,75 @@ function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;",
 function clock(ts){ if(!ts) return ""; const d=new Date(ts), p=n=>String(n).padStart(2,"0"); return p(d.getHours())+":"+p(d.getMinutes()); }
 
 /* ============================================================
+   INITIATIVE — your card off the Game Mother's deck
+   ------------------------------------------------------------
+   The deck itself lives on the GM console (assets/initiative.js);
+   this panel asks it for a card and mirrors the running order,
+   so a player never has to ask "am I up yet?".
+   ============================================================ */
+let INIT=null, initT=null;
+function initDeck(){
+  if(typeof Initiative==="undefined") return;
+  INIT = Initiative.follow(RollBus, paintInit);
+  $("#initDraw").addEventListener("click", ()=>{
+    const c=CREW[current]; if(!c) return;
+    clearTimeout(initT);
+    if(INIT.mine().length){                       // already dealt in — step back out
+      INIT.leave(c.name);
+      initSay("Dropping out of the fight…");
+      return;
+    }
+    INIT.draw(c.name, c.role);
+    initSay("Asking the deck for a card…");
+    initT=setTimeout(()=>{
+      if(!INIT.mine().length)
+        initSay("No answer. The Game Mother's deck isn't open on this room — she can deal you in from her console.");
+    }, 3500);
+  });
+  paintInit(null);
+}
+function initSay(msg){ $("#initStat").innerHTML=esc(msg); }
+function paintInit(st){
+  const panel=$("#initPanel"), card=$("#initCard"), list=$("#initOrder");
+  const cards = st ? Initiative.order(st) : [];
+  const live  = !!(st && st.active && cards.length);
+  const mine  = st ? Initiative.mine(st, RollBus.clientId) : [];
+  const at    = st ? Initiative.turn(st) : -1;
+  const my    = mine[0] || null;
+  const up    = at>=0 ? cards[at] : null;
+  const mineNow = !!(my && up && my.id===up.id);
+
+  panel.classList.toggle("mine", mineNow);
+  card.className = "icard"+(my?" has":"");
+  card.innerHTML = '<span class="n">'+(my?my.n:"—")+'</span>'+
+                   '<span class="k">'+(my?"your card":"no card")+'</span>';
+  $("#initDraw").textContent = my ? "✕ Drop out" : "⚄ Draw a card";
+
+  if(!live){
+    $("#initStat").innerHTML = 'No fight in progress. <span class="dim">Draw when one starts '+
+      'and the Game Mother\'s deck hands you a card.</span>';
+  } else if(mineNow){
+    $("#initStat").innerHTML = '<span class="go">▶ Your move</span> — round <b>'+st.round+
+      '</b>, card <b>'+my.n+'</b>. One slow action and one fast action.';
+  } else if(my){
+    $("#initStat").innerHTML = 'Round <b>'+st.round+'</b> — you act on card <b>'+my.n+'</b>.'+
+      (up ? ' <span class="dim">Up now: '+esc(up.who)+' ('+up.n+').</span>' : '');
+  } else {
+    $("#initStat").innerHTML = 'A fight is running — round <b>'+st.round+
+      '</b>. Draw a card to join the order.';
+  }
+
+  list.innerHTML="";
+  if(!live) return;
+  cards.forEach((c,i)=>{
+    const li=document.createElement("li");
+    li.className = (i===at?"now ":"")+(my&&c.id===my.id?"me ":"")+((at>=0&&i<at)?"gone":"");
+    li.innerHTML='<span class="n">'+c.n+'</span>'+esc(c.who)+(c.of>1?' <span class="dim">'+c.part+'/'+c.of+'</span>':'');
+    list.appendChild(li);
+  });
+}
+
+/* ============================================================
    ROOM / SYNC + BOOT
    ============================================================ */
 $("#switchBtn").addEventListener("click", ()=>{
@@ -2009,6 +2139,7 @@ function buildCritIndex(){
   wireInjuries();          // needs CRIT_INFO, so it follows buildCritIndex
   buildCatalog();
   initRoom();
+  initDeck();              // needs the bus, so it follows initRoom
   wireEquip();
   const params = new URLSearchParams(location.search);
   let start = params.get("char");

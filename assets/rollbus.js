@@ -18,11 +18,18 @@
    local echo and BroadcastChannel still work, so a roll is never
    lost on the device that made it.
 
+   The bus also carries the table's other shared traffic — the
+   initiative deck (assets/initiative.js) rides on it — so
+   'roll' only fires for actual dice, and 'msg' fires for
+   everything. A roll-log listener wants 'roll'; anything
+   speaking its own protocol wants 'msg'.
+
    Public API (window.RollBus):
      RollBus.config({ room })   -> join a room, start listening
      RollBus.on('roll', fn)     -> fn(rollObject) on every roll
+     RollBus.on('msg', fn)      -> fn(payload) on every message
      RollBus.on('status', fn)   -> fn({net:bool}) on connectivity
-     RollBus.publish(obj)       -> broadcast a roll to the room
+     RollBus.publish(obj)       -> broadcast to the room
      RollBus.setRoom(code)      -> switch rooms live
      RollBus.room()             -> current room slug
    ============================================================ */
@@ -32,7 +39,8 @@
   var NTFY = "https://ntfy.sh";
   var seen = new Set();                 // de-dupe by roll id (BC + ntfy + echo)
   var room = null, topic = null, es = null, bc = null;
-  var handlers = { roll: [], status: [] };
+  var handlers = { roll: [], msg: [], status: [] };
+  var ROLLS = { roll: 1, push: 1, panic: 1 };   // kinds a roll log should show
   var clientId = Math.random().toString(36).slice(2, 10);
 
   function slug(s) {
@@ -63,7 +71,9 @@
     if (seen.has(obj.id)) return;
     seen.add(obj.id);
     if (seen.size > 800) { seen.clear(); seen.add(obj.id); }
-    emit("roll", obj);
+    emit("msg", obj);
+    /* untagged payloads are rolls from before the bus carried anything else */
+    if (!obj.kind || ROLLS[obj.kind]) emit("roll", obj);
   }
 
   function openSSE() {

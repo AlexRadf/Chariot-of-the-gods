@@ -217,6 +217,27 @@ section h2{ font-size:clamp(10px,1.5vw,13px); color:var(--amber); font-weight:40
 .d-error .code{ color:#4a534c; letter-spacing:.18em; font-size:clamp(10px,1.6vw,13px); margin-top:26px; line-height:1.7; }
 @keyframes glitch{0%,100%{transform:translate(0,0);opacity:1}48%{transform:translate(-2px,1px);opacity:.85}49%{transform:translate(3px,-1px);opacity:.6}50%{transform:translate(-1px,0);opacity:1}}
 
+/* initiative strip — only on screen while a fight is running */
+#initbar{ display:none; border-top:2px solid var(--faint); margin-top:8px; padding:8px 6px 2px;
+  align-items:center; gap:12px; min-height:0; }
+#initbar.on{ display:flex; }
+#scrn.trk #initbar{ display:none; }                 /* the scope tab takes the whole screen */
+#initbar .ih{ font-size:clamp(9px,1.3vw,11px); letter-spacing:.14em; text-transform:uppercase;
+  color:var(--dim); line-height:1.5; white-space:nowrap; }
+#initbar .ih b{ display:block; font-family:'VT323',monospace; font-weight:400;
+  font-size:clamp(16px,2.4vw,22px); color:var(--amber); letter-spacing:.04em; }
+#initbar .icards{ display:flex; gap:6px; overflow-x:auto; flex:1; padding-bottom:2px; }
+#initbar .ic{ border:1px solid var(--faint); padding:3px 8px 4px; min-width:clamp(54px,7vw,78px);
+  text-align:center; flex:none; }
+#initbar .ic .n{ font-family:'VT323',monospace; font-size:clamp(20px,3vw,30px);
+  line-height:1; color:var(--phos); display:block; }
+#initbar .ic .w{ font-size:clamp(8px,1.15vw,10.5px); letter-spacing:.06em; text-transform:uppercase;
+  color:var(--dim); display:block; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#initbar .ic.now{ border-color:var(--amber); background:rgba(240,178,62,.12); }
+#initbar .ic.now .n{ color:var(--amber); }
+#initbar .ic.now .w{ color:var(--amber); }
+#initbar .ic.done{ opacity:.42; }
+
 /* live crew dice feed — the bottom-right ROLL LOG panel (newest on top) */
 #rolls{ display:flex; flex-direction:column; gap:6px; }
 #rolls:empty::before{ content:"— AWAITING CREW ROLLS —"; color:var(--faint);
@@ -284,6 +305,12 @@ body.cronus #rolls .rl{ background:rgba(6,13,22,.6); }
 
   <iframe id="trackerView" title="M314 Motion Tracker" allow="fullscreen"></iframe>
 
+  <!-- initiative order, dealt from the GM console -->
+  <div id="initbar">
+    <span class="ih">Initiative<b id="initRound">RND 1</b></span>
+    <div class="icards" id="initCards"></div>
+  </div>
+
   <div class="cmd" id="cmd"></div>
   <div class="foot">
     <span>WEYLAND-YUTANI CORP — BUILDING BETTER WORLDS</span>
@@ -320,6 +347,7 @@ body.cronus #rolls .rl{ background:rgba(6,13,22,.6); }
 
 
 <script src="../assets/rollbus.js"></script>
+<script src="../assets/initiative.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -760,6 +788,39 @@ $("#start").addEventListener("click", boot);
   }
   RollBus.config({});
   RollBus.on("roll", add);
+})();
+
+/* ---------------- initiative order (dealt on the GM console) ----------------
+   The table's copy of the deck: the running order, low card first, with
+   whoever is acting right now lit in amber. It only appears while a fight
+   is actually running. */
+(function(){
+  if(typeof RollBus==="undefined" || typeof Initiative==="undefined") return;
+  const bar=$("#initbar"), box=$("#initCards");
+  let lastTurn=null;
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+  /* the crew go by surname up here — the strip has room for little else */
+  function short(c){ return c.type==="pc" ? String(c.who).split(/\s+/).pop() : c.who; }
+  function paint(st){
+    const cards=Initiative.order(st), at=Initiative.turn(st);
+    if(!st || !st.active || !cards.length){ bar.classList.remove("on"); lastTurn=null; return; }
+    bar.classList.add("on");
+    $("#initRound").textContent = "RND "+st.round;
+    box.innerHTML="";
+    cards.forEach((c,i)=>{
+      const el=document.createElement("div");
+      el.className="ic"+(i===at?" now":"")+(at>=0 && i<at ? " done":"");
+      el.innerHTML='<span class="n">'+c.n+'</span><span class="w">'+esc(short(c))+'</span>';
+      box.appendChild(el);
+    });
+    if(st.turnId!==lastTurn){
+      lastTurn=st.turnId;
+      const now=box.querySelector(".ic.now");
+      if(now) now.scrollIntoView({ block:"nearest", inline:"center", behavior:"smooth" });
+      blip(880,0.045,0.045);
+    }
+  }
+  Initiative.follow(RollBus, paint);
 })();
 </script>
 <script>if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("../sw.js").catch(function(){});});}</script>
