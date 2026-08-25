@@ -156,6 +156,16 @@ need for play lives on their own device.
   gear — with the weapon's **bonus already applied**. Fire full-auto by *pushing*
   the roll as normal. (Per the ALIEN RPG, ammunition isn't counted — there's no
   reload tracker.)
+- **Supplies that run out on you.** **Air**, **food**, **water** and **power**
+  each carry a rating you set with **− / +**. Draw on one and tap
+  **⚄ Supply roll**: it throws **stress dice equal to that rating** (six at most)
+  and **every 1 spends a step**, writing the new rating straight back onto the
+  sheet. The pop-up shows the dice, the new figure and an *out of air* warning at
+  zero, with **Roll again** for the next Turn — and the whole table sees the
+  spend in the roll log.
+- **A scanner at the bottom of the sheet.** **◫ Scan access card** is a
+  full-width button under the roll log — one thumb-sized target for opening the
+  camera on a crew card's QR code, instead of a link buried in the footer.
 - **Your initiative card.** An **Initiative** panel sits under the quick rolls.
   Tap **⚄ Draw a card** when a fight starts and the Game Mother's deck deals you
   one of the ten — your number fills the panel, the running order appears beneath
@@ -166,7 +176,7 @@ need for play lives on their own device.
   *rules ▸* link by the dice and a *Rules* link in the footer) pops up the full
   **Game Mother Screen** quick reference as a toggle overlay — dice & pushing,
   the complete Panic table, stress triggers, initiative & the round,
-  time & range, slow/fast actions,
+  supply & consumables, time & range, slow/fast actions,
   ranged & cover mods, stealth, every skill's stunts, synthetic and xenomorph
   rules, and the full d66 critical-injury table. Collapsible, closes on
   <kbd>Esc</kbd> or a tap outside.

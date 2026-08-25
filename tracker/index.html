@@ -616,6 +616,9 @@ $("#npcRollBtn").addEventListener("click", ()=>{
     el.className="rl"+(o.kind==="panic"?" panic":"");
     if(o.kind==="panic"){
       el.innerHTML='<span class="who">'+esc(o.who)+'</span> PANIC <span class="s">'+o.panicTotal+'</span> <span class="dim">'+esc(o.panicText||"")+'</span>';
+    } else if(o.kind==="supply"){
+      el.innerHTML='<span class="who">'+esc(o.who)+'</span> supply <span class="dim">'+esc(o.label)+'</span> '+
+        o.before+' → <span class="s">'+o.after+'</span><span class="dim">'+(o.stressOnes?(' ✦'+o.stressOnes):'')+'</span>';
     } else {
       el.innerHTML='<span class="who">'+esc(o.who)+'</span> '+(o.kind==="push"?"push":"roll")+' <span class="dim">'+esc(o.label)+'</span> → <span class="s">'+o.successes+'</span><span class="dim"> succ'+(o.pushed?(" p×"+o.pushed):"")+(o.stressOnes?(" ✦"+o.stressOnes):"")+'</span>';
     }

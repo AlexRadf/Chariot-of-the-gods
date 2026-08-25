@@ -40,7 +40,7 @@
   var seen = new Set();                 // de-dupe by roll id (BC + ntfy + echo)
   var room = null, topic = null, es = null, bc = null;
   var handlers = { roll: [], msg: [], status: [] };
-  var ROLLS = { roll: 1, push: 1, panic: 1 };   // kinds a roll log should show
+  var ROLLS = { roll: 1, push: 1, panic: 1, supply: 1 };   // kinds a roll log shows
   var clientId = Math.random().toString(36).slice(2, 10);
 
   function slug(s) {
