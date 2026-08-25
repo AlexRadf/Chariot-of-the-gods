@@ -136,6 +136,9 @@ body::before{
 .statline .ar{ font-size:12px; color:var(--phos); letter-spacing:.05em; margin-top:3px; }
 .statline .ar b{ color:var(--dim); font-weight:400; font-size:11px; letter-spacing:.06em; }
 .statline .ds{ font-size:11px; color:var(--muted); line-height:1.5; margin-top:5px; }
+/* how to play them — the line you glance at before you open your mouth */
+.statline .pl{ font-size:12.5px; color:var(--amber); line-height:1.5; margin-top:5px;
+  border-left:2px solid var(--amber); padding-left:7px; }
 /* the reference block under the chips reads as prose, so it stays legible */
 #castMeta, #xenoMeta, #poolMeta{ color:var(--muted); }
 #castMeta b, #xenoMeta b, #poolMeta b{ color:var(--dim); font-weight:400; text-transform:uppercase; letter-spacing:.08em; font-size:10px; }
@@ -643,6 +646,7 @@ $("#gmTabs").addEventListener("click", e=>{
       '<div class="nm">'+esc(turned ? base.name+" · Stage II" : (base.full||base.name))+'</div>'+
       '<div class="rl">'+esc(turned ? GMData.STAGE2.name : base.role+" · "+base.ship)+
         (base.personality && !turned ? ' · '+esc(base.personality) : '')+'</div>'+
+      (base.play && !turned ? '<div class="pl">▸ '+esc(base.play)+'</div>' : '')+
       '<div class="st">STR '+a.STR+' · AGI '+a.AGI+' · WITS '+a.WITS+' · EMP '+a.EMP+
         ' <b>HEALTH</b> '+n.health+(turned?' <b>SPEED</b> 2':'')+'</div>'+
       '<div class="ds">'+esc(n.note||"")+'</div>';
@@ -672,7 +676,7 @@ $("#gmTabs").addEventListener("click", e=>{
 
     const ROMANS=["I","II","III"];
     const actLines = (base.acts||[]).map((a,i)=>
-      '<br><b>Act '+ROMANS[i]+'</b> '+esc(a)).join("");
+      '<br><b>Act '+ROMANS[i]+'</b> '+esc(a)).join("");   /* short goals — the full text is on the player's own sheet */
     $("#castMeta").innerHTML = turned
       ? esc(GMData.STAGE2.note)
       : "<b>Talent</b> "+esc(base.talent)+" · <b>Gear</b> "+esc(base.gear)+
