@@ -48,14 +48,13 @@ body{
   overflow-x:hidden;
 }
 
-/* ---- CRT overlay: scanlines + vignette + flicker ---- */
+/* ---- CRT overlay: vignette + flicker ----
+   No scanlines: this screen is pages of crew mail and documents, and stripes
+   over that much body text made it hard work to read. ---- */
 body::before{
   content:"";
   position:fixed; inset:0; z-index:50; pointer-events:none;
   background:
-    repeating-linear-gradient(0deg,
-      rgba(0,0,0,.22) 0px, rgba(0,0,0,.22) 1px,
-      transparent 1px, transparent 3px),
     radial-gradient(ellipse at center,
       transparent 55%, rgba(0,0,0,.55) 100%);
 }

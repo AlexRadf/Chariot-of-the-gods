@@ -30,10 +30,6 @@ body{
   font-family:'Share Tech Mono',ui-monospace,monospace; text-shadow:var(--glow);
   -webkit-font-smoothing:antialiased; user-select:none; -webkit-user-select:none;
 }
-body::before{
-  content:""; position:fixed; inset:0; z-index:30; pointer-events:none;
-  background:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);
-}
 @media (prefers-reduced-motion:reduce){ *{animation:none!important} }
 a{ color:var(--amber); text-decoration:none; }
 button{ font-family:inherit; background:none; border:1px solid var(--faint); color:var(--phos);

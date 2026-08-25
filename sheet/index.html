@@ -38,11 +38,12 @@ body{
   font-family:'Share Tech Mono',ui-monospace,monospace; font-size:15px; line-height:1.5;
   text-shadow:var(--glow); -webkit-font-smoothing:antialiased; overflow-x:hidden;
 }
+/* Vignette only — the CRT scanlines used to run over this too, but the sheet
+   is the one screen people *read*, and stripes across 12px body text cost more
+   than the effect was worth. */
 body::before{
   content:""; position:fixed; inset:0; z-index:2; pointer-events:none;
-  background:
-    repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, transparent 1px 3px),
-    radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
+  background:radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
 }
 @media (prefers-reduced-motion:reduce){ *{animation-duration:.001s!important; transition-duration:.001s!important;} }
 
@@ -182,6 +183,8 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .wc-top input.wname{ flex:1; min-width:0; background:transparent; border:0; border-bottom:1px solid var(--faint);
   color:var(--phos); font-family:inherit; font-size:14px; padding:3px 2px; }
 .wc-top input.wname:focus{ outline:none; border-bottom-color:var(--amber); }
+.wc-top .wc-heavy{ flex:none; display:inline-flex; align-items:center; gap:4px; font-size:10.5px;
+  color:var(--dim); text-transform:uppercase; letter-spacing:.06em; cursor:pointer; }
 .wc-top .wc-x{ border:0; color:var(--faint); font-size:15px; padding:2px 6px; background:none; cursor:pointer; }
 .wc-top .wc-x:hover{ color:var(--alert); }
 .wc-stats{ display:flex; gap:6px; }
@@ -216,6 +219,9 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
   color:var(--phos); font-family:inherit; font-size:13px; padding:.5em .7em; }
 .gear-add label{ font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em; display:inline-flex; gap:4px; align-items:center; }
 .encum{ font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--dim); text-transform:none; letter-spacing:0; }
+/* the panel title carries the running total on a line of its own, so a long
+   title never has to fight it for room on a phone */
+.panel > h2 .encum{ display:block; margin-top:1px; }
 .encum.over{ color:var(--alert); }
 .eq-empty{ color:var(--faint); font-size:12.5px; }
 /* custom critical injury builder — only shown when "Custom…" is picked */
@@ -457,8 +463,6 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .wywin{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   width:min(560px,94vw); max-height:90dvh; overflow:auto; background:#050b07; border:1px solid var(--amber);
   padding:20px; box-shadow:0 0 40px rgba(0,0,0,.85), inset 0 0 60px rgba(240,178,62,.05); }
-.wyscan{ position:absolute; inset:0; pointer-events:none; z-index:1;
-  background:repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
 .wywin > *{ position:relative; z-index:2; }
 .wytop{ display:flex; align-items:center; justify-content:space-between; }
 .wymark{ font-family:'VT323',monospace; font-size:clamp(26px,6vw,38px); letter-spacing:.14em; color:var(--amber);
@@ -638,7 +642,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 
   <!-- equipment & inventory -->
   <section class="panel">
-    <h2>Equipment &amp; Inventory</h2>
+    <h2>Equipment &amp; Inventory <span class="encum" id="encum"></span></h2>
 
     <div class="eq-h">Quick add</div>
     <div class="catadd">
@@ -662,14 +666,14 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
       <span>Rating</span><input class="arate" id="armorRating" placeholder="0" inputmode="numeric">
     </div>
 
-    <div class="eq-h">Gear <span class="encum" id="encum"></span></div>
+    <div class="eq-h">Gear</div>
     <ul id="gearList"></ul>
     <div class="gear-add">
       <input type="text" id="gearIn" placeholder="Add an item…" spellcheck="false">
       <label><input type="checkbox" id="gearHeavy"> heavy</label>
       <button class="eq-add" id="gearAdd">Add</button>
     </div>
-    <small style="color:var(--faint); display:block; margin-top:8px">Encumbrance limit = your Strength. Heavy items count as 2. Over the limit and you're slowed.</small>
+    <small style="color:var(--faint); display:block; margin-top:8px">Encumbrance limit = your Strength, and it counts <b>everything you carry — weapons included</b>. Heavy items count as 2, your signature item is free. Over the limit and you're slowed.</small>
   </section>
 
   <!-- roll log -->
@@ -1010,7 +1014,6 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 <div id="wyModal" role="dialog" aria-modal="true" aria-label="Priority transmission">
   <div class="veil" data-close-wy></div>
   <div class="wywin">
-    <div class="wyscan"></div>
     <div class="wytop">
       <span class="wymark">WEYLAND<span>-</span>YUTANI</span>
       <button data-close-wy aria-label="Close">✕</button>
@@ -1201,7 +1204,7 @@ const CATALOG = {
     { name:"Rexim RXF-M5 EVA Pistol", bonus:"+1", damage:"1", range:"Short" },
     { name:".357 Magnum Revolver", bonus:"+1", damage:"2", range:"Medium" },
     { name:"Armat M41A Pulse Rifle", bonus:"+1", damage:"2", range:"Long" },
-    { name:"Weyland Storm Rifle (heavy)", bonus:"0", damage:"2", range:"Long" },
+    { name:"Weyland Storm Rifle (heavy)", bonus:"0", damage:"2", range:"Long", heavy:true },
     { name:"Armat 37A2 12ga Shotgun", bonus:"+2", damage:"2", range:"Short" },
     { name:"Watatsumi DV-303 Bolt Gun", bonus:"+1", damage:"2", range:"Short" },
     { name:"M240 Incinerator Unit", bonus:"+1", damage:"Fire", range:"Short" },
@@ -1494,12 +1497,20 @@ function skillForWeapon(w){
 }
 function weaponBonus(w){ const m=String(w.bonus||"").match(/-?\d+/); return m ? parseInt(m[0],10) : 0; }
 
+/* What a weapon costs to carry — it counts against encumbrance like any other
+   item: two slots for a heavy one, otherwise one. Weapons saved before they
+   were counted carry no flag, so the catalogue's "(heavy)" naming still reads. */
+function weaponHeavy(w){
+  return w.heavy != null ? !!w.heavy : /\(\s*heavy\s*\)/i.test(w.name||"");
+}
+function weaponWeight(w){ return weaponHeavy(w) ? 2 : 1; }
+
 function renderWeapons(){
   const e = charState.equip, box = $("#wBody"); box.innerHTML="";
   if(!e.weapons.length){
     const p=document.createElement("div"); p.className="eq-empty";
     p.textContent="No weapons yet — add one from Quick add, or “+ Add weapon”.";
-    box.appendChild(p); return;
+    box.appendChild(p); renderEncumbrance(); return;
   }
   e.weapons.forEach((w,i)=>{
     const { attr, skill } = skillForWeapon(w), bon = weaponBonus(w);
@@ -1510,9 +1521,15 @@ function renderWeapons(){
     const nameI=document.createElement("input"); nameI.className="wname"; nameI.value=w.name||"";
     nameI.placeholder="Weapon name"; nameI.setAttribute("aria-label","weapon name");
     nameI.addEventListener("input", ()=>{ w.name=nameI.value; saveState(); });
+    /* heavy weapons take two slots of encumbrance, like heavy gear */
+    const hv=document.createElement("label"); hv.className="wc-heavy";
+    const hvc=document.createElement("input"); hvc.type="checkbox"; hvc.checked=weaponHeavy(w);
+    hvc.setAttribute("aria-label","heavy weapon");
+    hvc.addEventListener("change", ()=>{ w.heavy=hvc.checked; saveState(); renderEncumbrance(); });
+    hv.appendChild(hvc); hv.appendChild(document.createTextNode("heavy"));
     const x=document.createElement("button"); x.className="wc-x"; x.textContent="✕"; x.setAttribute("aria-label","remove weapon");
     x.addEventListener("click", ()=>{ e.weapons.splice(i,1); saveState(); renderWeapons(); });
-    top.appendChild(nameI); top.appendChild(x); card.appendChild(top);
+    top.appendChild(nameI); top.appendChild(hv); top.appendChild(x); card.appendChild(top);
 
     // editable stats — the ALIEN weapon line: Bonus / Damage / Range
     const stats=document.createElement("div"); stats.className="wc-stats";
@@ -1533,6 +1550,7 @@ function renderWeapons(){
 
     box.appendChild(card);
   });
+  renderEncumbrance();
 }
 
 /* fire a weapon: open the roll modal on the right combat skill, bonus applied */
@@ -1556,9 +1574,15 @@ function renderGear(){
     rb.addEventListener("click", ()=>{ e.gear.splice(i,1); saveState(); renderGear(); });
     li.appendChild(rb); ul.appendChild(li);
   });
-  const load = e.gear.reduce((n,g)=> n + gearWeight(g), 0);
+  renderEncumbrance();
+}
+/* Everything on you counts: gear and the weapons you're carrying alike. */
+function renderEncumbrance(){
+  const e = charState.equip, el = $("#encum");
+  if(!el || !e || !CREW[current]) return;
+  const load = e.gear.reduce((n,g)=> n + gearWeight(g), 0) +
+               e.weapons.reduce((n,w)=> n + weaponWeight(w), 0);
   const limit = CREW[current].STR;
-  const el = $("#encum");
   el.textContent = "Encumbrance "+load+" / "+limit;
   el.classList.toggle("over", load>limit);
 }
@@ -1581,7 +1605,8 @@ function catAdd(){
   const idx = $("#catSel").value; if(idx==="") return;
   const item = CAT_INDEX[parseInt(idx,10)]; if(!item) return;
   if(item.damage != null){   // anything with weapon stats goes to the weapons table
-    charState.equip.weapons.push({ name:item.name, bonus:item.bonus||"", damage:item.damage||"", range:item.range||"" });
+    charState.equip.weapons.push({ name:item.name, bonus:item.bonus||"", damage:item.damage||"",
+      range:item.range||"", heavy:!!item.heavy });
     renderWeapons();
   } else {
     charState.equip.gear.push({ name:item.name, heavy:!!item.heavy });
