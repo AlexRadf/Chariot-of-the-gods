@@ -27,7 +27,12 @@
   --phos:#8affb0; --dim:#3d7a53; --faint:#1d3b2a;
   --crt:#040906; --raise:#081209; --raise2:#0b1a10;
   --amber:#f0b23e; --alert:#ff5c47; --white:#e9fff2;
-  --glow:0 0 6px rgba(138,255,176,.45);
+  /* Two phosphor glows. --glow is what body text wears: a tight halo that
+     survives the scanlines without smearing 12–15px type. --glow-hi is the
+     old wide bloom, kept for the big VT323 display numerals and headings,
+     where there's glyph enough to carry it. */
+  --glow:0 0 2px rgba(138,255,176,.25);
+  --glow-hi:0 0 6px rgba(138,255,176,.45);
 }
 *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
 /* touch-action:manipulation stops the browser's double-tap-to-zoom (so double
@@ -38,12 +43,11 @@ body{
   font-family:'Share Tech Mono',ui-monospace,monospace; font-size:15px; line-height:1.5;
   text-shadow:var(--glow); -webkit-font-smoothing:antialiased; overflow-x:hidden;
 }
-/* Vignette only — the CRT scanlines used to run over this too, but the sheet
-   is the one screen people *read*, and stripes across 12px body text cost more
-   than the effect was worth. */
 body::before{
   content:""; position:fixed; inset:0; z-index:2; pointer-events:none;
-  background:radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
 }
 @media (prefers-reduced-motion:reduce){ *{animation-duration:.001s!important; transition-duration:.001s!important;} }
 
@@ -463,6 +467,8 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .wywin{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   width:min(560px,94vw); max-height:90dvh; overflow:auto; background:#050b07; border:1px solid var(--amber);
   padding:20px; box-shadow:0 0 40px rgba(0,0,0,.85), inset 0 0 60px rgba(240,178,62,.05); }
+.wyscan{ position:absolute; inset:0; pointer-events:none; z-index:1;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
 .wywin > *{ position:relative; z-index:2; }
 .wytop{ display:flex; align-items:center; justify-content:space-between; }
 .wymark{ font-family:'VT323',monospace; font-size:clamp(26px,6vw,38px); letter-spacing:.14em; color:var(--amber);
@@ -505,6 +511,17 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .roombox{ display:inline-flex; gap:6px; align-items:center; }
 .roombox input{ width:8em; background:var(--crt); border:1px solid var(--faint); color:var(--phos);
   font-family:inherit; font-size:11px; padding:.3em .5em; text-transform:lowercase; letter-spacing:.06em; }
+
+/* ---- the phosphor bloom, kept where the type is big enough for it ----
+   Everything else runs on the tight --glow set on the body, so the sheet
+   reads cleanly under the scanlines. Last in the file so it beats the
+   rules above on a tie; anything with its own text-shadow keeps it. */
+h2,
+#pick .lead .big, .card .nm,
+.top .nm, .attr .val,
+.icard .n,
+#rollModal .rhead .rt, .die, .tally .succ, .panic-out .t,
+#miscModal .rhead .rt, #miscModal .bignum{ text-shadow:var(--glow-hi); }
 </style>
 </head>
 <body>
@@ -1014,6 +1031,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 <div id="wyModal" role="dialog" aria-modal="true" aria-label="Priority transmission">
   <div class="veil" data-close-wy></div>
   <div class="wywin">
+    <div class="wyscan"></div>
     <div class="wytop">
       <span class="wymark">WEYLAND<span>-</span>YUTANI</span>
       <button data-close-wy aria-label="Close">✕</button>
