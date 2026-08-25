@@ -585,6 +585,7 @@ live automatically. `.nojekyll` tells Pages to serve the files as-is.
 | [`cards/access-cards.html`](cards/access-cards.html) | Print-ready sheet of all nine terminal cards. |
 | [`scripts/generate_qr.py`](scripts/generate_qr.py) | Regenerates the codes and card sheet for any site URL. |
 | [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) | Builds and publishes the Pages site on every push. |
+| [`sw.js`](sw.js) | The offline **service worker** — caches every page and asset so the kit runs with no internet. Pages are network-first; assets are stale-while-revalidate, so an edit lands on the next load. Bump `CACHE` when you want every device to drop its old copies at once. |
 | `.nojekyll` | Tells Pages to serve the files as-is instead of running Jekyll. |
 
 ---
@@ -743,7 +744,8 @@ want to change the built-in default.
 | Sync says **local** instead of **LIVE** | The browser couldn't reach ntfy.sh (offline, or a restrictive network). Same-device screens still sync; cross-device won't until the connection is back. |
 | A player can't see their secret agenda | The codeword must be entered exactly (`LUCAS` / `INFECTED`); it's stored per device, so it won't follow them to a different phone. |
 | QR codes open the wrong address | They were generated for a different URL — rerun `scripts/generate_qr.py` with your real site URL. |
-| Edits don't show up | Hard-refresh the browser; on the live site, wait for the deploy to finish. |
+| Edits don't show up | Hard-refresh the browser; on the live site, wait for the deploy to finish. The kit runs from a service worker, so a page can be a load behind — reload once more and it catches up. |
+| A device is running old **data** (no Montero crew in the GM cast, say) | It had a stale copy of `assets/gmdata.js` cached. Reload twice; the worker replaces it in the background. If you change an asset yourself, bump `CACHE` in [`sw.js`](sw.js) to drop every old copy at once. |
 
 ---
 
