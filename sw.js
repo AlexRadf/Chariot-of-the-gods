@@ -14,11 +14,15 @@
    Strategy:
      · navigations / HTML  -> network-first, fall back to cache
        (so you get fresh content online, cached copy offline)
-     · same-origin assets  -> cache-first (rarely change)
-     · Google Fonts        -> cache-first at runtime
-   Bump CACHE to force a refresh of everything.
+     · same-origin assets  -> stale-while-revalidate: the cached copy
+       comes back instantly, and a fresh one is fetched behind it for
+       next time. These used to be cache-first, which meant an edit to
+       gmdata.js or rollbus.js never reached a device that had already
+       visited — the pages updated around them and the data didn't.
+     · Google Fonts        -> cache-first (they never change)
+   Bump CACHE to drop every old copy at once.
    ============================================================ */
-const CACHE = "cotg-offline-v3";
+const CACHE = "cotg-offline-v4";
 
 /* Core files, relative to this worker's scope (the site root). */
 const CORE = [
@@ -85,9 +89,23 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Same-origin assets: cache-first.
-  event.respondWith(cacheFirst(req));
+  // Same-origin assets: stale-while-revalidate.
+  event.respondWith(staleWhileRevalidate(event, req));
 });
+
+/* Serve what we have, then quietly replace it. waitUntil keeps the worker
+   alive for the background fetch, so the new copy is really in the cache
+   before it shuts down. */
+async function staleWhileRevalidate(event, req) {
+  const cache = await caches.open(CACHE);
+  const hit = await cache.match(req);
+  const fresh = fetch(req).then(net => {
+    if (net && (net.ok || net.type === "opaque")) cache.put(req, net.clone());
+    return net;
+  }).catch(() => null);
+  if (hit) { event.waitUntil(fresh); return hit; }
+  return (await fresh) || Response.error();
+}
 
 async function networkFirst(req) {
   const cache = await caches.open(CACHE);
