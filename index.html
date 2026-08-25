@@ -33,6 +33,7 @@
   /* --glow is the tight halo body text wears, so mail and documents stay
      sharp under the scanlines; --glow-hi is the old wide bloom, kept for
      the big VT323 display type. */
+  --muted:     #74c093;   /* secondary prose — --phos-faint is for borders */
   --glow:    0 0 2px rgba(138,255,176,.25);
   --glow-hi: 0 0 6px rgba(138,255,176,.45);
 }
@@ -262,6 +263,41 @@ main{ flex:1; display:flex; min-height:0; }
   padding:40px 20px; text-align:center; color:var(--phos-dim);
 }
 
+/* ============================ HUB ============================
+   The bare site URL has no card to read, so instead of a card-read error
+   it opens the kit: a way in to each screen. A crew card (?id=) still
+   boots the terminal as that crew member, and an id that isn't in the
+   manifest still gets ACCESS DENIED — that part is the prop working. */
+#hub{
+  display:none; flex:1; flex-direction:column; align-items:center; justify-content:center;
+  padding:calc(28px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
+  min-height:100dvh;
+}
+#hub.on{ display:flex; }
+#hub .hwrap{ width:100%; max-width:760px; }
+#hub h1{
+  font-family:'VT323',monospace; font-weight:400; letter-spacing:.05em;
+  font-size:clamp(30px,7vw,52px); text-shadow:var(--glow-hi);
+}
+#hub .hsub{ color:var(--amber); letter-spacing:.2em; text-transform:uppercase;
+  font-size:clamp(10px,2.2vw,12px); margin-top:2px; }
+#hub .hrule{ border-bottom:2px solid var(--phos-faint); margin:14px 0 18px; }
+#hub .hgrid{ display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); }
+#hub .htile{
+  display:block; border:1px solid var(--phos-faint); background:var(--crt-raise);
+  padding:13px 14px; text-decoration:none; color:var(--phos); transition:.12s;
+}
+#hub .htile:hover,#hub .htile:focus-visible{ border-color:var(--phos); background:#0b1a10; outline:none; }
+#hub .htile b{ display:block; font-family:'VT323',monospace; font-weight:400; font-size:21px;
+  letter-spacing:.04em; }
+#hub .htile small{ display:block; color:var(--muted); font-size:11.5px; line-height:1.5; margin-top:4px; }
+#hub .htile .gmtag{ display:inline-block; border:1px solid var(--amber); color:var(--amber);
+  font-size:9px; letter-spacing:.12em; padding:0 4px; margin-left:6px; vertical-align:middle; }
+#hub .hnote{ color:var(--muted); font-size:12px; line-height:1.6; margin-top:18px; }
+#hub .hnote b{ color:var(--amber); font-weight:400; }
+#hub .hnote a{ color:var(--amber); text-decoration:none; border-bottom:1px dotted currentColor; }
+#hub .hnote a:hover{ color:var(--phos); }
+
 /* ============================ DENIED ============================ */
 #denied{
   display:none; min-height:100dvh;
@@ -311,6 +347,32 @@ header h1{ text-shadow:var(--glow-hi); }
 <div id="boot" aria-live="polite">
   <div id="bootlog"></div>
   <button id="skipBtn">Skip &gt;&gt;</button>
+</div>
+
+<div id="hub">
+  <div class="hwrap">
+    <h1>CHARIOT OF THE GODS</h1>
+    <div class="hsub">Digital prop kit · ALIEN RPG</div>
+    <div class="hrule"></div>
+    <div class="hgrid">
+      <a class="htile" href="./sheet/"><b>◆ Crew Sheets</b>
+        <small>Your Montero character — stats, dice, agenda, condition, initiative.</small></a>
+      <a class="htile" href="./display/"><b>▲ Main Display</b>
+        <small>MU/TH/UR 6500 for the middle of the table. Leave it running.</small></a>
+      <a class="htile" href="./scan/"><b>◫ Scan Access Card</b>
+        <small>Read a crew card's QR code and open this terminal as them.</small></a>
+      <a class="htile" href="./map/"><b>▦ Ship Map</b>
+        <small>The Montero deck plans, pan and zoom.</small></a>
+      <a class="htile" href="./control/"><b>◇ GM Control<span class="gmtag">GM</span></b>
+        <small>The Game Mother's console: NPCs, events, the initiative deck, the self-destruct.</small></a>
+      <a class="htile" href="./tracker/"><b>◎ Motion Tracker<span class="gmtag">GM</span></b>
+        <small>The M314 scope. Place the blips and walk them in.</small></a>
+    </div>
+    <div class="hnote">Hand a player a crew access card and this page becomes that crew member's
+      terminal — or print the cards from <a href="./cards/access-cards.html">cards/access-cards.html</a>.
+      <b>Game Mothers:</b> the console and the tracker are yours; everything behind a crew card is
+      the players' to find.</div>
+  </div>
 </div>
 
 <div id="denied" role="alert">
@@ -1012,18 +1074,23 @@ const bootLines = crew ? [
   ["warn","CARD ID NOT RECOGNISED"]
 ];
 
+/* No ?id= means nobody presented a card — that's a visit to the kit, not a
+   failed read, so it opens the hub rather than the denial screen. */
+const noCard = !id;
+
 let bootDone = false;
 function finishBoot(){
   if (bootDone) return;
   bootDone = true;
   $("#boot").style.display = "none";
   if (crew){ initApp(); }
+  else if (noCard){ $("#hub").classList.add("on"); }
   else { $("#denied").classList.add("on"); }
 }
 $("#skipBtn").addEventListener("click", finishBoot);
 
 (async function runBoot(){
-  if (reduced){ finishBoot(); return; }
+  if (noCard || reduced){ finishBoot(); return; }   // no card to read, no boot log
   const log = $("#bootlog");
   for (const [cls, text] of bootLines){
     if (bootDone) return;
