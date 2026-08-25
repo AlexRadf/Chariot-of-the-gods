@@ -20,6 +20,7 @@
 :root{
   --phos:#8affb0; --dim:#3d7a53; --faint:#1d3b2a;
   --crt:#040906; --raise:#081209; --amber:#f0b23e;
+  --muted:#74c093;   /* secondary prose — --faint is for borders */
   --glow:0 0 2px rgba(138,255,176,.25);
   --glow-hi:0 0 6px rgba(138,255,176,.45);
 }
@@ -60,7 +61,7 @@ body::before{
 .ctrls button:active{ background:var(--faint); }
 .ctrls .fit{ font-size:11px; letter-spacing:.06em; }
 .hint{ position:fixed; z-index:15; left:14px; bottom:calc(14px + env(safe-area-inset-bottom));
-  font-size:10px; color:var(--faint); letter-spacing:.1em; text-transform:uppercase; max-width:60vw; line-height:1.5; }
+  font-size:10px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; max-width:60vw; line-height:1.5; }
 
 /* the wide phosphor bloom, kept for the big type only */
 .bar .id{ text-shadow:var(--glow-hi); }

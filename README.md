@@ -655,6 +655,10 @@ want to change the built-in default.
 
 - **Reduced motion:** visitors whose browser requests reduced motion get the boot
   sequence and CRT flicker turned off automatically.
+- **Readable secondary text:** the palette keeps `--faint` for **rules and
+  borders only**. Prose that recedes — hints, empty states, the small print under
+  a panel, the GM's instruction notes — uses **`--muted`**, which sits around
+  9:1 against the tube black instead of the 1.9:1 `--faint` gave it.
 - **Legible text:** the phosphor glow comes in two strengths. Body text — crew
   mail, stat blocks, rules, the roll log — wears a **tight halo** (`--glow`) so it
   stays sharp under the scanlines; the big VT323 display type keeps the **wide

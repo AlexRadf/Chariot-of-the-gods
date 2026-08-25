@@ -27,6 +27,7 @@
   --phos:#8affb0; --dim:#3d7a53; --faint:#1d3b2a;
   --crt:#040906; --raise:#081209;
   --amber:#f0b23e; --alert:#ff5c47;
+  --muted:#74c093;   /* secondary prose — --faint is for borders */
   /* tight halo for the panel text that's read across the table; the wide
      bloom is kept below for the big display type */
   --glow:0 0 2px rgba(138,255,176,.25);
@@ -58,6 +59,7 @@ body::after{
 body.cronus{
   --phos:#79b3ff; --dim:#4a6ea8; --faint:#22334f;
   --crt:#03060c; --raise:#060d16;
+  --muted:#8ab8f0;
   --glow:0 0 2px rgba(121,179,255,.28);
   --glow-hi:0 0 6px rgba(121,179,255,.5);
   background:var(--crt);
@@ -168,8 +170,8 @@ section h2{ font-size:clamp(10px,1.5vw,13px); color:var(--amber); font-weight:40
 .cmd .cur{ display:inline-block; width:.55em; height:1.05em; background:var(--phos);
   vertical-align:text-bottom; animation:bl 1s steps(1) infinite; }
 .foot{ display:flex; justify-content:space-between; gap:12px; padding:4px 8px 0;
-  font-size:clamp(9px,1.3vw,11px); color:var(--faint); letter-spacing:.1em; text-transform:uppercase; }
-.foot a{ color:var(--faint); text-decoration:none; } .foot a:hover{ color:var(--dim); }
+  font-size:clamp(9px,1.3vw,11px); color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
+.foot a{ color:var(--muted); text-decoration:none; } .foot a:hover{ color:var(--phos); }
 .foot .dot{ display:inline-block; width:7px; height:7px; border-radius:50%;
   background:var(--faint); box-shadow:0 0 5px currentColor; color:var(--faint); vertical-align:middle; }
 .foot .dot.up{ background:var(--phos); color:var(--phos); }
@@ -244,7 +246,7 @@ section h2{ font-size:clamp(10px,1.5vw,13px); color:var(--amber); font-weight:40
 
 /* live crew dice feed — the bottom-right ROLL LOG panel (newest on top) */
 #rolls{ display:flex; flex-direction:column; gap:6px; }
-#rolls:empty::before{ content:"— AWAITING CREW ROLLS —"; color:var(--faint);
+#rolls:empty::before{ content:"— AWAITING CREW ROLLS —"; color:var(--muted);
   font-size:clamp(10px,1.4vw,12px); letter-spacing:.12em; }
 #rolls .rl{ border:1px solid var(--faint); background:rgba(6,15,10,.6); padding:7px 10px;
   font-size:clamp(11px,1.5vw,14px); line-height:1.4; animation:rin .35s ease; }
