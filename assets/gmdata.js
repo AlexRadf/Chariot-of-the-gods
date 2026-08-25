@@ -88,11 +88,12 @@
       attr: { STR: 4, AGI: 3, WITS: 2, EMP: 5 }, health: 4,
       skills: { piloting:2, rangedCombat:1, mobility:1, observation:2, command:3, medicalAid:1 },
       talent: "Pull Rank", gear: "WY Jacket Patch",
+      play: "Calm and worn out, counting the cost of every order she gives.",
       agenda: "Get out from under the Company — the money to lease the Montero, or a ship of her own.",
       acts: [
-        "Follow company protocol, get the job done and cash in. Don't do anything to risk your paycheck. Maybe the next run pays better.",
-        "Finding the Cronus is a huge opportunity, even with monsters onboard. Find a way to get out from under the corporate yoke with an upgraded ship or enough money to buy a new one.",
-        "Things are going south fast. Get all the cash you can and get the hell out of dodge, by any means necessary."
+        "Play it safe and get paid.",
+        "Turn the Cronus into a way out from under the Company.",
+        "Take the money and go, by any means."
       ],
       buddy: "Davis", rival: "Wilson", turns: true
     },
@@ -104,11 +105,12 @@
       attr: { STR: 2, AGI: 5, WITS: 3, EMP: 4 }, health: 2,
       skills: { heavyMachinery:1, rangedCombat:2, mobility:2, piloting:3, observation:2, command:1 },
       talent: "Reckless", gear: "Almost empty pill bottle",
+      play: "Bored until something is on fire. Talks fast, waits for nobody.",
       agenda: "Break the monotony, and find something to take the edge off.",
       acts: [
-        "God, these cargo runs are boring. Take any chance to break the monotony.",
-        "You really need another fix right now. Search the labs on the Cronus for stimulants.",
-        "This will all go to hell unless you save the day. Take any risk necessary to kill the monsters and other enemies on the Cronus."
+        "Anything to break the boredom.",
+        "Find something in the Cronus labs to take the edge off.",
+        "Save the day, whatever the risk."
       ],
       buddy: "Miller", rival: "—", turns: true
     },
@@ -120,11 +122,12 @@
       attr: { STR: 4, AGI: 3, WITS: 4, EMP: 3 }, health: 4,
       skills: { heavyMachinery:1, stamina:2, mobility:2, comtech:3, medicalAid:2 },
       talent: "The Long Haul", gear: "A well-worn photo of your brother",
+      play: "Practical and guarded, working out what everything here is worth.",
       agenda: "Money for her sick brother back home, by whatever angle presents itself.",
       acts: [
-        "Find any angle to get more money out of this cargo run. Your sick brother back home needs the cash badly.",
-        "Search the Cronus for cash or any other valuable items that you might sell back home if you survive. The ship is a derelict anyway, right?",
-        "Strike any deal to get enough money to support yourself and your family for good, no matter what the cost to your soul."
+        "Squeeze more money out of this run — her brother needs it.",
+        "Loot the derelict for anything sellable.",
+        "Any deal that sets her family up for good."
       ],
       buddy: "Cham", rival: "Miller", turns: true
     },
@@ -136,11 +139,12 @@
       attr: { STR: 5, AGI: 3, WITS: 2, EMP: 4 }, health: 5,
       skills: { closeCombat:2, heavyMachinery:3, stamina:2, observation:1, survival:1, comtech:1 },
       talent: "True Grit", gear: "Rosary",
+      play: "Quiet and immovable. Puts himself between the crew and the door.",
       agenda: "The crew is family. Keep them alive.",
       acts: [
-        "Do your duty and help your fellow crewmates as best you can.",
-        "The crew is in danger and the crew is your family. Protect them with your life, if need be.",
-        "Get all the surviving crew from the Montero to safety off the Cronus — by any means necessary."
+        "Do the job, help the crew.",
+        "The crew is family — shield them, whatever it costs.",
+        "Get every surviving crewmate off the Cronus alive."
       ],
       buddy: "Rye", rival: "—", turns: true
     },
@@ -152,11 +156,12 @@
       attr: { STR: 2, AGI: 4, WITS: 3, EMP: 5 }, health: 2,
       skills: { rangedCombat:1, mobility:2, observation:2, comtech:1, manipulation:3, medicalAid:1 },
       talent: "Personal Safety", gear: "Access keycard",
+      play: "Helpful, agreeable, and always somewhere he shouldn't be.",
       agenda: "Special Order 966 — secure the xenomorphic material for the Company. Crew expendable.",
       acts: [
-        "Shortly before the cargo run to Sutter's World, you received Special Order 966 from Weyland-Yutani headquarters. The Montero will be redirected en route to investigate the USCSS Cronus, a Weyland-Yutani science ship missing for 73 years. Make sure the Montero crew investigates the Cronus, but tread carefully — don't do anything to raise suspicions. Be helpful and make the crew trust you.",
-        "The discoveries on the Cronus are beyond your wildest dreams. It's dangerous to be sure, but if you pull this off and manage to salvage the xenomorphic material, you can parlay it into a fortune. No matter what, Special Order 966 is your goal — but don't risk open confrontation with the rest of the Montero crew. You still need them.",
-        "This is the endgame. With the Montero gone, your goal is to bring the Cronus back to Earth at any cost. Join forces with Clayton if need be, but even she's expendable for you to reach your goal — just like the rest of the crew."
+        "Steer them into boarding the Cronus without raising suspicion.",
+        "Secure the xenomorphic material, and keep the crew onside.",
+        "Bring the Cronus home at any cost. Everyone is expendable."
       ],
       buddy: "—", rival: "Miller", turns: true
     },
@@ -170,6 +175,7 @@
       attr: { STR: 4, AGI: 3, WITS: 3, EMP: 4 }, health: 4,
       skills: { heavyMachinery: 1, stamina: 2, rangedCombat: 2, piloting: 2, observation: 2, command: 1 },
       talent: "Pull Rank", gear: "M4A3 Pistol (1 reload), key card",
+      play: "Looks to whoever sounds certain, and does what they say.",
       agenda: "Find a leader to follow and help them save human lives.",
       buddy: "—", rival: "Clayton", turns: true
     },
@@ -181,6 +187,7 @@
       attr: { STR: 5, AGI: 4, WITS: 2, EMP: 3 }, health: 5,
       skills: { closeCombat: 3, heavyMachinery: 1, rangedCombat: 3, mobility: 2, command: 1 },
       talent: "Overkill", gear: "Armat 37A2 12ga Shotgun (2 reloads)",
+      play: "Wound tight. Answers a problem by aiming at it.",
       agenda: "Terminate all threats to the Cronus crew with extreme prejudice, whatever the risk to you.",
       buddy: "Johns", rival: "Flynn", turns: true
     },
@@ -192,6 +199,7 @@
       attr: { STR: 2, AGI: 3, WITS: 4, EMP: 5 }, health: 2,
       skills: { mobility: 1, observation: 2, comtech: 2, manipulation: 2, medicalAid: 3 },
       talent: "Compassion", gear: "Personal Medkit, Surgical Kit",
+      play: "Sweating and over-explaining. Steers you off the subject of the cure.",
       agenda: "Get out of this mess alive, whatever it costs and whatever lies you have to tell.",
       buddy: "Cooper", rival: "Reid", turns: true
     },
@@ -203,6 +211,7 @@
       attr: { STR: 2, AGI: 3, WITS: 5, EMP: 4 }, health: 2,
       skills: { mobility: 1, observation: 2, comtech: 3, manipulation: 1, medicalAid: 3 },
       talent: "Analysis", gear: "Personal data tablet",
+      play: "Level and clinical. Reasons out loud, even about himself.",
       agenda: "Make sure the 26 Draconis Strain never becomes a threat to human civilization.",
       buddy: "Flynn", rival: "Clayton", turns: false
     },
@@ -214,6 +223,7 @@
       attr: { STR: 2, AGI: 3, WITS: 4, EMP: 5 }, health: 2,
       skills: { rangedCombat: 2, mobility: 1, observation: 2, command: 2, manipulation: 3 },
       talent: "Personal Safety", gear: "M4A3 Pistol (2 reloads), key card",
+      play: "Courteous, composed, entirely willing. Never raises her voice.",
       agenda: "Bring Flynn and a sample of the 26 Draconis Strain back to Weyland-Yutani — no matter who you have to kill.",
       buddy: "—", rival: "Cooper", turns: true
     },
@@ -225,6 +235,7 @@
       attr: { STR: 5, AGI: 6, WITS: 5, EMP: 4 }, health: 5,
       skills: { mobility: 1, stamina: 2, observation: 2, comtech: 3, medicalAid: 2 },
       talent: "—", gear: "None",
+      play: "Serene and literal. Offers help nobody asked for.",
       agenda: "Help the humans on the Cronus survive, without regard for your own safety.",
       buddy: "—", rival: "—", turns: false
     },
@@ -238,6 +249,7 @@
       attr: { STR: 3, AGI: 5, WITS: 3, EMP: 3 }, health: 3,
       skills: { heavyMachinery: 1, mobility: 2, piloting: 1, rangedCombat: 3, manipulation: 1, command: 2 },
       talent: "Pull Rank", gear: "Rexim RXF-M5 EVA Pistol (3 reloads)",
+      play: "Trader's manners over a hard line. Names his price once.",
       agenda: "Turn this tricky situation into a profit without risking your ship and crew.",
       buddy: "Pin", rival: "—", turns: true
     },
@@ -249,6 +261,7 @@
       attr: { STR: 5, AGI: 4, WITS: 3, EMP: 2 }, health: 5,
       skills: { closeCombat: 3, heavyMachinery: 1, stamina: 1, rangedCombat: 2, mobility: 2, command: 1 },
       talent: "Overkill", gear: "Armat M41A Pulse Rifle (2 reloads)",
+      play: "Says little. Watches Bolaji, and moves when he does.",
       agenda: "Follow and protect Bolaji, whatever the cost or risk.",
       buddy: "Bolaji", rival: "Bein", turns: true
     },
@@ -260,6 +273,7 @@
       attr: { STR: 3, AGI: 5, WITS: 3, EMP: 3 }, health: 3,
       skills: { heavyMachinery: 2, rangedCombat: 2, piloting: 3, observation: 1, command: 2 },
       talent: "Reckless", gear: ".357 Magnum Revolver (2 reloads)",
+      play: "Dry and unimpressed, already looking for the drinks cabinet.",
       agenda: "Find a drink on this goddamn ship.",
       buddy: "Horton", rival: "Pin", turns: true
     },
@@ -271,6 +285,7 @@
       attr: { STR: 2, AGI: 4, WITS: 5, EMP: 3 }, health: 2,
       skills: { mobility: 2, observation: 2, survival: 2, comtech: 3, medicalAid: 1 },
       talent: "Beneath Notice", gear: "M240 Incinerator Unit (1 reload)",
+      play: "Twelve years old and cheerful, chattering about the ship's systems.",
       agenda: "Help your crewmates from the Sotillo get out alive.",
       buddy: "Bein", rival: "—", turns: true
     }
