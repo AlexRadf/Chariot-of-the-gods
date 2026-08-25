@@ -4,9 +4,12 @@
    Everything the Game Mother needs to roll for the scenario,
    lifted straight out of the Chariot of the Gods booklet:
 
-     · NPCS        the crews of the Cronus and the Sotillo,
-                   with their real attributes, skills, talents,
-                   gear and personal agendas
+     · NPCS        the crews of the Montero, the Cronus and the
+                   Sotillo, with their real attributes, skills,
+                   talents, gear and personal agendas — the
+                   players' own crew carry pc:true and their
+                   per-Act goals, so the GM can roll for anyone
+                   who has stepped away from the table
      · XENOS       Bloodburster / Neophyte / adult Neomorph and
                    the Abomination stages, with Speed, Health,
                    skills and Armor Rating
@@ -32,7 +35,7 @@
 
    Public API (window.GMData):
      GMData.SKILLS            ordered skill list w/ attribute
-     GMData.PCS               the players' crew, names only
+     GMData.PCS               the players' crew (id/name/role)
      GMData.NPCS / XENOS / ATTACKS / CRITS / EVENTS / TABLES
      GMData.pool(npc, skillKey)   -> Base Dice for that NPC
      GMData.skillsOf(npc)         -> [{key,name,attr,pool}, …]
@@ -68,23 +71,96 @@
 
   var ATTR_NAME = { STR: "Strength", AGI: "Agility", WITS: "Wits", EMP: "Empathy" };
 
-  /* ----------------------------------------------------------
-     The players' own crew — names only, so the GM can deal them
-     an initiative card for anyone away from their sheet. Their
-     real stats live on the sheets themselves.
-     ---------------------------------------------------------- */
-  var PCS = [
-    { id: "miller", name: "Cpt. Vanessa Miller", role: "Officer" },
-    { id: "davis",  name: "Leah Davis",          role: "Pilot" },
-    { id: "rye",    name: "Kayla Rye",           role: "Roughneck" },
-    { id: "cham",   name: "Lyron Cham",          role: "Roughneck" },
-    { id: "wilson", name: "John J. Wilson",      role: "Company Agent" }
-  ];
-
   /* ============================================================
      NON-PLAYER CHARACTERS  (booklet pp. 8–13)
      ============================================================ */
   var NPCS = [
+    /* ---------------- the players' own crew, aboard the Montero ----------------
+       Here so the Game Mother can roll for a player who has stepped away, read
+       what each of them is chasing this Act, and deal them an initiative card.
+       sheet/index.html is the source of truth for play — these are the same
+       numbers, kept in the GM's data so the console works on its own. */
+    {
+      id: "miller", group: "Crew of the Montero", pc: true,
+      name: "Cpt. Vanessa Miller", role: "Officer", full: "Cpt. Vanessa Miller",
+      ship: "USCSS Montero",
+      note: "Commanding officer of the USCSS Montero, tired of being under the thumb of Weyland-Yutani.",
+      attr: { STR: 4, AGI: 3, WITS: 2, EMP: 5 }, health: 4,
+      skills: { piloting:2, rangedCombat:1, mobility:1, observation:2, command:3, medicalAid:1 },
+      talent: "Pull Rank", gear: "WY Jacket Patch",
+      agenda: "Get out from under the Company — the money to lease the Montero, or a ship of her own.",
+      acts: [
+        "Follow company protocol, get the job done and cash in. Don't do anything to risk your paycheck. Maybe the next run pays better.",
+        "Finding the Cronus is a huge opportunity, even with monsters onboard. Find a way to get out from under the corporate yoke with an upgraded ship or enough money to buy a new one.",
+        "Things are going south fast. Get all the cash you can and get the hell out of dodge, by any means necessary."
+      ],
+      buddy: "Davis", rival: "Wilson", turns: true
+    },
+    {
+      id: "davis", group: "Crew of the Montero", pc: true,
+      name: "Leah Davis", role: "Pilot", full: "Leah Davis",
+      ship: "USCSS Montero",
+      note: "A reckless pilot, willing to do anything for a thrill, up to, and including stimulant abuse. MDMA preferred.",
+      attr: { STR: 2, AGI: 5, WITS: 3, EMP: 4 }, health: 2,
+      skills: { heavyMachinery:1, rangedCombat:2, mobility:2, piloting:3, observation:2, command:1 },
+      talent: "Reckless", gear: "Almost empty pill bottle",
+      agenda: "Break the monotony, and find something to take the edge off.",
+      acts: [
+        "God, these cargo runs are boring. Take any chance to break the monotony.",
+        "You really need another fix right now. Search the labs on the Cronus for stimulants.",
+        "This will all go to hell unless you save the day. Take any risk necessary to kill the monsters and other enemies on the Cronus."
+      ],
+      buddy: "Miller", rival: "—", turns: true
+    },
+    {
+      id: "rye", group: "Crew of the Montero", pc: true,
+      name: "Kayla Rye", role: "Roughneck", full: "Kayla Rye",
+      ship: "USCSS Montero",
+      note: "A technician with a chip on her shoulder, money to earn, and a family in need of support.",
+      attr: { STR: 4, AGI: 3, WITS: 4, EMP: 3 }, health: 4,
+      skills: { heavyMachinery:1, stamina:2, mobility:2, comtech:3, medicalAid:2 },
+      talent: "The Long Haul", gear: "A well-worn photo of your brother",
+      agenda: "Money for her sick brother back home, by whatever angle presents itself.",
+      acts: [
+        "Find any angle to get more money out of this cargo run. Your sick brother back home needs the cash badly.",
+        "Search the Cronus for cash or any other valuable items that you might sell back home if you survive. The ship is a derelict anyway, right?",
+        "Strike any deal to get enough money to support yourself and your family for good, no matter what the cost to your soul."
+      ],
+      buddy: "Cham", rival: "Miller", turns: true
+    },
+    {
+      id: "cham", group: "Crew of the Montero", pc: true,
+      name: "Lyron Cham", role: "Roughneck", full: "Lyron Cham",
+      ship: "USCSS Montero",
+      note: "A loner with a new-found family who is willing to do anything and everything to keep them safe.",
+      attr: { STR: 5, AGI: 3, WITS: 2, EMP: 4 }, health: 5,
+      skills: { closeCombat:2, heavyMachinery:3, stamina:2, observation:1, survival:1, comtech:1 },
+      talent: "True Grit", gear: "Rosary",
+      agenda: "The crew is family. Keep them alive.",
+      acts: [
+        "Do your duty and help your fellow crewmates as best you can.",
+        "The crew is in danger and the crew is your family. Protect them with your life, if need be.",
+        "Get all the surviving crew from the Montero to safety off the Cronus — by any means necessary."
+      ],
+      buddy: "Rye", rival: "—", turns: true
+    },
+    {
+      id: "wilson", group: "Crew of the Montero", pc: true,
+      name: "John J. Wilson", role: "Company Agent", full: "John J. Wilson",
+      ship: "USCSS Montero",
+      note: "A Company man, through and through, desperate for advancement, whatever the cost.",
+      attr: { STR: 2, AGI: 4, WITS: 3, EMP: 5 }, health: 2,
+      skills: { rangedCombat:1, mobility:2, observation:2, comtech:1, manipulation:3, medicalAid:1 },
+      talent: "Personal Safety", gear: "Access keycard",
+      agenda: "Special Order 966 — secure the xenomorphic material for the Company. Crew expendable.",
+      acts: [
+        "Shortly before the cargo run to Sutter's World, you received Special Order 966 from Weyland-Yutani headquarters. The Montero will be redirected en route to investigate the USCSS Cronus, a Weyland-Yutani science ship missing for 73 years. Make sure the Montero crew investigates the Cronus, but tread carefully — don't do anything to raise suspicions. Be helpful and make the crew trust you.",
+        "The discoveries on the Cronus are beyond your wildest dreams. It's dangerous to be sure, but if you pull this off and manage to salvage the xenomorphic material, you can parlay it into a fortune. No matter what, Special Order 966 is your goal — but don't risk open confrontation with the rest of the Montero crew. You still need them.",
+        "This is the endgame. With the Montero gone, your goal is to bring the Cronus back to Earth at any cost. Join forces with Clayton if need be, but even she's expendable for you to reach your goal — just like the rest of the crew."
+      ],
+      buddy: "—", rival: "Miller", turns: true
+    },
+
     /* ---------------- crew of the USCSS Cronus ---------------- */
     {
       id: "johns", group: "Crew of the Cronus",
@@ -199,6 +275,12 @@
       buddy: "Bein", rival: "—", turns: true
     }
   ];
+
+  /* The players' own crew, pulled back out of the list above — the GM's
+     initiative roster offers these by name, and the names have to match what
+     the sheets publish, so they are derived rather than typed twice. */
+  var PCS = NPCS.filter(function (n) { return n.pc; })
+                .map(function (n) { return { id: n.id, name: n.name, role: n.role }; });
 
   /* ============================================================
      XENOMORPHS  (Appendix I, booklet pp. 36–46)

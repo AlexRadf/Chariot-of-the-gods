@@ -630,10 +630,13 @@ $("#gmTabs").addEventListener("click", e=>{
       wrap.appendChild(b);
     });
 
+    const ROMANS=["I","II","III"];
+    const actLines = (base.acts||[]).map((a,i)=>
+      '<br><b>Act '+ROMANS[i]+'</b> '+esc(a)).join("");
     $("#castMeta").innerHTML = turned
       ? esc(GMData.STAGE2.note)
       : "<b>Talent</b> "+esc(base.talent)+" · <b>Gear</b> "+esc(base.gear)+
-        "<br><b>Agenda</b> "+esc(base.agenda)+
+        "<br><b>Agenda</b> "+esc(base.agenda)+ actLines +
         "<br><b>Buddy</b> "+esc(base.buddy)+" · <b>Rival</b> "+esc(base.rival);
   }
   sel.addEventListener("change", ()=>{ $("#castTurned").checked=false; render(); });
@@ -875,7 +878,8 @@ function buildDeckPicker(){
   };
   group("Montero crew", GMData.PCS.map(p=>["pc:"+p.id, p.name+" — "+p.role]));
   const crews={};
-  GMData.NPCS.forEach(n=>{ (crews[n.group]=crews[n.group]||[]).push(n); });
+  GMData.NPCS.forEach(n=>{ if(n.pc) return;      // already offered as "Montero crew"
+    (crews[n.group]=crews[n.group]||[]).push(n); });
   Object.keys(crews).forEach(g=>{
     group(g, crews[g].map(n=>["npc:"+n.id, n.name+" — "+n.role]));
   });

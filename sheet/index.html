@@ -73,6 +73,14 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 #pick .lead .sub{ color:var(--dim); letter-spacing:.18em; text-transform:uppercase; font-size:clamp(11px,2.6vw,14px); }
 #pick .lead .hint{ color:var(--muted); font-size:12px; letter-spacing:.08em; margin-top:10px; }
 .cards{ display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); }
+/* extras — the Cronus and Sotillo crews, for when a character doesn't make it */
+.extras-btn{ width:100%; margin-top:18px; border:1px dashed var(--faint); background:none;
+  color:var(--muted); font-size:14px; letter-spacing:.1em; padding:.9em 1em; text-align:center; }
+.extras-btn:hover{ background:var(--raise); border-color:var(--dim); color:var(--phos); }
+.extras-btn .xk{ display:block; font-size:10.5px; letter-spacing:.06em; color:var(--dim);
+  text-transform:none; margin-top:4px; }
+#extraWrap{ margin-top:14px; }
+#extraGrid .card .sh{ color:var(--muted); font-size:11px; letter-spacing:.1em; text-transform:uppercase; }
 .card{ border:1px solid var(--faint); background:var(--raise); padding:16px; cursor:pointer;
   display:flex; flex-direction:column; gap:8px; text-align:left; transition:.12s; }
 .card:hover,.card:focus-visible{ border-color:var(--phos); background:var(--raise2); outline:none; }
@@ -215,6 +223,8 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .armor-row input{ background:var(--crt); border:1px solid var(--faint); color:var(--phos); font-family:inherit; font-size:13px; padding:.4em .6em; }
 .armor-row input.aname{ flex:1; min-width:120px; }
 .armor-row input.arate{ width:4em; text-align:center; }
+.armor-row .armorRoll{ font-size:12px; padding:.45em .8em; border-color:var(--dim); color:var(--white); }
+.armor-row .armorRoll:disabled{ opacity:.35; cursor:not-allowed; border-color:var(--faint); color:var(--faint); }
 #gearList{ list-style:none; display:flex; flex-direction:column; gap:4px; margin:2px 0 8px; }
 #gearList li{ display:flex; align-items:center; justify-content:space-between; gap:8px;
   border:1px solid var(--faint); padding:5px 9px; font-size:13px; }
@@ -537,6 +547,16 @@ h2,
     <div class="hint">Tap a card to take that role. Your stats, talent and hidden agenda travel with you.</div>
   </div>
   <div class="cards" id="cardGrid"></div>
+
+  <!-- the other survivors: playable when a character doesn't make it -->
+  <button class="extras-btn" id="extrasBtn" aria-expanded="false" aria-controls="extraWrap">
+    ＋ Extras — the other survivors
+    <span class="xk">If your character is gone, take one of the Cronus or Sotillo crew</span>
+  </button>
+  <div id="extraWrap" hidden>
+    <div class="cards" id="extraGrid"></div>
+  </div>
+
   <div class="backlink"><a href="../">◄ Access Terminal</a> · <a href="../display/">Main Display</a> · <a href="../tracker/">Motion Tracker</a></div>
 </div>
 
@@ -608,7 +628,7 @@ h2,
       <h2>Talent &amp; Kit</h2>
       <div class="talent" id="talent"></div>
       <div style="margin-top:12px">
-        <div class="kv"><b>Signature item:</b> <span id="sig"></span></div>
+        <div class="kv"><b id="sigLabel">Signature item:</b> <span id="sig"></span></div>
         <div class="kv"><b>Buddy:</b> <span id="buddy"></span></div>
         <div class="kv"><b>Rival:</b> <span id="rival"></span></div>
       </div>
@@ -684,7 +704,9 @@ h2,
     <div class="armor-row">
       <input class="aname" id="armorName" placeholder="Armor name" spellcheck="false">
       <span>Rating</span><input class="arate" id="armorRating" placeholder="0" inputmode="numeric">
+      <button class="armorRoll" id="armorRoll">⛨ Soak</button>
     </div>
+    <small style="color:var(--muted); display:block; margin-top:6px">Add a suit from <b style="color:var(--amber)">Quick add</b> and it fills this row. When you're hit, tap <b style="color:var(--amber)">⛨ Soak</b>: it rolls base dice equal to your rating and every <b style="color:var(--amber)">6</b> stops one point of damage.</small>
 
     <div class="eq-h">Gear</div>
     <ul id="gearList"></ul>
@@ -1065,6 +1087,7 @@ h2,
 
 <script src="../assets/rollbus.js"></script>
 <script src="../assets/initiative.js"></script>
+<script src="../assets/gmdata.js"></script>
 <script>
 "use strict";
 const $ = s => document.querySelector(s);
@@ -1235,8 +1258,12 @@ const CATALOG = {
     { name:"Maintenance Jack", bonus:"+2", damage:"1", range:"Engaged" },
     { name:"Combat Knife", bonus:"+2", damage:"1", range:"Engaged" }
   ],
+  "Armor": [
+    { name:"IRC Mk.50 Compression Suit", armor:"2" },
+    { name:"M3 Personnel Armor", armor:"6" }
+  ],
   "Gear on the Montero": [
-    { name:"IRC Mk.50 Compression Suit (Air 5)" },
+    { name:"IRC Mk.50 Compression Suit (Air 5)", armor:"2" },
     { name:"M314 Motion Tracker (Power 5)" },
     { name:"Cutting Torch (Power 5)", bonus:"+1", damage:"2", range:"Engaged" },
     { name:"Watatsumi Bolt Gun", bonus:"+1", damage:"2", range:"Short" },
@@ -1254,7 +1281,7 @@ const CATALOG = {
   ],
   "Standard gear": [
     { name:"Flashlight" },
-    { name:"Compression Suit (Air Supply)" },
+    { name:"Compression Suit (Air Supply)", armor:"2" },
     { name:"Personal Medkit" },
     { name:"Signal Flare" },
     { name:"Rope (10 m)" },
@@ -1317,7 +1344,7 @@ function loadState(id){
 /* import the equipment listed on the character sheet — the signature item —
    into the inventory (idempotent, counts as a tiny item so it's weight-free). */
 function seedEquip(s, c){
-  if(c.sig && !s.equip.gear.some(g=> g.name === c.sig)){
+  if(c.sig && !c.extra && !s.equip.gear.some(g=> g.name === c.sig)){
     s.equip.gear.unshift({ name:c.sig, sig:true });
   }
   (c.startingGear||[]).forEach(it=>{
@@ -1329,23 +1356,65 @@ function saveState(){ if(current){ try{ localStorage.setItem(stateKey(current), 
 /* ============================================================
    CHARACTER SELECT
    ============================================================ */
+/* ---- EXTRAS ----------------------------------------------------------
+   The Cronus and Sotillo crews, playable. When a character dies mid-scenario
+   the booklet hands the player one of the survivors; these are those people,
+   built out of assets/gmdata.js and folded into CREW so every other part of
+   the sheet — rolls, injuries, equipment, the agenda drawer — just works.
+   Their ids are prefixed so their saved state never collides with a PC's. */
+const EXTRAS = [];
+function buildExtras(){
+  if(typeof GMData === "undefined") return;
+  GMData.NPCS.forEach(n=>{
+    if(n.pc) return;                                  // the Montero crew have their own cards
+    const id = "x-"+n.id;
+    const kit = (n.gear||"").split(/,\s*/).filter(Boolean);
+    CREW[id] = {
+      name: n.full || n.name, role: n.role, extra: true,
+      desc: n.note || "", ship: n.ship || "",
+      buddy: n.buddy || "—", rival: n.rival || "—",
+      sig: n.gear || "—", sigLabel: "Kit",
+      startingGear: kit.map(name=>({ name })),
+      STR:n.attr.STR, AGI:n.attr.AGI, WITS:n.attr.WITS, EMP:n.attr.EMP,
+      skills: Object.assign({}, n.skills),
+      talent: { name:(n.talent||"—"), text:"" },
+      agenda: { intro:(n.agenda||""), acts:[] }
+    };
+    EXTRAS.push(id);
+  });
+}
+function cardFor(id, ship){
+  const c = CREW[id];
+  const b = document.createElement("button");
+  b.className="card"; b.setAttribute("data-id",id);
+  b.innerHTML =
+    '<span class="nm">'+esc(c.name)+'</span>'+
+    '<span class="rl">'+esc(c.role)+'</span>'+
+    (ship && c.ship ? '<span class="sh">'+esc(c.ship)+'</span>' : '')+
+    '<span class="ds">'+esc(c.desc)+'</span>'+
+    '<span class="atts">'+
+      '<span>STR <b>'+c.STR+'</b></span><span>AGI <b>'+c.AGI+'</b></span>'+
+      '<span>WITS <b>'+c.WITS+'</b></span><span>EMP <b>'+c.EMP+'</b></span>'+
+    '</span>';
+  b.addEventListener("click", ()=> selectChar(id));
+  return b;
+}
+function buildExtraCards(){
+  const g = $("#extraGrid"); if(!g) return;
+  g.innerHTML="";
+  EXTRAS.forEach(id=> g.appendChild(cardFor(id, true)));
+}
+$("#extrasBtn").addEventListener("click", ()=>{
+  const w=$("#extraWrap"), open=w.hidden;
+  w.hidden=!open;
+  $("#extrasBtn").setAttribute("aria-expanded", String(open));
+  $("#extrasBtn").firstChild.textContent = (open ? "− Extras — the other survivors" : "＋ Extras — the other survivors");
+  if(open) w.scrollIntoView({ block:"nearest", behavior:"smooth" });
+});
+
 function buildCards(){
   const g = $("#cardGrid"); g.innerHTML="";
-  ORDER.forEach(id=>{
-    const c = CREW[id];
-    const b = document.createElement("button");
-    b.className="card"; b.setAttribute("data-id",id);
-    b.innerHTML =
-      '<span class="nm">'+c.name+'</span>'+
-      '<span class="rl">'+c.role+'</span>'+
-      '<span class="ds">'+c.desc+'</span>'+
-      '<span class="atts">'+
-        '<span>STR <b>'+c.STR+'</b></span><span>AGI <b>'+c.AGI+'</b></span>'+
-        '<span>WITS <b>'+c.WITS+'</b></span><span>EMP <b>'+c.EMP+'</b></span>'+
-      '</span>';
-    b.addEventListener("click", ()=> selectChar(id));
-    g.appendChild(b);
-  });
+  ORDER.forEach(id=> g.appendChild(cardFor(id, false)));
 }
 function selectChar(id){
   current = id;
@@ -1367,6 +1436,7 @@ function renderSheet(){
   $("#cRole").textContent = c.role;
   $("#cDesc").textContent = c.desc + (c.note ? "  ·  " + c.note : "");
   $("#talent").innerHTML = "<b>"+c.talent.name+".</b> " + c.talent.text;
+  $("#sigLabel").textContent = (c.sigLabel || "Signature item") + ":";
   $("#sig").textContent = c.sig;
   $("#buddy").textContent = c.buddy;
   $("#rival").textContent = c.rival;
@@ -1449,6 +1519,7 @@ function buildEquip(){
   // armor
   $("#armorName").value = e.armorName||"";
   $("#armorRating").value = e.armorRating||"";
+  renderArmor();
   // weapons + gear
   renderWeapons();
   renderGear();
@@ -1507,6 +1578,37 @@ function rollSupply(key, label){
   const c=CREW[current];
   RollBus.publish({ kind:"supply", who:c.name, role:c.role, label:label,
     before:before, after:after, stress:dice, stressOnes:ones });
+}
+
+/* ---- armor ----
+   Armor Rating is rolled when you're hit: base dice equal to the rating, and
+   every 6 stops a point of damage. Stress dice never come into it, so this
+   runs its own little roll rather than going through the pop-up. */
+function armorRating(){
+  const m = String((charState.equip && charState.equip.armorRating) || "").match(/\d+/);
+  return m ? parseInt(m[0],10) : 0;
+}
+function renderArmor(){
+  const btn = $("#armorRoll"); if(!btn) return;
+  btn.disabled = armorRating() <= 0;
+}
+function rollArmor(){
+  const rating = armorRating();
+  if(rating <= 0) return;
+  const dice = rollN(rating);
+  const stopped = countSix(dice);
+  const name = (charState.equip.armorName || "Armor").trim() || "Armor";
+  const diceHtml = dice.map(v=>'<div class="die'+(v===6?" six":"")+' rolling">'+v+'</div>').join("");
+  showMisc("Armor Soak",
+    '<div class="sub">'+esc(name)+' · rating '+rating+'</div>'+
+    '<div class="dicewrap">'+diceHtml+'</div>'+
+    '<div class="bignum'+(stopped?' ok':'')+'">'+stopped+'</div>'+
+    '<div class="res">'+(stopped
+      ? '<b>'+stopped+'</b> point'+(stopped===1?'':'s')+' of damage stopped'
+      : 'The armor holds nothing — you take it all')+'</div>');
+  const c = CREW[current];
+  RollBus.publish({ kind:"roll", who:c.name, role:c.role, label:"Armor soak · "+name,
+    base:dice, stress:[], successes:stopped, stressOnes:0, pushed:0 });
 }
 
 /* a weapon at Engaged range (or with no range set) is a Close Combat attack;
@@ -1615,7 +1717,9 @@ function buildCatalog(){
     CATALOG[group].forEach(item=>{
       const idx = CAT_INDEX.push(Object.assign({ _group:group }, item)) - 1;
       const o = document.createElement("option"); o.value = idx;
-      o.textContent = item.name + (item.damage!=null ? "  ("+item.bonus+"/"+item.damage+"/"+item.range+")" : "");
+      o.textContent = item.name +
+        (item.damage!=null ? "  ("+item.bonus+"/"+item.damage+"/"+item.range+")" :
+         item.armor!=null  ? "  (armor "+item.armor+")" : "");
       og.appendChild(o);
     });
     sel.appendChild(og);
@@ -1629,6 +1733,12 @@ function catAdd(){
     charState.equip.weapons.push({ name:item.name, bonus:item.bonus||"", damage:item.damage||"",
       range:item.range||"", heavy:!!item.heavy });
     renderWeapons();
+  } else if(item.armor != null){   // a suit or vest wears the Armor slot, not the gear list
+    charState.equip.armorName = item.name;
+    charState.equip.armorRating = String(item.armor);
+    $("#armorName").value = charState.equip.armorName;
+    $("#armorRating").value = charState.equip.armorRating;
+    renderArmor();
   } else {
     charState.equip.gear.push({ name:item.name, heavy:!!item.heavy });
     renderGear();
@@ -1641,7 +1751,8 @@ function wireEquip(){
   $("#catAdd").addEventListener("click", catAdd);
   $("#catSel").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); catAdd(); } });
   $("#armorName").addEventListener("input", ()=>{ if(charState.equip){ charState.equip.armorName=$("#armorName").value; saveState(); } });
-  $("#armorRating").addEventListener("input", ()=>{ if(charState.equip){ charState.equip.armorRating=$("#armorRating").value; saveState(); } });
+  $("#armorRating").addEventListener("input", ()=>{ if(charState.equip){ charState.equip.armorRating=$("#armorRating").value; saveState(); renderArmor(); } });
+  $("#armorRoll").addEventListener("click", rollArmor);
   $("#wAdd").addEventListener("click", ()=>{ if(!charState.equip) return;
     charState.equip.weapons.push({ name:"", bonus:"", damage:"", range:"" }); saveState(); renderWeapons(); });
   const addGear = ()=>{ if(!charState.equip) return; const v=$("#gearIn").value.trim(); if(!v) return;
@@ -1873,7 +1984,10 @@ function paintAgenda(){
   const c = CREW[current];
   $$("#actTabs button").forEach((b,i)=> b.classList.toggle("on", i===charState.act));
   $("#agIntro").textContent = c.agenda.intro;
-  $("#agGoal").innerHTML = '<span class="glabel">Act '+["I","II","III"][charState.act]+' — your goal</span>' + c.agenda.acts[charState.act];
+  const acts = c.agenda.acts || [];
+  $("#agGoal").innerHTML = acts.length
+    ? '<span class="glabel">Act '+["I","II","III"][charState.act]+' — your goal</span>' + acts[charState.act]
+    : '';
   const red = $("#agRedact");
   if(c.agenda.redact && charState.act===0){ red.style.display="block"; red.textContent=c.agenda.redact; }
   else red.style.display="none";
@@ -2266,7 +2380,9 @@ function buildCritIndex(){
   });
 }
 (function boot(){
+  buildExtras();
   buildCards();
+  buildExtraCards();
   buildCritIndex();
   wireInjuries();          // needs CRIT_INFO, so it follows buildCritIndex
   buildCatalog();

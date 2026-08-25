@@ -156,6 +156,12 @@ need for play lives on their own device.
   gear — with the weapon's **bonus already applied**. Fire full-auto by *pushing*
   the roll as normal. (Per the ALIEN RPG, ammunition isn't counted — there's no
   reload tracker.)
+- **Extras — the other survivors.** Under the five crew cards, **＋ Extras**
+  opens the **Cronus and Sotillo crews as playable characters** — Johns, Reid,
+  Flynn, Cooper, Clayton, Ava 6, Bolaji, Pin, Bein and Horton, with their real
+  attributes, skills, talent, kit and agenda. When a character doesn't make it,
+  the player takes one of these and carries on; their sheet saves separately, so
+  the dead PC's sheet is still there if you want it.
 - **Supplies that run out on you.** **Air**, **food**, **water** and **power**
   each carry a rating you set with **− / +**. Draw on one and tap
   **⚄ Supply roll**: it throws **stress dice equal to that rating** (six at most)
@@ -163,6 +169,11 @@ need for play lives on their own device.
   sheet. The pop-up shows the dice, the new figure and an *out of air* warning at
   zero, with **Roll again** for the next Turn — and the whole table sees the
   spend in the roll log.
+- **Armor that arrives with its rating, and rolls.** Add a suit or a vest from
+  **Quick add** and it fills the **Armor** row — name and rating — instead of
+  dropping into the gear list. Beside the rating, **⛨ Soak** rolls base dice
+  equal to that rating and counts the **6s**: each one stops a point of damage.
+  The result goes to the table feed like any other roll.
 - **A scanner at the bottom of the sheet.** **◫ Scan access card** is a
   full-width button under the roll log — one thumb-sized target for opening the
   camera on a crew card's QR code, instead of a link buried in the footer.
@@ -281,7 +292,7 @@ thrown until you hit **⚄ Roll**, and only that result reaches the table.
 
 | Tab | What's in it |
 |-----|--------------|
-| **Cast** | Every NPC of the **Cronus** (Johns, Reid, Flynn, Cooper, Clayton, Ava 6) and the **Sotillo** (Bolaji, Pin, Bein, Horton) with their real attributes, Health, talent, gear, agenda, buddy and rival. Their skills come up as chips already totalled to **attribute + skill** — tap *Ranged Cbt 7* and the pool is set. Four attribute chips cover anything with no skill behind it. |
+| **Cast** | The **Montero crew** — your own players — plus every NPC of the **Cronus** (Johns, Reid, Flynn, Cooper, Clayton, Ava 6) and the **Sotillo** (Bolaji, Pin, Bein, Horton), with their real attributes, Health, talent, gear, agenda, buddy and rival. The player characters also carry their **Act I / II / III goals**, so you can see at a glance what each of them is chasing — and roll for anyone who has stepped away from the table. Their skills come up as chips already totalled to **attribute + skill** — tap *Ranged Cbt 7* and the pool is set. Four attribute chips cover anything with no skill behind it. |
 | **Xenos** | The Neomorph life cycle (**Bloodburster → Neophyte → adult**) and the Abomination stages (**Revenant**, **Beluga-Head**) with Speed, Health, Armor Rating and skill pools. **⚄ Signature attack** rolls the creature's own D6 table and prints the result — then loads its Base Dice and Damage into the roller for you. **⚄ Critical injury** rolls the Xenomorph crit table for when one hits zero Health. |
 | **Events** | All 34 scripted events of **Acts I, II and III**, laid out as a **rough timeline** — see below. |
 | **Tables** | The scenario's stray rolls (egg sac clutches **2D6**, decompressed compartments, doses, the Turns before a Bloodburster returns) and its fixed pools — **Blast Power 12** for the Montero's detonation, **Virulence 9** for Neomorphic Motes, **Virulence 6** for the 26 Draconis Strain. |
@@ -629,8 +640,8 @@ plain-data file — no DOM, no network, so it works offline like the rest of the
 
 | Export | Holds |
 |--------|-------|
-| `PCS` | The players' own crew, names and careers only — what the GM's initiative roster offers for anyone away from their sheet. Their real stats live in `sheet/index.html`. |
-| `NPCS` | The crews of the **Cronus** and the **Sotillo** — attributes, skills, Health, talent, gear, personal agenda, buddy and rival. `turns: false` marks anyone who never becomes an Abomination. |
+| `PCS` | The players' own crew, derived from the `pc: true` entries above — what the GM's initiative roster offers. `sheet/index.html` stays the source of truth for play. |
+| `NPCS` | The crews of the **Montero**, the **Cronus** and the **Sotillo** — attributes, skills, Health, talent, gear, personal agenda, buddy and rival. `turns: false` marks anyone who never becomes an Abomination; `pc: true` marks the players' own crew, who also carry their per-Act goals. The Cronus and Sotillo entries are what the crew sheets offer as **Extras**. |
 | `XENOS` | Bloodburster, Neophyte, adult Neomorph, Revenant and Beluga-Head — Speed, Health, Armor Rating, skills, and which attack table each one uses. |
 | `ATTACKS` / `CRITS` | The D6 signature-attack tables and the Xenomorph critical injury table, each row carrying its Base Dice, Damage, crit number and whether it forces a Panic Roll. |
 | `EVENTS` | All 34 Act I–III events **in timeline order**: `id`, `act`, `phase`, `mandatory`, `when` (`anytime` / `conditional`), the skill roll it calls for, any stress hit, and the text you read off the phone. Array order *is* timeline order — move an entry and it moves on the GM's screen. |
