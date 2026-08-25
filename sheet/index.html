@@ -157,6 +157,11 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .cons .cl{ text-transform:uppercase; letter-spacing:.08em; font-size:12px; color:var(--dim);
   min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .cons .stepper{ justify-self:end; }
+/* the supply roll sits under its rating, full width, so it's a deliberate tap */
+.cons .csup{ grid-column:1 / -1; width:100%; margin-top:7px; font-size:11px; padding:.5em .3em;
+  border-color:var(--faint); color:var(--dim); letter-spacing:.09em; }
+.cons .csup:hover:not(:disabled){ background:none; border-color:var(--amber); color:var(--amber); }
+.cons .csup:disabled{ opacity:.3; cursor:not-allowed; }
 /* fixed-width buttons: Share Tech Mono has no U+2212, so the minus falls back to a
    proportional system face and used to render wider than the plus */
 .stepper.sm button{ font-size:16px; padding:0; width:1.9em; text-align:center; letter-spacing:0; }
@@ -435,6 +440,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 #miscModal .res b{ color:var(--amber); }
 #miscModal .fatal{ color:var(--alert); font-size:12.5px; margin-top:6px; }
 #miscModal .again{ margin-top:14px; border-color:var(--dim); }
+#miscModal .dicewrap{ justify-content:center; margin:14px 0 0; }
 
 /* W-Y priority transmission — trigger button + modal */
 .wy-btn{ width:100%; margin-top:14px; border:1px solid var(--amber); color:var(--amber);
@@ -477,6 +483,16 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .wyacts{ text-align:right; margin-top:12px; }
 .wyacts button{ border-color:var(--dim); font-size:12px; }
 @media (prefers-reduced-motion:reduce){ .wy-btn{ animation:none } .wystamp.show{ animation:none } }
+
+/* scan-card call to action — the last thing on the sheet, thumb-sized */
+.scan-btn{ display:flex; align-items:center; justify-content:center; gap:14px; width:100%;
+  margin-top:16px; border:1px solid var(--dim); background:var(--raise); color:var(--white);
+  font-size:16px; letter-spacing:.12em; text-transform:uppercase; padding:1em .9em; text-align:left; }
+.scan-btn:hover{ background:var(--faint); border-color:var(--phos); }
+.scan-btn:focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+.scan-btn .ic{ font-size:26px; line-height:1; color:var(--amber); }
+.scan-btn .sk{ display:block; font-size:10.5px; letter-spacing:.06em; color:var(--dim);
+  text-transform:none; margin-top:3px; }
 
 .footbar{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; margin-top:16px;
   border-top:2px solid var(--faint); padding-top:10px; font-size:11px; letter-spacing:.08em;
@@ -633,6 +649,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 
     <div class="eq-h">Consumables</div>
     <div class="consum" id="consum"></div>
+    <small style="color:var(--faint); display:block; margin-top:6px">Set each supply with <b style="color:var(--amber)">− / +</b>. When you draw on one, tap <b style="color:var(--amber)">⚄ Supply roll</b>: it throws stress dice equal to that rating (six at most) and every <b style="color:var(--amber)">1</b> spends a step.</small>
 
     <div class="eq-h">Weapons</div>
     <div class="wlist" id="wBody"></div>
@@ -661,9 +678,15 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
     <ul id="log"><li class="empty">No rolls yet. Tap a skill above — every roll at the table lands here.</li></ul>
   </section>
 
+  <!-- the scanner, big enough to hit in the dark with one hand -->
+  <a class="scan-btn" href="../scan/">
+    <span class="ic">◫</span>
+    <span>Scan access card<span class="sk">Point the camera at a crew card's QR code</span></span>
+  </a>
+
   <div class="footbar">
     <span class="net">Room <span class="roombox"><input id="roomIn" spellcheck="false"></span> · sync <b id="netDot">·</b></span>
-    <span><a href="../map/">▦ Ship map</a> · <a href="../scan/">◫ Scan card</a> · <a href="../display/">Main display</a> · <a href="../tracker/">Motion tracker</a></span>
+    <span><a href="../map/">▦ Ship map</a> · <a href="../display/">Main display</a> · <a href="../tracker/">Motion tracker</a></span>
   </div>
 </div>
 
@@ -864,6 +887,21 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
         <tr><td>Turn</td><td>5–10 minutes — exploring.</td></tr>
         <tr><td>Shift</td><td>5–10 hours — recovery.</td></tr>
       </tbody></table>
+    </div>
+  </details>
+
+  <details class="rsec">
+    <summary>Supply &amp; consumables</summary>
+    <div class="rc">
+      <ul>
+        <li><b>Air</b>, <b>food</b>, <b>water</b> and <b>power</b> each have a supply rating.</li>
+        <li>Whenever you draw on one — a Turn of air, a meal, a power cell — make a
+            <b>supply roll</b>: <b>stress dice equal to that rating</b>, six at most.</li>
+        <li>Every <b>1</b> spends a step — the rating drops by one for each 1 rolled.</li>
+        <li>At <b>0</b> you have run out, and whatever that costs you starts now.</li>
+      </ul>
+      <p style="color:var(--dim)">Tap <b>⚄ Supply roll</b> under any consumable on the sheet and
+        it rolls and spends for you.</p>
     </div>
   </details>
 
@@ -1383,19 +1421,7 @@ function runWy(o){
    ============================================================ */
 function buildEquip(){
   const e = charState.equip;
-  // consumables
-  const cons = $("#consum"); cons.innerHTML="";
-  [["air","Air"],["food","Food"],["water","Water"],["power","Power"]].forEach(([k,lab])=>{
-    const d = document.createElement("div"); d.className="cons";
-    d.innerHTML = '<span class="cl">'+lab+'</span>'+
-      '<span class="stepper sm"><button data-d="-1" aria-label="'+lab+' down">−</button>'+
-      '<span class="mv">'+(e[k]||0)+'</span><button data-d="1" aria-label="'+lab+' up">+</button></span>';
-    d.querySelectorAll("button").forEach(b=> b.addEventListener("click", ()=>{
-      e[k] = Math.max(0, Math.min(20, (e[k]||0) + parseInt(b.getAttribute("data-d"),10)));
-      d.querySelector(".mv").textContent = e[k]; saveState();
-    }));
-    cons.appendChild(d);
-  });
+  renderConsumables();
   // armor
   $("#armorName").value = e.armorName||"";
   $("#armorRating").value = e.armorRating||"";
@@ -1403,6 +1429,62 @@ function buildEquip(){
   renderWeapons();
   renderGear();
 }
+/* ---- consumables & the supply roll ----
+   Air, food, water and power each carry a supply rating. Drawing on one
+   is a supply roll: stress dice equal to the rating (six at most), and
+   every 1 spends a step of it. */
+const CONSUMABLES = [["air","Air"],["food","Food"],["water","Water"],["power","Power"]];
+const SUPPLY_DICE_MAX = 6;
+
+function renderConsumables(){
+  const e = charState.equip, cons = $("#consum");
+  cons.innerHTML="";
+  CONSUMABLES.forEach(([k,lab])=>{
+    const d = document.createElement("div"); d.className="cons";
+    d.innerHTML = '<span class="cl">'+lab+'</span>'+
+      '<span class="stepper sm"><button data-d="-1" aria-label="'+lab+' down">−</button>'+
+      '<span class="mv">'+(e[k]||0)+'</span><button data-d="1" aria-label="'+lab+' up">+</button></span>'+
+      '<button class="csup" aria-label="'+lab+' supply roll">⚄ Supply roll</button>';
+    const paint = ()=>{
+      d.querySelector(".mv").textContent = e[k]||0;
+      d.querySelector(".csup").disabled = !(e[k]>0);
+    };
+    d.querySelectorAll(".stepper button").forEach(b=> b.addEventListener("click", ()=>{
+      e[k] = Math.max(0, Math.min(20, (e[k]||0) + parseInt(b.getAttribute("data-d"),10)));
+      paint(); saveState();
+    }));
+    d.querySelector(".csup").addEventListener("click", ()=> rollSupply(k, lab));
+    paint();
+    cons.appendChild(d);
+  });
+}
+
+function rollSupply(key, label){
+  const e = charState.equip;
+  const before = Math.max(0, e[key]|0);
+  if(before<=0) return;                                  // nothing left to spend
+  const dice = rollN(Math.min(SUPPLY_DICE_MAX, before));
+  const ones = countOne(dice);
+  const after = Math.max(0, before - ones);
+  e[key] = after; saveState(); renderConsumables();
+
+  const diceHtml = dice.map(v=>'<div class="die stress'+(v===1?" one":"")+' rolling">'+v+'</div>').join("");
+  showMisc(label+" Supply",
+    '<div class="sub">'+dice.length+' stress '+(dice.length===1?'die':'dice')+
+      ' · rating '+before+(before>SUPPLY_DICE_MAX?' (six dice at most)':'')+'</div>'+
+    '<div class="dicewrap">'+diceHtml+'</div>'+
+    '<div class="bignum'+(after>0?' ok':'')+'">'+after+'</div>'+
+    '<div class="res">'+(ones
+      ? label+' <b>'+before+' → '+after+'</b> — '+ones+' ✦1'+(ones===1?'':'s')+', '+ones+' step'+(ones===1?'':'s')+' spent'
+      : label+' holds at <b>'+before+'</b> — no 1s')+'</div>'+
+    (after===0 ? '<div class="fatal">Out of '+label.toLowerCase()+'.</div>' : ''),
+    after>0 ? ()=>rollSupply(key,label) : null);
+
+  const c=CREW[current];
+  RollBus.publish({ kind:"supply", who:c.name, role:c.role, label:label,
+    before:before, after:after, stress:dice, stressOnes:ones });
+}
+
 /* a weapon at Engaged range (or with no range set) is a Close Combat attack;
    anything with a firing range rolls Ranged Combat. */
 function skillForWeapon(w){
@@ -2027,6 +2109,10 @@ function renderLog(){
     if(o.kind==="panic"){
       body='<span class="who">'+esc(o.who)+'</span> panics — d6 '+o.panicDie+' + '+(o.panicTotal-o.panicDie)+
            ' = <span class="s">'+o.panicTotal+'</span> <span class="dim">'+esc(o.panicText||"")+'</span>';
+    } else if(o.kind==="supply"){
+      body='<span class="who">'+esc(o.who)+'</span> spends <span class="dim">'+esc(o.label)+'</span> → '+
+           '<span class="s">'+o.after+'</span> <span class="dim">(was '+o.before+
+           (o.stressOnes?(' · '+o.stressOnes+' ✦1'):' · no 1s')+')</span>';
     } else {
       body='<span class="who">'+esc(o.who)+'</span> '+(o.kind==="push"?"pushes":"rolls")+
            ' <span class="dim">'+esc(o.label)+'</span> → <span class="s">'+o.successes+'</span> succ'+
