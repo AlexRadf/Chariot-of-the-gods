@@ -80,7 +80,12 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .extras-btn .xk{ display:block; font-size:10.5px; letter-spacing:.06em; color:var(--dim);
   text-transform:none; margin-top:4px; }
 #extraWrap{ margin-top:14px; }
-#extraGrid .card .sh{ color:var(--muted); font-size:11px; letter-spacing:.1em; text-transform:uppercase; }
+#extraWrap .xgroup{ margin-bottom:18px; }
+#extraWrap .xgroup h3{ font-family:'VT323',monospace; font-weight:400; font-size:19px;
+  letter-spacing:.06em; color:var(--amber); text-transform:uppercase; margin-bottom:4px; }
+#extraWrap .xgroup .xg-sub{ color:var(--muted); font-size:11.5px; letter-spacing:.05em;
+  margin-bottom:10px; line-height:1.5; }
+#extraWrap .card .sh{ color:var(--muted); font-size:11px; letter-spacing:.1em; text-transform:uppercase; }
 .card{ border:1px solid var(--faint); background:var(--raise); padding:16px; cursor:pointer;
   display:flex; flex-direction:column; gap:8px; text-align:left; transition:.12s; }
 .card:hover,.card:focus-visible{ border-color:var(--phos); background:var(--raise2); outline:none; }
@@ -548,13 +553,14 @@ h2,
   </div>
   <div class="cards" id="cardGrid"></div>
 
-  <!-- the other survivors: playable when a character doesn't make it -->
-  <button class="extras-btn" id="extrasBtn" aria-expanded="false" aria-controls="extraWrap">
-    ＋ Extras — the other survivors
-    <span class="xk">If your character is gone, take one of the Cronus or Sotillo crew</span>
-  </button>
-  <div id="extraWrap" hidden>
-    <div class="cards" id="extraGrid"></div>
+  <!-- the other survivors: playable when a character doesn't make it, and only
+       once the Game Mother has brought them into the story -->
+  <div id="extrasBlock" hidden>
+    <button class="extras-btn" id="extrasBtn" aria-expanded="false" aria-controls="extraWrap">
+      <span class="xt">＋ Extras — the other survivors</span>
+      <span class="xk" id="extrasHint"></span>
+    </button>
+    <div id="extraWrap" hidden></div>
   </div>
 
   <div class="backlink"><a href="../">◄ Access Terminal</a> · <a href="../display/">Main Display</a> · <a href="../tracker/">Motion Tracker</a></div>
@@ -1369,9 +1375,13 @@ function buildExtras(){
     if(n.pc) return;                                  // the Montero crew have their own cards
     const id = "x-"+n.id;
     const kit = (n.gear||"").split(/,\s*/).filter(Boolean);
+    const ship = n.ship || "";
     CREW[id] = {
       name: n.full || n.name, role: n.role, extra: true,
-      desc: n.note || "", ship: n.ship || "",
+      /* the Cronus crew come out of hypersleep in Act II; the Sotillo's
+         boarders don't turn up until Act III */
+      unlockAct: /sotillo/i.test(ship) ? 3 : 2,
+      desc: n.note || "", ship: ship,
       buddy: n.buddy || "—", rival: n.rival || "—",
       sig: n.gear || "—", sigLabel: "Kit",
       startingGear: kit.map(name=>({ name })),
@@ -1399,16 +1409,64 @@ function cardFor(id, ship){
   b.addEventListener("click", ()=> selectChar(id));
   return b;
 }
+/* ---- the Act gate ----------------------------------------------------
+   Extras are a spoiler until the story has introduced them, so the Game
+   Mother's console publishes which Act the table is in and this sheet only
+   offers the people who have turned up by then. The last Act heard is kept
+   on the device, so a reload mid-session doesn't lock a player out of the
+   character they're playing. The codeword SURVIVORS opens them by hand,
+   for a table running with no console. */
+const ACT_ROMAN = ["","I","II","III"];
+const XGROUPS = [
+  { act:2, ship:"USCSS Cronus",
+    sub:"Found in hypersleep aboard the derelict — the crew whose story you've been reading." },
+  { act:3, ship:"USCSS Sotillo",
+    sub:"The salvage crew who came aboard after you." }
+];
+let ROOM_ACT = 1, EXTRAS_FORCED = false;
+try{ ROOM_ACT = parseInt(localStorage.getItem("cotg_act"),10) || 1; }catch(e){}
+try{ EXTRAS_FORCED = localStorage.getItem("cotg_extras")==="1"; }catch(e){}
+
+function extrasAct(){ return EXTRAS_FORCED ? 3 : ROOM_ACT; }
+function setRoomAct(n){
+  const act = Math.max(1, Math.min(3, parseInt(n,10)||1));
+  if(act === ROOM_ACT) return;
+  ROOM_ACT = act;
+  try{ localStorage.setItem("cotg_act", String(act)); }catch(e){}
+  buildExtraCards();
+}
+function unlockExtras(){
+  EXTRAS_FORCED = true;
+  try{ localStorage.setItem("cotg_extras","1"); }catch(e){}
+  buildExtraCards();
+}
+
 function buildExtraCards(){
-  const g = $("#extraGrid"); if(!g) return;
-  g.innerHTML="";
-  EXTRAS.forEach(id=> g.appendChild(cardFor(id, true)));
+  const wrap=$("#extraWrap"), block=$("#extrasBlock");
+  if(!wrap || !block) return;
+  const act = extrasAct();
+  const open = XGROUPS.filter(g=> act >= g.act);
+  block.hidden = !open.length;              // Act I: no hint that they exist
+  wrap.innerHTML="";
+  if(!open.length){ wrap.hidden = true; $("#extrasBtn").setAttribute("aria-expanded","false"); return; }
+  open.forEach(g=>{
+    const ids = EXTRAS.filter(id=> CREW[id].ship === g.ship);
+    if(!ids.length) return;
+    const sec=document.createElement("div"); sec.className="xgroup";
+    sec.innerHTML='<h3>'+esc(g.ship)+'</h3><div class="xg-sub">'+esc(g.sub)+'</div>';
+    const grid=document.createElement("div"); grid.className="cards";
+    ids.forEach(id=> grid.appendChild(cardFor(id, false)));
+    sec.appendChild(grid); wrap.appendChild(sec);
+  });
+  $("#extrasHint").textContent = open.length>1
+    ? "If your character is gone, take one of the Cronus or Sotillo crew"
+    : "If your character is gone, take one of the "+open[0].ship.replace(/^USCSS /,"")+"'s crew";
 }
 $("#extrasBtn").addEventListener("click", ()=>{
   const w=$("#extraWrap"), open=w.hidden;
   w.hidden=!open;
   $("#extrasBtn").setAttribute("aria-expanded", String(open));
-  $("#extrasBtn").firstChild.textContent = (open ? "− Extras — the other survivors" : "＋ Extras — the other survivors");
+  $(".xt").textContent = (open ? "−" : "＋") + " Extras — the other survivors";
   if(open) w.scrollIntoView({ block:"nearest", behavior:"smooth" });
 });
 
@@ -2005,6 +2063,9 @@ function tryCode(){
     charState.secret = code; saveState(); $("#codeIn").value="";
     msg.className="msg"; msg.textContent="Sealed orders decrypted.";
     renderSecret();
+  } else if(code === "SURVIVORS"){
+    unlockExtras(); $("#codeIn").value="";
+    msg.className="msg"; msg.textContent="Survivor records unsealed — the Extras are on the character list.";
   } else { msg.className="msg bad"; msg.textContent="Codeword not recognised."; }
 }
 function renderSecret(){
@@ -2370,6 +2431,10 @@ function initRoom(){
   $("#roomIn").addEventListener("change", ()=>{ $("#roomIn").value = RollBus.setRoom($("#roomIn").value); });
   RollBus.on("roll", onRoll);
   RollBus.on("status", s=>{ const d=$("#netDot"); d.textContent=s.net?"LIVE":"local"; d.className=s.net?"":"off"; });
+  /* which Act the table is in — the GM console owns it and answers on request */
+  RollBus.on("msg", o=>{ if(o && o.kind==="act") setRoomAct(o.act); });
+  const askAct = ()=> RollBus.publish({ kind:"act-req" });
+  [400, 1600, 5000].forEach(ms=> setTimeout(askAct, ms));
 }
 /* index the reference injury table so rolls and stored injuries share its text */
 function buildCritIndex(){
