@@ -20,7 +20,8 @@
 :root{
   --phos:#8affb0; --dim:#3d7a53; --faint:#1d3b2a;
   --crt:#040906; --raise:#081209; --amber:#f0b23e;
-  --glow:0 0 6px rgba(138,255,176,.45);
+  --glow:0 0 2px rgba(138,255,176,.25);
+  --glow-hi:0 0 6px rgba(138,255,176,.45);
 }
 *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
 html,body{ height:100%; overflow:hidden; }
@@ -31,7 +32,9 @@ body{
 }
 body::before{
   content:""; position:fixed; inset:0; z-index:20; pointer-events:none;
-  background:radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
 }
 @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
 
@@ -58,6 +61,9 @@ body::before{
 .ctrls .fit{ font-size:11px; letter-spacing:.06em; }
 .hint{ position:fixed; z-index:15; left:14px; bottom:calc(14px + env(safe-area-inset-bottom));
   font-size:10px; color:var(--faint); letter-spacing:.1em; text-transform:uppercase; max-width:60vw; line-height:1.5; }
+
+/* the wide phosphor bloom, kept for the big type only */
+.bar .id{ text-shadow:var(--glow-hi); }
 </style>
 </head>
 <body>

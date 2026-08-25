@@ -30,7 +30,11 @@
   --crt-raise: #081209;   /* raised panels */
   --amber:     #f0b23e;   /* warnings / unread */
   --alert:     #ff5c47;   /* denied / danger */
-  --glow: 0 0 6px rgba(138,255,176,.45);
+  /* --glow is the tight halo body text wears, so mail and documents stay
+     sharp under the scanlines; --glow-hi is the old wide bloom, kept for
+     the big VT323 display type. */
+  --glow:    0 0 2px rgba(138,255,176,.25);
+  --glow-hi: 0 0 6px rgba(138,255,176,.45);
 }
 
 *{ box-sizing:border-box; margin:0; padding:0; }
@@ -48,13 +52,14 @@ body{
   overflow-x:hidden;
 }
 
-/* ---- CRT overlay: vignette + flicker ----
-   No scanlines: this screen is pages of crew mail and documents, and stripes
-   over that much body text made it hard work to read. ---- */
+/* ---- CRT overlay: scanlines + vignette + flicker ---- */
 body::before{
   content:"";
   position:fixed; inset:0; z-index:50; pointer-events:none;
   background:
+    repeating-linear-gradient(0deg,
+      rgba(0,0,0,.22) 0px, rgba(0,0,0,.22) 1px,
+      transparent 1px, transparent 3px),
     radial-gradient(ellipse at center,
       transparent 55%, rgba(0,0,0,.55) 100%);
 }
@@ -293,6 +298,12 @@ footer{
   #app.reading #reader{ display:block; }
   #backBtn{ display:inline-block; }
 }
+
+/* ---- the phosphor bloom, kept where the type is big enough for it ----
+   Body text runs on the tight --glow from :root so the crew's mail stays
+   readable; the terminal's own headings keep the wide one. Anything with
+   its own text-shadow (ACCESS DENIED, the module lockout) is untouched. */
+header h1{ text-shadow:var(--glow-hi); }
 </style>
 </head>
 <body>

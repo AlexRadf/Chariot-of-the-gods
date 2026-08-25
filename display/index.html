@@ -27,7 +27,10 @@
   --phos:#8affb0; --dim:#3d7a53; --faint:#1d3b2a;
   --crt:#040906; --raise:#081209;
   --amber:#f0b23e; --alert:#ff5c47;
-  --glow:0 0 6px rgba(138,255,176,.45);
+  /* tight halo for the panel text that's read across the table; the wide
+     bloom is kept below for the big display type */
+  --glow:0 0 2px rgba(138,255,176,.25);
+  --glow-hi:0 0 6px rgba(138,255,176,.45);
 }
 *{ box-sizing:border-box; margin:0; padding:0; }
 html,body{ height:100%; overflow:hidden; }
@@ -37,11 +40,12 @@ body{
   text-shadow:var(--glow); -webkit-font-smoothing:antialiased;
   user-select:none; -webkit-user-select:none;
 }
-/* CRT overlay — vignette and flicker carry the look; the scanlines came off
-   because the registry and the roll log are read from across the table. */
+/* CRT overlay */
 body::before{
   content:""; position:fixed; inset:0; z-index:80; pointer-events:none;
-  background:radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,.60) 100%);
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,.60) 100%);
 }
 body::after{
   content:""; position:fixed; inset:0; z-index:81; pointer-events:none;
@@ -54,7 +58,8 @@ body::after{
 body.cronus{
   --phos:#79b3ff; --dim:#4a6ea8; --faint:#22334f;
   --crt:#03060c; --raise:#060d16;
-  --glow:0 0 6px rgba(121,179,255,.5);
+  --glow:0 0 2px rgba(121,179,255,.28);
+  --glow-hi:0 0 6px rgba(121,179,255,.5);
   background:var(--crt);
 }
 body.cronus::after{ background:rgba(121,179,255,.022); }
@@ -251,6 +256,10 @@ body.cronus #rolls .rl{ background:rgba(6,13,22,.6); }
 #rolls .rl .dim{ color:var(--dim); }
 #rolls .rl.fade{ opacity:.5; transition:opacity 1s ease; }
 @keyframes rin{ from{ transform:translateY(-6px); opacity:0 } to{ transform:none; opacity:1 } }
+
+/* the wide phosphor bloom, kept for the big display type only — the panel
+   text underneath runs on the tight --glow so it reads from across the room */
+#start .big, #diag .dh, .topbar .mu{ text-shadow:var(--glow-hi); }
 </style>
 </head>
 <body>

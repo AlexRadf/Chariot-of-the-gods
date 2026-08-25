@@ -655,10 +655,11 @@ want to change the built-in default.
 
 - **Reduced motion:** visitors whose browser requests reduced motion get the boot
   sequence and CRT flicker turned off automatically.
-- **Legible text:** the CRT look is carried by the phosphor palette, the vignette
-  and (on the display) a slow flicker — there are **no scanlines** over any
-  screen. Striping every third pixel row looked the part but made body text hard
-  work to read, so it came off.
+- **Legible text:** the phosphor glow comes in two strengths. Body text — crew
+  mail, stat blocks, rules, the roll log — wears a **tight halo** (`--glow`) so it
+  stays sharp under the scanlines; the big VT323 display type keeps the **wide
+  bloom** (`--glow-hi`). Both are `:root` variables on every page, so you can
+  retune the whole kit's glow in one line each.
 - **Keyboard & screen readers:** terminal tabs, mail rows and map rooms, and the
   sheet's skills, agenda tabs and rules window are focusable and operable by
   keyboard; the rules window traps <kbd>Esc</kbd> to close.

@@ -24,7 +24,10 @@
   --phos:#8affb0; --dim:#3d7a53; --faint:#1d3b2a;
   --crt:#040906; --raise:#081209;
   --amber:#f0b23e; --alert:#ff5c47;
-  --glow:0 0 6px rgba(138,255,176,.5);
+  /* tight halo for the stat blocks and event text read off this phone;
+     the wide bloom is kept below for the big display type */
+  --glow:0 0 2px rgba(138,255,176,.28);
+  --glow-hi:0 0 6px rgba(138,255,176,.5);
 }
 *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
 html,body{ height:100%; }
@@ -33,10 +36,11 @@ body{
   font-family:'Share Tech Mono',ui-monospace,monospace; text-shadow:var(--glow);
   -webkit-user-select:none; user-select:none; -webkit-font-smoothing:antialiased;
 }
-/* vignette only — no scanlines over the event text you read off this phone */
 body::before{
   content:""; position:fixed; inset:0; z-index:80; pointer-events:none;
-  background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.6) 100%);
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.6) 100%);
 }
 @media (prefers-reduced-motion:reduce){ *{animation-duration:.001s!important} }
 @keyframes bl{50%{opacity:0}}
@@ -258,6 +262,9 @@ body::before{
 .feed.ok{ color:var(--phos); } .feed.bad{ color:var(--alert); }
 .foot{ text-align:center; font-size:10px; color:var(--faint); letter-spacing:.1em; text-transform:uppercase; }
 .foot a{ color:var(--faint); text-decoration:none; }
+
+/* the wide phosphor bloom, kept for the big type only */
+#start .big, .hdr .t, .tally .s, .draw .d6{ text-shadow:var(--glow-hi); }
 </style>
 </head>
 <body>
