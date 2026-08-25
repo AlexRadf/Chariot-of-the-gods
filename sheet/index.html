@@ -27,6 +27,9 @@
   --phos:#8affb0; --dim:#3d7a53; --faint:#1d3b2a;
   --crt:#040906; --raise:#081209; --raise2:#0b1a10;
   --amber:#f0b23e; --alert:#ff5c47; --white:#e9fff2;
+  /* secondary prose — hints, empty states, the small print under a panel.
+     --faint is a border colour and was never legible as text. */
+  --muted:#74c093;
   /* Two phosphor glows. --glow is what body text wears: a tight halo that
      survives the scanlines without smearing 12–15px type. --glow-hi is the
      old wide bloom, kept for the big VT323 display numerals and headings,
@@ -68,7 +71,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 #pick .lead{ text-align:center; margin:8px 0 22px; }
 #pick .lead .big{ font-family:'VT323',monospace; font-size:clamp(34px,8vw,58px); letter-spacing:.05em; }
 #pick .lead .sub{ color:var(--dim); letter-spacing:.18em; text-transform:uppercase; font-size:clamp(11px,2.6vw,14px); }
-#pick .lead .hint{ color:var(--faint); font-size:12px; letter-spacing:.08em; margin-top:10px; }
+#pick .lead .hint{ color:var(--muted); font-size:12px; letter-spacing:.08em; margin-top:10px; }
 .cards{ display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); }
 .card{ border:1px solid var(--faint); background:var(--raise); padding:16px; cursor:pointer;
   display:flex; flex-direction:column; gap:8px; text-align:left; transition:.12s; }
@@ -120,7 +123,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .attr .val{ font-family:'VT323',monospace; font-size:38px; line-height:.9; color:var(--white);
   border:1px solid var(--dim); width:50px; height:50px; display:flex; align-items:center; justify-content:center; }
 .attr .an{ text-transform:uppercase; letter-spacing:.1em; font-size:13px; color:var(--amber); flex:1; }
-.attr .hd .cue{ font-size:10px; color:var(--faint); letter-spacing:.1em; }
+.attr .hd .cue{ font-size:10px; color:var(--dim); letter-spacing:.1em; }
 .attr .hd:hover .cue{ color:var(--amber); }
 .attr .skills{ display:flex; flex-direction:column; padding:0 8px 8px; }
 .skill{ display:flex; justify-content:space-between; align-items:center; gap:8px;
@@ -129,7 +132,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .skill .sn{ color:var(--dim); text-transform:uppercase; letter-spacing:.05em; min-width:0; flex:1; overflow-wrap:break-word; }
 .skill.has .sn{ color:var(--phos); }
 .skill .rt{ display:flex; align-items:center; gap:8px; flex:none; }
-.skill .rt .cue{ color:var(--faint); font-size:10px; letter-spacing:.1em; }
+.skill .rt .cue{ color:var(--dim); font-size:10px; letter-spacing:.1em; }
 .skill:hover .rt .cue{ color:var(--amber); }
 .skill .sv{ color:var(--white); font-family:'VT323',monospace; font-size:20px; min-width:1.1em; text-align:right; }
 
@@ -145,7 +148,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .trk .lbl{ display:flex; justify-content:space-between; align-items:baseline; }
 .trk .lbl .n{ text-transform:uppercase; letter-spacing:.1em; font-size:13px; color:var(--amber); }
 .trk .lbl .v{ font-family:'VT323',monospace; font-size:20px; color:var(--white); }
-.trk small{ color:var(--faint); font-size:11px; letter-spacing:.05em; }
+.trk small{ color:var(--muted); font-size:11px; letter-spacing:.05em; }
 
 .kv{ font-size:13px; margin:3px 0; } .kv b{ color:var(--amber); font-weight:400; text-transform:uppercase; letter-spacing:.06em; }
 .talent{ font-size:13.5px; line-height:1.5; } .talent b{ color:var(--white); }
@@ -178,7 +181,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .wtable input.wname{ text-align:left; }
 .wtable input:focus{ outline:1px solid var(--amber); background:var(--raise2); }
 .wtable td.rm{ width:26px; text-align:center; }
-.wtable td.rm button{ border:0; color:var(--faint); padding:2px 6px; font-size:14px; }
+.wtable td.rm button{ border:0; color:var(--dim); padding:2px 6px; font-size:14px; }
 .wtable td.rm button:hover{ color:var(--alert); background:none; }
 /* weapon cards — each with a Fire button that rolls the right combat skill */
 .wlist{ display:flex; flex-direction:column; gap:8px; }
@@ -189,7 +192,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .wc-top input.wname:focus{ outline:none; border-bottom-color:var(--amber); }
 .wc-top .wc-heavy{ flex:none; display:inline-flex; align-items:center; gap:4px; font-size:10.5px;
   color:var(--dim); text-transform:uppercase; letter-spacing:.06em; cursor:pointer; }
-.wc-top .wc-x{ border:0; color:var(--faint); font-size:15px; padding:2px 6px; background:none; cursor:pointer; }
+.wc-top .wc-x{ border:0; color:var(--dim); font-size:15px; padding:2px 6px; background:none; cursor:pointer; }
 .wc-top .wc-x:hover{ color:var(--alert); }
 .wc-stats{ display:flex; gap:6px; }
 .wc-stats label{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; font-size:9px; color:var(--dim);
@@ -216,7 +219,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 #gearList li{ display:flex; align-items:center; justify-content:space-between; gap:8px;
   border:1px solid var(--faint); padding:5px 9px; font-size:13px; }
 #gearList li .gw{ color:var(--dim); font-size:11px; letter-spacing:.05em; }
-#gearList li button{ border:0; color:var(--faint); padding:0 4px; font-size:14px; }
+#gearList li button{ border:0; color:var(--dim); padding:0 4px; font-size:14px; }
 #gearList li button:hover{ color:var(--alert); background:none; }
 .gear-add{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .gear-add input[type=text]{ flex:1; min-width:120px; background:var(--crt); border:1px solid var(--faint);
@@ -227,7 +230,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
    title never has to fight it for room on a phone */
 .panel > h2 .encum{ display:block; margin-top:1px; }
 .encum.over{ color:var(--alert); }
-.eq-empty{ color:var(--faint); font-size:12.5px; }
+.eq-empty{ color:var(--muted); font-size:12.5px; }
 /* custom critical injury builder — only shown when "Custom…" is picked */
 .injcustom{ display:none; margin-top:10px; border:1px solid var(--faint); padding:10px; }
 .injcustom.on{ display:block; }
@@ -251,7 +254,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .rtable td .efffatal{ display:block; color:var(--alert); }
 #injBody td.eff{ color:var(--alert); }
 #injBody td.rm{ width:26px; text-align:center; }
-#injBody td.rm button{ border:0; color:var(--faint); padding:2px 6px; font-size:14px; }
+#injBody td.rm button{ border:0; color:var(--dim); padding:2px 6px; font-size:14px; }
 #injBody td.rm button:hover{ color:var(--alert); background:none; }
 
 /* initiative — your card off the shared deck of ten */
@@ -259,7 +262,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .icard{ flex:none; width:84px; border:1px solid var(--dim); display:flex; flex-direction:column;
   align-items:center; justify-content:center; padding:10px 4px; }
 .icard .n{ font-family:'VT323',monospace; font-size:52px; line-height:.85; color:var(--dim); }
-.icard .k{ font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin-top:6px; }
+.icard .k{ font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-top:6px; }
 .icard.has{ border-color:var(--amber); }
 .icard.has .n{ color:var(--white); }
 .icard.has .k{ color:var(--dim); }
@@ -269,7 +272,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
   justify-content:center; gap:10px; }
 .istat{ font-size:13px; color:var(--dim); line-height:1.5; }
 .istat b{ color:var(--phos); font-weight:400; }
-.istat .dim{ color:var(--faint); }
+.istat .dim{ color:var(--muted); }
 .istat .go{ color:var(--amber); letter-spacing:.08em; text-transform:uppercase; }
 /* the order reads straight down, so "how far away am I?" needs no thinking */
 .iorder{ list-style:none; display:flex; flex-direction:column; gap:5px; margin-top:12px;
@@ -278,7 +281,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
   padding:4px 8px; font-size:12.5px; color:var(--dim); }
 .iorder li .n{ font-family:'VT323',monospace; font-size:17px; color:var(--phos);
   min-width:1.4em; text-align:right; }
-.iorder li .dim{ color:var(--faint); }
+.iorder li .dim{ color:var(--muted); }
 .iorder li.me{ background:var(--raise2); color:var(--phos); }
 .iorder li.now{ border-color:var(--amber); color:var(--amber); }
 .iorder li.now .n{ color:var(--amber); }
@@ -292,7 +295,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 #log .who{ color:var(--amber); text-transform:uppercase; letter-spacing:.06em; }
 #log .s{ color:var(--white); font-family:'VT323',monospace; font-size:16px; }
 #log .dim{ color:var(--dim); }
-#log .empty{ color:var(--faint); border:none; padding:2px; }
+#log .empty{ color:var(--muted); border:none; padding:2px; }
 
 /* ---------------- edge tabs ---------------- */
 .edge-tab{ position:fixed; top:50%; z-index:40;
@@ -367,7 +370,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 .rtable td,.rtable th{ border:1px solid var(--faint); padding:3px 6px; text-align:left; vertical-align:top; }
 .rtable th{ color:var(--amber); font-weight:400; text-transform:uppercase; font-size:10.5px; letter-spacing:.05em; }
 .rtable td:first-child{ color:var(--white); white-space:nowrap; }
-.rcredit{ color:var(--faint); font-size:11px; letter-spacing:.05em; padding:12px 2px 0; }
+.rcredit{ color:var(--muted); font-size:11px; letter-spacing:.05em; padding:12px 2px 0; }
 
 /* ---------------- roll pop-up ---------------- */
 #rollModal{ position:fixed; inset:0; z-index:80; display:none; }
@@ -506,7 +509,7 @@ h2{ font-family:'VT323',monospace; font-weight:400; font-size:22px; letter-spaci
 
 .footbar{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; margin-top:16px;
   border-top:2px solid var(--faint); padding-top:10px; font-size:11px; letter-spacing:.08em;
-  text-transform:uppercase; color:var(--faint); }
+  text-transform:uppercase; color:var(--muted); }
 .footbar a{ color:var(--dim); } .footbar .net b{ color:var(--phos); } .footbar .net b.off{ color:var(--alert); }
 .roombox{ display:inline-flex; gap:6px; align-items:center; }
 .roombox input{ width:8em; background:var(--crt); border:1px solid var(--faint); color:var(--phos);
@@ -626,7 +629,7 @@ h2,
       <select id="injSel" aria-label="Critical injury to add"></select>
       <button class="eq-add" id="injAdd">Add</button>
     </div>
-    <small style="color:var(--faint); display:block; margin-top:6px">When the Game Mother calls a number — “critical injury #61” — pick it here instead of rolling. Its penalty starts applying to your rolls straight away.</small>
+    <small style="color:var(--muted); display:block; margin-top:6px">When the Game Mother calls a number — “critical injury #61” — pick it here instead of rolling. Its penalty starts applying to your rolls straight away.</small>
 
     <div id="injCustom" class="injcustom">
       <div class="inj-row">
@@ -653,7 +656,7 @@ h2,
         <label><input type="checkbox" id="injFatal"> Fatal</label>
         <input type="text" id="injFatalTxt" class="fatalin" placeholder="e.g. −1 · 1 Turn" spellcheck="false" disabled>
       </div>
-      <small style="color:var(--faint); display:block">Penalties you add here are applied to those rolls automatically, exactly like a d66 injury.</small>
+      <small style="color:var(--muted); display:block">Penalties you add here are applied to those rolls automatically, exactly like a d66 injury.</small>
     </div>
   </section>
 
@@ -666,16 +669,16 @@ h2,
       <select id="catSel" aria-label="Item catalogue"></select>
       <button class="eq-add" id="catAdd">Add</button>
     </div>
-    <small style="color:var(--faint); display:block; margin-top:6px">“Gear on the Montero” is the shared starting locker (5 suits, 1 of each item) — Captain Miller distributes it. Weapons drop into the weapons table, everything else into gear.</small>
+    <small style="color:var(--muted); display:block; margin-top:6px">“Gear on the Montero” is the shared starting locker (5 suits, 1 of each item) — Captain Miller distributes it. Weapons drop into the weapons table, everything else into gear.</small>
 
     <div class="eq-h">Consumables</div>
     <div class="consum" id="consum"></div>
-    <small style="color:var(--faint); display:block; margin-top:6px">Set each supply with <b style="color:var(--amber)">− / +</b>. When you draw on one, tap <b style="color:var(--amber)">⚄ Supply roll</b>: it throws stress dice equal to that rating (six at most) and every <b style="color:var(--amber)">1</b> spends a step.</small>
+    <small style="color:var(--muted); display:block; margin-top:6px">Set each supply with <b style="color:var(--amber)">− / +</b>. When you draw on one, tap <b style="color:var(--amber)">⚄ Supply roll</b>: it throws stress dice equal to that rating (six at most) and every <b style="color:var(--amber)">1</b> spends a step.</small>
 
     <div class="eq-h">Weapons</div>
     <div class="wlist" id="wBody"></div>
     <button class="eq-add" id="wAdd">+ Add weapon</button>
-    <small style="color:var(--faint); display:block; margin-top:6px">Tap <b style="color:var(--amber)">Fire</b> to roll the weapon — it uses Ranged Combat (or Close Combat at Engaged range) with the weapon's bonus baked in. Fire full-auto by pushing the roll in the usual way.</small>
+    <small style="color:var(--muted); display:block; margin-top:6px">Tap <b style="color:var(--amber)">Fire</b> to roll the weapon — it uses Ranged Combat (or Close Combat at Engaged range) with the weapon's bonus baked in. Fire full-auto by pushing the roll in the usual way.</small>
 
     <div class="eq-h">Armor</div>
     <div class="armor-row">
@@ -690,7 +693,7 @@ h2,
       <label><input type="checkbox" id="gearHeavy"> heavy</label>
       <button class="eq-add" id="gearAdd">Add</button>
     </div>
-    <small style="color:var(--faint); display:block; margin-top:8px">Encumbrance limit = your Strength, and it counts <b>everything you carry — weapons included</b>. Heavy items count as 2, your signature item is free. Over the limit and you're slowed.</small>
+    <small style="color:var(--muted); display:block; margin-top:8px">Encumbrance limit = your Strength, and it counts <b>everything you carry — weapons included</b>. Heavy items count as 2, your signature item is free. Over the limit and you're slowed.</small>
   </section>
 
   <!-- roll log -->
