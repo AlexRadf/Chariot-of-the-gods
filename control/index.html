@@ -33,11 +33,10 @@ body{
   font-family:'Share Tech Mono',ui-monospace,monospace; text-shadow:var(--glow);
   -webkit-user-select:none; user-select:none; -webkit-font-smoothing:antialiased;
 }
+/* vignette only — no scanlines over the event text you read off this phone */
 body::before{
   content:""; position:fixed; inset:0; z-index:80; pointer-events:none;
-  background:
-    repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px),
-    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.6) 100%);
+  background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.6) 100%);
 }
 @media (prefers-reduced-motion:reduce){ *{animation-duration:.001s!important} }
 @keyframes bl{50%{opacity:0}}
