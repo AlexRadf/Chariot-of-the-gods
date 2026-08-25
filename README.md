@@ -131,7 +131,8 @@ need for play lives on their own device.
   III** tabs switch between that act's goal — so players reveal only the act
   they're in. Wilson's Act I also shows the redacted **Special Order 966**.
 - **Sealed orders (GM secret roles).** If you quietly hand a player a codeword —
-  **`LUCAS`** (the undercover synthetic) or **`INFECTED`** (the Abomination) —
+  **`LUCAS`** (the undercover synthetic), **`INFECTED`** (the Abomination), or
+  **`SURVIVORS`** (opens the Extras on that device) —
   entering it unlocks that secret agenda and its stat changes, right on the
   player's own sheet. No codeword, nothing to see. Give it privately (a whisper,
   a DM) so the rest of the table stays in the dark.
@@ -156,12 +157,25 @@ need for play lives on their own device.
   gear — with the weapon's **bonus already applied**. Fire full-auto by *pushing*
   the roll as normal. (Per the ALIEN RPG, ammunition isn't counted — there's no
   reload tracker.)
-- **Extras — the other survivors.** Under the five crew cards, **＋ Extras**
-  opens the **Cronus and Sotillo crews as playable characters** — Johns, Reid,
-  Flynn, Cooper, Clayton, Ava 6, Bolaji, Pin, Bein and Horton, with their real
-  attributes, skills, talent, kit and agenda. When a character doesn't make it,
-  the player takes one of these and carries on; their sheet saves separately, so
-  the dead PC's sheet is still there if you want it.
+- **Extras — the other survivors, unlocked by Act.** When a character doesn't
+  make it, the player takes over one of the survivors and carries on. Under the
+  five crew cards, **＋ Extras** opens them with their real attributes, skills,
+  talent, kit and agenda — and their sheet saves separately, so the dead PC's
+  sheet is still there if you want it.
+
+  They are **spoiler-gated**, so nobody reads ahead. The [GM Control](#screen-4--gm-control--self-destruct-phone-portrait)
+  console publishes which **Act in play** the table is in, and the sheets follow:
+
+  | Act in play | What the crew sheets offer |
+  |-------------|----------------------------|
+  | **I** | Nothing. There is no sign on the page that extras exist at all. |
+  | **II** | The **Cronus** crew — Johns, Reid, Flynn, Cooper, Clayton, Ava 6 — found in hypersleep aboard the derelict. |
+  | **III** | Adds the **Sotillo**'s crew — Bolaji, Pin, Bein, Horton — the salvage crew who came aboard after you. |
+
+  The Act each device last heard is remembered, so a mid-session reload never
+  locks a player out of the character they're playing. Running without the
+  console? The codeword **`SURVIVORS`** in the sheet's sealed-orders box opens
+  them by hand on that device.
 - **Supplies that run out on you.** **Air**, **food**, **water** and **power**
   each carry a rating you set with **− / +**. Draw on one and tap
   **⚄ Supply roll**: it throws **stress dice equal to that rating** (six at most)
@@ -282,8 +296,17 @@ state and self-destruct, rolls for NPCs, and places motion-tracker blips — all
 one page, with the roller and the scope **kept well apart** so you never fumble one
 for the other.
 
-The cards run top-to-bottom: **pairing → NPC / Event Roll → Initiative Deck →
-ship state → self-destruct → Motion Tracker**.
+The cards run top-to-bottom: **pairing → Act in play → NPC / Event Roll →
+Initiative Deck → ship state → self-destruct → Motion Tracker**.
+
+**Act in play.** One session-wide switch — **Act I / II / III** — for where the
+table actually is. It's what gates the **Extras** on the crew sheets: Act II
+opens the Cronus crew as playable characters, Act III adds the Sotillo's, and
+Act I keeps them out of sight entirely (see
+[Screen 2](#screen-2--crew-sheets-the-players)). The Events tab below it is
+yours to browse freely — only this switch changes what the players can see. It
+survives a reload of the console, and a sheet joining later asks for it and
+catches up.
 
 **NPC / Event Roll** (near the top) is the scenario itself, loaded in — the real
 stat blocks, signature attacks, Act events and odd little tables out of *Chariot

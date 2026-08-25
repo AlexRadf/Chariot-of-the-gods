@@ -293,6 +293,20 @@ body::before{
   </div>
 
   <div class="card">
+    <h2>Act in Play</h2>
+    <div class="seg" id="actPlay">
+      <button data-play="1" class="on">Act I</button>
+      <button data-play="2">Act II</button>
+      <button data-play="3">Act III</button>
+    </div>
+    <div class="rnote">Where the table actually is. It gates the <b>Extras</b> on the crew
+      sheets, so nobody reads ahead: <b>Act II</b> opens the Cronus crew as playable
+      characters, <b>Act III</b> adds the Sotillo's. Act I keeps them out of sight
+      entirely. (The Events tab below is yours to browse — only this changes what the
+      players can see.)</div>
+  </div>
+
+  <div class="card">
     <h2>NPC / Event Roll</h2>
     <div class="tabs" id="gmTabs">
       <button data-tab="cast" class="on">Cast</button>
@@ -492,6 +506,32 @@ function send(cmd, label){
     .then(r=>{ if(!r.ok) throw 0; flash("▸ "+(label||cmd), "ok"); })
     .catch(()=>flash("SEND FAILED — CHECK NETWORK", "bad"));
 }
+
+/* -------------------- ACT IN PLAY --------------------
+   One session-wide number, held here and published to the room. The crew
+   sheets use it to decide which Extras a player may take over, so the
+   Cronus and Sotillo crews stay out of sight until you've brought them in.
+   Kept in storage so a reload of this console doesn't send the table back
+   to Act I. */
+let ACT_PLAY = 1;
+try{ ACT_PLAY = parseInt(localStorage.getItem("cotg-gm-act"),10) || 1; }catch(e){}
+
+function paintAct(){
+  $("#actPlay").querySelectorAll("button").forEach(b=>
+    b.classList.toggle("on", parseInt(b.dataset.play,10)===ACT_PLAY));
+}
+function publishAct(){
+  if(typeof RollBus==="undefined") return;
+  RollBus.publish({ kind:"act", act:ACT_PLAY });
+}
+$("#actPlay").addEventListener("click", e=>{
+  const b=e.target.closest("button[data-play]"); if(!b) return;
+  ACT_PLAY = parseInt(b.dataset.play,10) || 1;
+  try{ localStorage.setItem("cotg-gm-act", String(ACT_PLAY)); }catch(e){}
+  paintAct(); publishAct();
+  flash("ACT "+["","I","II","III"][ACT_PLAY]+" — SHEETS UPDATED", "ok");
+});
+paintAct();
 
 /* -------------------- ship toggle -------------------- */
 $("#shipSeg").addEventListener("click", e=>{
@@ -976,6 +1016,14 @@ function boot(){
   if(typeof Initiative!=="undefined" && typeof RollBus!=="undefined"){
     DECK = Initiative.deal(RollBus, { onChange: paintDeck });  // the deck lives here
     paintDeck(DECK.state());
+  }
+  if(typeof RollBus!=="undefined"){
+    /* a sheet joining the room asks what act we're in; nobody else answers */
+    RollBus.on("msg", o=>{
+      if(!o || o.kind!=="act-req" || o.src===RollBus.clientId) return;
+      publishAct();
+    });
+    publishAct();
   }
 }
 buildDeckPicker();
