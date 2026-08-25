@@ -25,7 +25,8 @@ https://alexradf.github.io/Chariot-of-the-gods/
 
 | Screen | URL | Who holds it | What it is |
 |--------|-----|--------------|------------|
-| **Access Terminal** | `/` | Players, at "consoles" | Boots up as a Cronus crew member from a card `?id=`. Shows that crew member's inbox and clearance-gated ship systems. This is how the derelict's story is discovered. |
+| **Front page** | `/` | Anyone | A way in to every screen below. The link to bookmark and to share. |
+| **Access Terminal** | `/?id=` | Players, at "consoles" | Boots up as a Cronus crew member from a card `?id=`. Shows that crew member's inbox and clearance-gated ship systems. This is how the derelict's story is discovered. |
 | **Crew Sheets** | `/sheet/` | Each player | The players' own Montero characters — stats, talent, per-Act agenda, condition trackers, their initiative card, and a full ALIEN dice roller. |
 | **Main Display** | `/display/` | Middle of the table (iPad) | The MU/TH/UR 6500 ship computer: two ship states (Montero / Cronus), ambient systems and registry, an on-screen motion-detector tab, and a self-destruct takeover. |
 | **GM Control** | `/control/` | The Game Mother (phone) | An off-fiction remote that pairs to the display: rolls for the NPCs, deals the initiative deck, and drives the self-destruct sequence (arm → countdown → signal-lost). |
@@ -45,9 +46,11 @@ Everything is optional and modular — run just the terminal, or the full kit.
 
 1. **Publish the site.** Enable GitHub Pages once (see
    [Publishing](#publishing-the-site-github-pages)) and wait for the first deploy.
-2. **Sanity-check it.** Open the bare URL — you should get `ACCESS DENIED` (that's
-   correct). Open `…/?id=8654` — you should boot in as Reynolds with the SECURITY
-   tab live. Open `…/sheet/` — you should get the character-select cards.
+2. **Sanity-check it.** Open the bare URL — you should get the **kit's front
+   page**, a way in to every screen. Open `…/?id=8654` — you should boot in as
+   Reynolds with the SECURITY tab live. Open `…/?id=0000` — you should get
+   `ACCESS DENIED` (that's correct). Open `…/sheet/` — you should get the
+   character-select cards.
 3. **Prep the players' side.** Send every player the `…/sheet/` link and agree on
    a shared **room code** (see [At the table](#at-the-table-how-the-screens-connect)).
    Have them each pick a character.
@@ -79,8 +82,10 @@ and when*.
 1. **Boot.** A period-styled boot log types out (skippable, and skipped
    automatically for reduced-motion users), then the terminal "reads the card."
 2. **Identity.** The `id` is looked up in the crew manifest. A **known** id logs
-   that crew member in; an **unknown or missing** id shows the in-fiction
-   `ACCESS DENIED` screen — so the bare site URL is safe to share.
+   that crew member in; an **unknown** id — a tampered or mistyped card — shows
+   the in-fiction `ACCESS DENIED` screen. **No `?id=` at all** isn't a failed
+   card read, it's a visit to the kit, so it opens the
+   [front page](#the-front-page) instead.
 3. **Mail + clearance modules.** Every crew member sees their **MAIL** inbox.
    Alongside it are four clearance-gated system tabs; a tab only opens if the
    card's clearance matches, otherwise it reads `ACCESS RESTRICTED`. This is how
@@ -105,6 +110,24 @@ consoles, and the truth assembles across the group instead of arriving in one
 lump. Give a player **Reynolds** and they get Security's survey of what's damaged
 or moving in the vents; give another **Clayton** and they read the Company's
 *eyes-only* orders — and learn the crew were expendable.
+
+---
+
+## The front page
+
+```
+https://alexradf.github.io/Chariot-of-the-gods/
+```
+
+The bare site URL — no crew card on it — opens a plain way in to the kit: one
+tile per screen (Crew Sheets, Main Display, Scan Access Card, Ship Map, and the
+two marked **GM**, Control and Motion Tracker), plus a link to the printable
+access cards. It's the link to bookmark and the one to send a player who just
+needs their sheet.
+
+Add a crew card's `?id=` and the same page becomes that crew member's terminal;
+an `?id=` that isn't in the manifest still gets `ACCESS DENIED`, which is the
+prop working as intended.
 
 ---
 
@@ -550,7 +573,7 @@ live automatically. `.nojekyll` tells Pages to serve the files as-is.
 
 | Path | What it is |
 |------|------------|
-| [`index.html`](index.html) | The **Access Terminal** — markup, styling, story data, and logic in one file. |
+| [`index.html`](index.html) | The **front page** and the **Access Terminal** in one file — a card-less visit gets the kit's front page, `?id=` boots that crew member's terminal. Markup, styling, story data and logic all live here. |
 | [`sheet/`](sheet/) | The **player crew sheets** — pick a character, track Health/Stress, read your per-Act agenda, roll dice that broadcast to the room, and open the rules window. |
 | [`display/`](display/) | The **MU/TH/UR 6500 main display** — the ambient bridge screen for an iPad, with two ship states, an on-screen motion-detector tab, and the self-destruct takeover. |
 | [`control/`](control/) | The **GM Control** remote — a phone page that pairs to the display, rolls for the scenario's cast, deals the initiative deck, and drives the self-destruct sequence. |
@@ -712,6 +735,7 @@ want to change the built-in default.
 
 | Symptom | Likely cause / fix |
 |---------|--------------------|
+| Bare URL shows the front page, not a terminal | That's correct — a card-less visit opens the kit. A crew card (`?id=8654`) boots the terminal as that crew member. |
 | Terminal shows `ACCESS DENIED` on a crew link | The `?id=` was dropped or altered — some chat apps strip query strings; check the full URL survived. |
 | A page 404s | Pages hasn't finished its first deploy, or **Settings → Pages → Source** isn't set to **GitHub Actions**. |
 | Rolls don't appear on other devices | The devices aren't on the same **room code**, or the network blocks ntfy.sh. Match the room code in each footer; rolls still show locally regardless. |

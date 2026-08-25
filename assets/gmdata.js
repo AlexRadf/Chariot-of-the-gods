@@ -180,7 +180,7 @@
       note: "ORDF veteran of Torin Prime with a synthetic arm and PTSD from LV-1113. 1.50m, and badly underestimated.",
       attr: { STR: 5, AGI: 4, WITS: 2, EMP: 3 }, health: 5,
       skills: { closeCombat: 3, heavyMachinery: 1, rangedCombat: 3, mobility: 2, command: 1 },
-      talent: "Overkill", gear: "Armat 37A2 12 Shotgun (2 reloads)",
+      talent: "Overkill", gear: "Armat 37A2 12ga Shotgun (2 reloads)",
       agenda: "Terminate all threats to the Cronus crew with extreme prejudice, whatever the risk to you.",
       buddy: "Johns", rival: "Flynn", turns: true
     },
