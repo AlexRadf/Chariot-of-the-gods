@@ -363,6 +363,8 @@ header h1{ text-shadow:var(--glow-hi); }
         <small>Read a crew card's QR code and open this terminal as them.</small></a>
       <a class="htile" href="./map/"><b>▦ Ship Map</b>
         <small>The Montero deck plans, pan and zoom.</small></a>
+      <a class="htile" href="./blueprint/"><b>▤ Cronus Deck Plans</b>
+        <small>The derelict's blueprint, decks A–D. Layout only — no annotations.</small></a>
       <a class="htile" href="./control/"><b>◇ GM Control<span class="gmtag">GM</span></b>
         <small>The Game Mother's console: NPCs, events, the initiative deck, the self-destruct.</small></a>
       <a class="htile" href="./tracker/"><b>◎ Motion Tracker<span class="gmtag">GM</span></b>
@@ -412,6 +414,7 @@ header h1{ text-shadow:var(--glow-hi); }
   </footer>
 </div>
 
+<script src="assets/deckplans.js"></script>
 <script>
 /* ================================================================
    CREW_DATA — EDIT THIS BLOCK
@@ -567,171 +570,10 @@ const CREW_DATA = {
    CLEARANCE MODULES — security overlay, science archive, company
    files. Edit notes and documents freely, same as CREW_DATA.
    ================================================================ */
-const SECURITY_DATA = {
-  updated: "FINAL SWEEP — C. REYNOLDS, 2110-11-05 02:00. NO FURTHER UPDATES.",
-  decks: [
-  { name:"CRONUS — DECK A · CRYO DECK", h:300,
-    hull:"180,4 244,30 268,100 290,170 290,292 70,292 70,170 92,100 116,30",
-    cors:[[180,42,180,274],[110,97,250,97],[101,158,259,158],[127,254,233,254]],
-    note:"Sleepers below. Cryodeck seals from the inside. Ava 6 holds the ship. Tap a compartment for its security annotation.",
-    rooms:[
-    {l:"MU/TH/UR|2000", x:143,y:12,w:74,h:30, st:"ok",
-     n:"Mainframe chamber, directly above the bridge. Entry restricted to command-sequence holders or the emergency access key."},
-    {l:"JCT A-1|MAIN AIRLOCK", x:143,y:50,w:74,h:28, st:"warn",
-     n:"Sole entry point to the vessel (dorsal). All boarding traffic passes through here. Monitor at all times."},
-    {l:"LDR 1|A–C", x:96,y:88,w:30,h:18, st:"ok",
-     n:"Junction ladderway 1, port side. Runs Decks A–B–C."},
-    {l:"STAIRWELL|A–C", x:143,y:86,w:74,h:22, st:"bad",
-     n:"Structural collapse below B deck. Impassable. Use junction ladderways or elevators."},
-    {l:"LDR 2|A–C", x:234,y:88,w:30,h:18, st:"ok",
-     n:"Junction ladderway 2, starboard side. Runs Decks A–B–C."},
-    {l:"AIR SCRUBBER|SHAFT", x:143,y:116,w:74,h:26, st:"warn",
-     n:"Movement reported in the vent trunking. All vents opening into the cryo chambers have been welded shut."},
-    {l:"ELEV 1|A–D", x:84,y:146,w:34,h:24, st:"ok",
-     n:"Elevator 1, all decks. Functional. Runs down to the vehicle bay."},
-    {l:"ELEV 2|A–D", x:242,y:146,w:34,h:24, st:"bad",
-     n:"Elevator 2, all decks. SHAFT DESTROYED at vehicle-bay level — car inoperative throughout."},
-    {l:"CRYO 1", x:100,y:178,w:58,h:26, st:"ok",
-     n:"Sealed. Main door lock reversed per the Captain's order — opens from the inside only."},
-    {l:"CRYO 2", x:202,y:178,w:58,h:26, st:"ok",
-     n:"Sealed. Crew personal effects lockered in-chamber."},
-    {l:"CRYO 3", x:151,y:210,w:58,h:24, st:"ok",
-     n:"Sealed. Most pods in this chamber unoccupied."},
-    {l:"EXAM|ROOM", x:96,y:242,w:62,h:24, st:"ok",
-     n:"Personal medkits stocked."},
-    {l:"SHOWERS &|WARDROBE", x:202,y:242,w:62,h:24, st:"warn",
-     n:"Organic growth located in the drains. Flagged for controlled burn — UNRESOLVED at final sweep."},
-    {l:"JCT A-2", x:143,y:272,w:74,h:20, st:"ok",
-     n:"Ladder access to lower decks. Doors functional."}
-  ]},
-  { name:"CRONUS — DECK B · MAIN DECK", h:330,
-    hull:"180,4 246,36 268,110 268,310 92,310 92,110 114,36",
-    pods:[[8,96,54,86],[298,96,54,86],[8,200,54,86],[298,200,54,86]],
-    cors:[[180,42,180,280],[75,68,285,68],[75,99,285,99],[75,131,285,131],[75,164,285,164],[75,198,285,198],[75,232,262,232],[75,263,180,263]],
-    note:"Mutiny damage remains uncatalogued. Both science labs under biohazard order. Corporate suite off-limits.",
-    rooms:[
-    {l:"BRIDGE", x:141,y:10,w:78,h:32, st:"warn",
-     n:"Fire damage from the mutiny. Pilot Station 1 axe-struck; holographic table destroyed; sensor station degraded. One pilot station suffices to fly her."},
-    {l:"VEST 1|(ARMORY)", x:60,y:54,w:60,h:28, st:"warn",
-     n:"Inventory critical: one Storm Rifle plus a case of shotgun shells. Most ordnance went to the surface and did not come back. Adjacent pod bay: ALL CLASS A ESCAPE PODS EXPENDED."},
-    {l:"JCT B-1", x:143,y:56,w:74,h:24, st:"ok",
-     n:"Ladder undamaged, all doors functional."},
-    {l:"VEST 2|(EVA)", x:240,y:54,w:60,h:28, st:"ok",
-     n:"Three IRC Mk.50 compression suits serviceable. Pod bay empty."},
-    {l:"LDR 1|A–C", x:96,y:90,w:30,h:18, st:"ok",
-     n:"Junction ladderway 1, port side. Runs Decks A–B–C."},
-    {l:"STAIRWELL|A–C", x:143,y:88,w:74,h:20, st:"bad",
-     n:"Collapsed. Impassable."},
-    {l:"LDR 2|A–C", x:234,y:90,w:30,h:18, st:"ok",
-     n:"Junction ladderway 2, starboard side. Runs Decks A–B–C."},
-    {l:"CORP SUITE|+ EEV", x:60,y:116,w:60,h:30, st:"warn",
-     n:"Occupant-keyed, off-limits to crew per the corporate liaison. A secondary egress unit is registered to this suite — capacity three."},
-    {l:"AIR SCRUB|SHAFT", x:143,y:116,w:74,h:24, st:"warn",
-     n:"See Deck A advisory. Shaft terminates in the water chamber on C deck."},
-    {l:"MESS HALL", x:240,y:116,w:60,h:30, st:"ok",
-     n:"Rationing in effect. Keep it civil in the queue."},
-    {l:"ELEV 1|A–D", x:84,y:152,w:34,h:24, st:"ok",
-     n:"Elevator 1, all decks. Functional."},
-    {l:"LIVING AREA", x:143,y:148,w:74,h:24, st:"ok",
-     n:"Common area. Nothing to report — for once."},
-    {l:"ELEV 2|A–D", x:242,y:152,w:34,h:24, st:"bad",
-     n:"Elevator 2, all decks. Shaft destroyed — inoperative."},
-    {l:"MEDLAB", x:60,y:184,w:60,h:28, st:"warn",
-     n:"Quarantine specimens held in cold storage. Both medpods configured for parasitic extraction work. Authorised personnel only."},
-    {l:"SCI LAB 2", x:143,y:180,w:74,h:26, st:"bad",
-     n:"SEALED — fire damage. Incinerator discharge; one chemical drum burned in place. Do not reopen."},
-    {l:"SCI LAB 1", x:240,y:184,w:60,h:28, st:"bad",
-     n:"BIOHAZARD — live node clutches underfoot throughout. Entry prohibited. Controlled burn pending, assigned E. Tenwick."},
-    {l:"MEDPODS", x:60,y:220,w:60,h:24, st:"ok",
-     n:"Operational."},
-    {l:"JCT B-2", x:143,y:214,w:74,h:22, st:"ok",
-     n:"Functional. Access to Decks A–C plus ventilation and maintenance shafts."},
-    {l:"WC", x:240,y:220,w:44,h:20, st:"ok",
-     n:"Facilities. Clean, remarkably."},
-    {l:"STORAGE", x:60,y:252,w:60,h:22, st:"ok",
-     n:"General stores."},
-    {l:"REACTOR CORE|B/C", x:143,y:244,w:74,h:26, st:"warn",
-     n:"Reactor core shaft, spans Decks B and C. Radiation leak logged. Limit exposure time. No weapons discharge."},
-    {l:"SCIENCE MODULE", x:128,y:278,w:104,h:40, st:"off",
-     n:"EJECTED AT LV-1113 by unanimous command decision. Module absent; hull cap sealed. The people we left are in the record. Leave the rest alone."}
-  ]},
-  { name:"CRONUS — DECK C · CARGO DECK", h:268,
-    hull:"180,4 244,26 262,84 262,254 98,254 98,84 116,26",
-    pods:[[10,68,52,70],[298,68,52,70],[10,150,52,70],[298,150,52,70]],
-    cors:[[180,34,180,226],[110,51,250,51],[88,80,272,80],[93,157,267,157],[75,185,285,185],[113,210,247,210],[89,237,271,237]],
-    note:"Sabotage on this deck logged, responsible party unknown. Reactor section is a radiation zone.",
-    rooms:[
-    {l:"JCT C-1", x:143,y:10,w:74,h:24, st:"warn",
-     n:"External airlock door sabotaged — party unknown, incident open. Ventral airlock access below."},
-    {l:"LDR 1|A–C", x:96,y:42,w:30,h:18, st:"ok",
-     n:"Junction ladderway 1 terminates here."},
-    {l:"STAIRWELL|A–C", x:143,y:40,w:74,h:20, st:"bad",
-     n:"Collapsed. Impassable."},
-    {l:"LDR 2|A–C", x:234,y:42,w:30,h:18, st:"ok",
-     n:"Junction ladderway 2 terminates here."},
-    {l:"STORAGE (P)", x:60,y:68,w:58,h:24, st:"warn",
-     n:"Sterilization stock: seven drums of quinitricetyline. Extreme fire hazard. Tools cage also here: bolt guns, cutting torch, maintenance jack."},
-    {l:"AIR SCRUB|SHAFT", x:152,y:68,w:56,h:24, st:"warn",
-     n:"Water chamber at shaft base. Electrolysis rods live when power is up — electrocution risk."},
-    {l:"STORAGE (S)", x:242,y:68,w:58,h:24, st:"warn",
-     n:"Coded unit — corporate hold. Contents not manifested to security. I asked. I was told to stop asking."},
-    {l:"CARGO|BAY 1", x:58,y:100,w:90,h:40, st:"ok",
-     n:"Food stores, untouched. Chain rigging loose — winch and secure before manoeuvres."},
-    {l:"CARGO|BAY 2", x:212,y:100,w:90,h:40, st:"ok",
-     n:"Near empty. Spare RV tires and dust."},
-    {l:"ELEV 1|A–D", x:76,y:146,w:34,h:22, st:"ok",
-     n:"Elevator 1, all decks. Functional."},
-    {l:"CATWALK", x:122,y:146,w:116,h:16, st:"warn",
-     n:"Overlooks the vehicle bay. Railing gaps directly in front of the cargo bay doors — fall risk. Only route to the technical section."},
-    {l:"ELEV 2|A–D", x:250,y:146,w:34,h:22, st:"bad",
-     n:"Elevator 2, all decks. Shaft destroyed — doors ajar over a live drop. Barrier taped. Tape is not a barrier."},
-    {l:"CARGO OFFICE", x:60,y:172,w:60,h:22, st:"ok",
-     n:"Crane control. Viewport over the bay."},
-    {l:"JCT C-2", x:143,y:172,w:74,h:22, st:"ok",
-     n:"Functional doors. Quiet. Suspiciously."},
-    {l:"MAINT|SHAFTS", x:240,y:172,w:60,h:22, st:"warn",
-     n:"Narrow crawlways. Sound carries — assume anything in there can hear you."},
-    {l:"BALCONY", x:143,y:198,w:74,h:12, st:"ok",
-     n:"Overlook above the vehicle bay stair run."},
-    {l:"STAIRS|C–D", x:96,y:200,w:34,h:20, st:"ok",
-     n:"Vehicle bay stair run, Decks C–D."},
-    {l:"EXT CREW|ELEVATOR", x:234,y:200,w:42,h:20, st:"warn",
-     n:"External crew elevator to the surface, mounted at the ventral airlock. Out of order."},
-    {l:"COOLANT|TANKS", x:60,y:224,w:58,h:24, st:"ok",
-     n:"Service-tunnel access only. If these go, the reactor builds to critical — guard accordingly."},
-    {l:"REACTOR", x:143,y:222,w:74,h:26, st:"bad",
-     n:"RADIATION ZONE. Leak logged at the relay. Weapons discharge prohibited — a stray round here can kill the ship."},
-    {l:"RELAY|CONTROL", x:240,y:224,w:58,h:26, st:"warn",
-     n:"Relay exposed via an open access port. Emergency destruct sequencing also initiates from this room. Keep it locked."}
-  ]},
-  { name:"CRONUS — DECK D · VEHICLE BAY", h:252,
-    hull:"180,6 236,32 250,96 250,246 110,246 110,96 124,32",
-    pods:[[14,80,50,62],[296,80,50,62],[14,152,50,62],[296,152,50,62]],
-    cors:[[180,54,180,230],[132,71,228,71],[114,211,246,211]],
-    note:"Least-affected deck. All four airlocks on this level sabotaged. Sweep the bay in pairs — too many shadows.",
-    rooms:[
-    {l:"STAIRS|C–D", x:128,y:34,w:40,h:20, st:"ok",
-     n:"Vehicle bay stair run lands here from Deck C."},
-    {l:"ELEV 1|A–D", x:114,y:60,w:36,h:22, st:"ok",
-     n:"Elevator 1 terminus. Buckshot scarring and dried blood inside the car — firefight during the containment action. Cleaned? No. Noted."},
-    {l:"ELEV 2|A–D", x:210,y:60,w:36,h:22, st:"bad",
-     n:"Elevator 2 terminus. Car crumpled at bay level; incendiary discharge follow-up logged. Incident file closed — C. Reynolds. Don't reopen it. Please."},
-    {l:"EXT VEHICLE|ELEVATOR", x:64,y:130,w:42,h:22, st:"warn",
-     n:"External vehicle elevator, port hull. Lowers vehicles to the surface. Currently out of order."},
-    {l:"VEHICLE BAY", x:120,y:88,w:120,h:84, st:"warn",
-     n:"Two ATVs aboard, both unsecured and on their sides. Crane track overhead. Deep shadow zones throughout — sweep in pairs, lights on."},
-    {l:"AIRLOCKS ×4", x:120,y:178,w:120,h:16, st:"bad",
-     n:"All four airlocks on this level sabotaged and inoperative without major repair. Party unknown. Somebody wanted only one way in or out of this ship."},
-    {l:"EQUIPMENT|REPAIRS", x:112,y:200,w:44,h:20, st:"ok",
-     n:"Workshop bay for vehicle and suit repairs. Tools serviceable."},
-    {l:"PARTS|STORAGE", x:160,y:200,w:44,h:20, st:"ok",
-     n:"Vehicle spares, clear of danger."},
-    {l:"DISPATCH|OFFICE", x:206,y:200,w:42,h:20, st:"ok",
-     n:"Clear."},
-    {l:"VEHICLE RAMP", x:120,y:226,w:120,h:16, st:"warn",
-     n:"Deployable vehicle ramp. Locks engaged. DECOMPRESS THE BAY BEFORE OPENING IN VACUUM or everything not bolted down leaves without you."}
-  ]}
-]};
+/* The deck schematic lives in assets/deckplans.js — the main display's
+   blueprint tab draws the same plans from it, minus the annotations.
+   Edit the decks and their security notes there. */
+const SECURITY_DATA = window.CRONUS_DECKS || { updated:"", decks:[] };
 
 const SCIENCE_DOCS = [
   { t:"LV-1113 — FIELD SUMMARY (ABRIDGED)", m:"D. COOPER — 2110-10-26", b:
@@ -844,6 +686,10 @@ function findLinkRoom(deck, key){
 
 function renderSecurity(){
   const el = $("#secmod");
+  if (!SECURITY_DATA.decks.length){          // assets/deckplans.js failed to load
+    el.innerHTML = '<div class="moddenied"><b>DATA FAULT</b><p>DECK SCHEMATIC UNAVAILABLE.</p></div>';
+    return;
+  }
   el.innerHTML =
     '<div class="modpane">' +
       '<div class="modhead">SHIP SECURITY OVERLAY — ' + esc(SECURITY_DATA.updated) + '</div>' +
