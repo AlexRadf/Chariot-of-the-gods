@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#040906">
+<title>USCSS CRONUS — DECK PLANS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CRONUS DECK PLANS — Chariot of the Gods.
+   The same four-deck schematic the crew terminal's SECURITY
+   module draws, stripped back to the bare blueprint: hull,
+   corridors, compartments and their names.
+
+   Deliberately NOT here: the status colour-coding, the legend,
+   the deck notes and the tap-to-read security annotations. This
+   screen sits on the table in front of the players, so it shows
+   them the shape of the ship and nothing the security officer
+   wrote about it.
+
+   Runs standalone, or embedded in the main display's DECK PLANS
+   tab with ?embed=1 (which drops the page chrome). ?ship=cronus
+   swaps to the cold-blue phosphor; the display also posts its
+   ship state in as it flips.
+   ============================================================ */
+:root{
+  --phos:#8affb0; --dim:#3d7a53; --faint:#1d3b2a;
+  --crt:#040906; --raise:#081209; --amber:#f0b23e;
+  --muted:#74c093;   /* secondary prose — --faint is for borders */
+  --glow:0 0 2px rgba(138,255,176,.25);
+  --glow-hi:0 0 6px rgba(138,255,176,.45);
+  --ink:#03130b;     /* the dark the plan is drawn on */
+}
+/* CRONUS runs a cold-blue phosphor, same swap as the main display */
+body.cronus{
+  --phos:#79b3ff; --dim:#4a6ea8; --faint:#22334f;
+  --crt:#03060c; --raise:#060d16; --muted:#8ab8f0;
+  --glow:0 0 2px rgba(121,179,255,.28);
+  --glow-hi:0 0 6px rgba(121,179,255,.5);
+  --ink:#04101f;
+}
+*{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html,body{ height:100%; overflow:hidden; }
+body{
+  background:var(--crt); color:var(--phos);
+  font-family:'Share Tech Mono',ui-monospace,monospace; text-shadow:var(--glow);
+  user-select:none; -webkit-user-select:none; -webkit-font-smoothing:antialiased;
+  display:flex; flex-direction:column;
+  transition:background-color .8s ease;
+}
+body::before{
+  content:""; position:fixed; inset:0; z-index:20; pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+
+.bar{ display:flex; align-items:center; gap:12px; justify-content:space-between;
+  padding:calc(8px + env(safe-area-inset-top)) 14px 6px; }
+.bar .id{ font-family:'VT323',monospace; font-size:clamp(20px,4.5vw,30px);
+  letter-spacing:.05em; text-shadow:var(--glow-hi); }
+.bar .id small{ display:block; font-family:'Share Tech Mono',monospace; font-size:11px;
+  color:var(--dim); letter-spacing:.16em; }
+.bar a{ color:var(--dim); text-decoration:none; font-size:12px; letter-spacing:.1em;
+  text-transform:uppercase; }
+.bar a:hover{ color:var(--amber); }
+
+/* view + deck selector */
+.ctl{ display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  padding:4px 14px 8px; border-bottom:1px solid var(--faint); }
+.ctl .grp{ display:flex; gap:6px; }
+.ctl button{ background:none; border:1px solid var(--faint); color:var(--dim);
+  font-family:inherit; text-shadow:var(--glow); font-size:clamp(10px,1.5vw,13px);
+  letter-spacing:.1em; padding:.4em .9em; text-transform:uppercase; cursor:pointer; }
+.ctl button.on{ background:var(--faint); color:var(--amber); border-color:var(--amber); }
+.ctl .deckname{ color:var(--muted); font-size:clamp(10px,1.6vw,13px);
+  letter-spacing:.14em; text-transform:uppercase; margin-left:auto; }
+
+#stage{ flex:1; position:relative; overflow:hidden; touch-action:none; cursor:grab; min-height:0; }
+#stage.drag{ cursor:grabbing; }
+#canvas{ position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform; }
+
+/* ---- the plan itself: one phosphor line weight, no status colours ---- */
+.plan{ display:block; background:var(--ink); }
+.plan .pod{ fill:rgba(61,122,83,.18); stroke:rgba(138,255,176,.22); stroke-width:1; }
+.plan .hull{ fill:rgba(61,122,83,.26); stroke:rgba(138,255,176,.38); stroke-width:1.2; }
+.plan .corBase{ stroke:var(--ink); stroke-width:11; stroke-linecap:square; }
+.plan .corLite{ stroke:rgba(138,255,176,.18); stroke-width:1; }
+.plan .link{ fill:rgba(138,255,176,.09); stroke:rgba(138,255,176,.28); stroke-width:0.8; }
+.plan .room path{ fill:#04170d; stroke:#69c98d; stroke-width:1.1; }
+.plan text{ fill:var(--phos); font-family:'Share Tech Mono',monospace;
+  font-size:8px; letter-spacing:.02em; text-anchor:middle; pointer-events:none; }
+.plan text.bb{ font-size:11px; paint-order:stroke; stroke:var(--ink); stroke-width:3px; }
+.plan .isoTitle{ font-size:13px; fill:var(--dim); text-anchor:start;
+  letter-spacing:.12em; text-transform:uppercase; }
+.plan .depth path, .plan .depth polygon, .plan .depth rect{ fill:#020b06; stroke:none; }
+.plan g.deckG.dim{ opacity:.30; }
+/* blue phosphor variants */
+body.cronus .plan .pod{ fill:rgba(58,96,160,.18); stroke:rgba(121,179,255,.22); }
+body.cronus .plan .hull{ fill:rgba(58,96,160,.26); stroke:rgba(121,179,255,.38); }
+body.cronus .plan .corLite{ stroke:rgba(121,179,255,.18); }
+body.cronus .plan .link{ fill:rgba(121,179,255,.09); stroke:rgba(121,179,255,.28); }
+body.cronus .plan .room path{ fill:#061426; stroke:#5f95dd; }
+body.cronus .plan .depth path, body.cronus .plan .depth polygon,
+body.cronus .plan .depth rect{ fill:#020812; }
+
+.ctrls{ position:fixed; z-index:15; right:12px; bottom:calc(14px + env(safe-area-inset-bottom));
+  display:flex; flex-direction:column; gap:8px; }
+.ctrls button{ width:46px; height:46px; font-size:22px; background:rgba(6,15,10,.9);
+  border:1px solid var(--faint); color:var(--phos); font-family:inherit;
+  text-shadow:var(--glow); cursor:pointer; line-height:1; }
+.ctrls button:active{ background:var(--faint); }
+.ctrls .fit{ font-size:11px; letter-spacing:.06em; }
+.hint{ position:fixed; z-index:15; left:14px; bottom:calc(14px + env(safe-area-inset-bottom));
+  font-size:10px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase;
+  max-width:55vw; line-height:1.5; }
+
+/* embedded in the main display: no page chrome, the display supplies it */
+body.embed .bar, body.embed .hint{ display:none; }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <span class="id">DECK PLANS<small>USCSS CRONUS · SCHEMATIC</small></span>
+  <span><a href="../map/">▦ Montero map</a> · <a href="../display/">▲ Display</a> · <a href="../sheet/">◆ Crew sheets</a></span>
+</div>
+
+<div class="ctl">
+  <span class="grp" id="viewbtns"></span>
+  <span class="grp" id="deckbtns"></span>
+  <span class="deckname" id="deckname"></span>
+</div>
+
+<div id="stage"><div id="canvas"></div></div>
+
+<div class="ctrls">
+  <button id="zin" aria-label="zoom in">＋</button>
+  <button id="zout" aria-label="zoom out">−</button>
+  <button id="fit" class="fit" aria-label="fit to screen">FIT</button>
+</div>
+<div class="hint">Drag to pan · pinch or wheel to zoom</div>
+
+<script src="../assets/deckplans.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const params = new URLSearchParams(location.search);
+if(params.get("embed") === "1") document.body.classList.add("embed");
+setShip(params.get("ship"));
+
+const DECKS = (window.CRONUS_DECKS && window.CRONUS_DECKS.decks) || [];
+let view = "flat", deck = 0;
+
+/* the display flips between the Montero's green phosphor and the Cronus'
+   cold blue; when embedded there, follow whichever it's showing */
+function setShip(ship){ document.body.classList.toggle("cronus", ship === "cronus"); }
+addEventListener("message", e=>{
+  const d = e.data;
+  if(d && d.cotg === "ship") setShip(d.ship);
+});
+
+/* ---------------- plan geometry (shared with the crew terminal) --------------- */
+const ISO_A = 0.866, ISO_B = 0.5, ISO_W = 760;
+/* vertical runs — elevators, ladderways, stairs, the reactor shaft — drawn as
+   ribbons between the decks they connect. One neutral colour: which of them
+   still works is the security module's business, not the table's. */
+const LINKS = ["ELEV 1","ELEV 2","LDR 1","LDR 2","STAIRWELL","STAIRS","REACTOR"];
+
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function roomPath(x, y, w, h){
+  const c = Math.min(7, w/4, h/4);
+  return "M"+(x+c)+","+y+" H"+(x+w-c)+" L"+(x+w)+","+(y+c)+" V"+(y+h-c)+
+         " L"+(x+w-c)+","+(y+h)+" H"+(x+c)+" L"+x+","+(y+h-c)+" V"+(y+c)+" Z";
+}
+function isoTx(d){ return d.h*ISO_A + (ISO_W - (360+d.h)*ISO_A)/2; }
+function isoPt(x, y, tx, ty){ return [x*ISO_A - y*ISO_A + tx, x*ISO_B + y*ISO_B + ty]; }
+function findLinkRoom(d, key){
+  return d.rooms.find(r => r.l.replace(/\|/g," ").indexOf(key) === 0);
+}
+
+/* rooms are drawn plain — no r.st class, so nothing is colour-coded and
+   there is nothing to tap for a note */
+function deckShapes(d, withText){
+  let s = "";
+  (d.pods || []).forEach(p=>{
+    s += '<rect class="pod" x="'+p[0]+'" y="'+p[1]+'" width="'+p[2]+
+         '" height="'+p[3]+'" rx="14"/>';
+  });
+  s += '<polygon class="hull" points="' + d.hull + '"/>';
+  (d.cors || []).forEach(c=>{
+    s += '<line class="corBase" x1="'+c[0]+'" y1="'+c[1]+'" x2="'+c[2]+'" y2="'+c[3]+'"/>' +
+         '<line class="corLite" x1="'+c[0]+'" y1="'+c[1]+'" x2="'+c[2]+'" y2="'+c[3]+'"/>';
+  });
+  d.rooms.forEach(r=>{
+    let txt = "";
+    if (withText){
+      const lines = r.l.split("|");
+      const cy = r.y + r.h/2 - (lines.length-1)*4.5;
+      lines.forEach((ln,j)=>{
+        txt += '<tspan x="'+(r.x+r.w/2)+'" y="'+(cy+j*9+2.8)+'">'+esc(ln)+'</tspan>';
+      });
+      txt = '<text>' + txt + '</text>';
+    }
+    s += '<g class="room"><path d="'+roomPath(r.x,r.y,r.w,r.h)+'"/>' + txt + '</g>';
+  });
+  return s;
+}
+function deckSilhouette(d){
+  let s = '<polygon points="' + d.hull + '"/>';
+  (d.pods || []).forEach(p=>{
+    s += '<rect x="'+p[0]+'" y="'+p[1]+'" width="'+p[2]+'" height="'+p[3]+'" rx="14"/>';
+  });
+  return s;
+}
+function dotgrid(id, op){
+  return '<defs><pattern id="'+id+'" width="16" height="16" patternUnits="userSpaceOnUse">' +
+         '<circle cx="2" cy="2" r="0.9" fill="rgba(138,255,176,'+op+')"/></pattern></defs>';
+}
+
+function flatSvg(){
+  const d = DECKS[deck];
+  return '<svg class="plan" width="360" height="' + d.h + '" viewBox="0 0 360 ' + d.h +
+    '" xmlns="http://www.w3.org/2000/svg">' + dotgrid("dg",".14") +
+    '<rect x="0" y="0" width="360" height="' + d.h + '" fill="url(#dg)"/>' +
+    deckShapes(d, true) + '</svg>';
+}
+
+function isoSvg(){
+  const gap = 300, depth = 8;
+  const offs = DECKS.map((d,i)=> 14 + i*gap);
+  const last = DECKS.length - 1;
+  const H = Math.ceil(offs[last] + (360 + DECKS[last].h) * ISO_B + 22);
+  isoFocusY = offs[deck] + (360 + DECKS[deck].h) * ISO_B / 2;   // what fit() centres on
+
+  let svg = '<svg class="plan" width="' + ISO_W + '" height="' + H + '" viewBox="0 0 ' +
+    ISO_W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' + dotgrid("dgi",".10") +
+    '<rect x="0" y="0" width="' + ISO_W + '" height="' + H + '" fill="url(#dgi)"/>';
+
+  LINKS.forEach(key=>{
+    const pts = [];
+    DECKS.forEach((d,i)=>{
+      const r = findLinkRoom(d, key);
+      if (r) pts.push(isoPt(r.x + r.w/2, r.y + r.h/2, isoTx(d), offs[i]));
+    });
+    for (let i = 0; i < pts.length - 1; i++){
+      const a = pts[i], b = pts[i+1];
+      svg += '<polygon class="link" points="' +
+        (a[0]-8)+','+a[1]+' '+(a[0]+8)+','+a[1]+' '+
+        (b[0]+8)+','+b[1]+' '+(b[0]-8)+','+b[1] + '"/>';
+    }
+  });
+
+  DECKS.forEach((d,i)=>{
+    const tx = isoTx(d), ty = offs[i];
+    const m = 'matrix('+ISO_A+','+ISO_B+','+(-ISO_A)+','+ISO_B+','+tx+','+ty+')';
+    svg += '<g class="deckG' + (i===deck ? '' : ' dim') + '">' +
+      '<g class="depth" transform="translate(0,'+depth+')">' +
+        '<g transform="'+m+'">' + deckSilhouette(d) + '</g></g>' +
+      '<g transform="'+m+'">' + deckShapes(d, false) + '</g>' +
+      '<text class="isoTitle" x="8" y="'+(ty+10)+'">DECK '+"ABCD"[i]+' · '+
+        esc(d.name.split("·")[1].trim())+'</text>' +
+    '</g>';
+  });
+
+  /* billboard labels for the focused deck, drawn on top */
+  const fd = DECKS[deck], ftx = isoTx(fd), fty = offs[deck];
+  fd.rooms.forEach(r=>{
+    const p = isoPt(r.x + r.w/2, r.y + r.h/2, ftx, fty);
+    const lines = r.l.split("|");
+    let t = '<text class="bb">';
+    lines.forEach((ln,j)=>{
+      t += '<tspan x="'+p[0]+'" y="'+(p[1] - (lines.length-1)*5.5 + j*11 + 3.5)+'">'+
+           esc(ln)+'</tspan>';
+    });
+    svg += t + '</text>';
+  });
+  return svg + '</svg>';
+}
+
+/* ---------------- draw + fit ---------------- */
+const stage = $("#stage"), canvas = $("#canvas");
+let scale=1, tx=0, ty=0, min=0.2, max=6, natW=0, natH=0, isoFocusY=0;
+
+function apply(){ canvas.style.transform = "translate("+tx+"px,"+ty+"px) scale("+scale+")"; }
+/* A flat deck fits the box whole. The isometric stack is four decks tall and
+   would shrink to unreadable, so it fits the width instead and parks the
+   selected deck in the middle of the screen — drag to walk up or down the ship. */
+function fit(){
+  const w = stage.clientWidth, h = stage.clientHeight;
+  if(!natW || !w || !h) return;
+  const whole = Math.min(w/natW, h/natH) * 0.94;
+  if(view === "iso"){
+    scale = Math.max(whole, (w/natW) * 0.94);
+    min = Math.min(whole * 0.9, scale);
+    ty = h/2 - isoFocusY*scale;
+  } else {
+    scale = whole;
+    min = scale * 0.6;
+    ty = (h - natH*scale)/2;
+  }
+  tx = (w - natW*scale)/2;
+  apply();
+}
+function clampZoom(s){ return Math.max(min, Math.min(max, s)); }
+function zoomAt(cx, cy, factor){
+  const ns = clampZoom(scale*factor), k = ns/scale;
+  tx = cx - (cx - tx)*k;
+  ty = cy - (cy - ty)*k;
+  scale = ns; apply();
+}
+
+function draw(){
+  document.querySelectorAll("#viewbtns button")
+    .forEach(b=>b.classList.toggle("on", b.dataset.v === view));
+  document.querySelectorAll("#deckbtns button")
+    .forEach((b,i)=>b.classList.toggle("on", i === deck));
+  if(!DECKS.length){
+    canvas.innerHTML = '<div style="padding:24px;color:var(--amber)">DECK SCHEMATIC UNAVAILABLE</div>';
+    return;
+  }
+  $("#deckname").textContent = DECKS[deck].name;
+  canvas.innerHTML = view === "iso" ? isoSvg() : flatSvg();
+  const svg = canvas.querySelector("svg");
+  natW = +svg.getAttribute("width");
+  natH = +svg.getAttribute("height");
+  canvas.style.width = natW+"px";
+  canvas.style.height = natH+"px";
+  fit();
+}
+
+[["FLAT PLAN","flat"],["ISOMETRIC","iso"]].forEach(v=>{
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = v[0]; b.dataset.v = v[1];
+  b.addEventListener("click", ()=>{ view = v[1]; draw(); });
+  $("#viewbtns").appendChild(b);
+});
+DECKS.forEach((d,i)=>{
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = "DECK " + "ABCD"[i];
+  b.addEventListener("click", ()=>{ deck = i; draw(); });
+  $("#deckbtns").appendChild(b);
+});
+draw();
+addEventListener("resize", fit);
+/* fonts land after first paint and can change nothing here, but the stage can
+   still be sized late inside a just-shown iframe — refit once it settles */
+setTimeout(fit, 300);
+
+/* wheel zoom */
+stage.addEventListener("wheel", e=>{ e.preventDefault();
+  const r = stage.getBoundingClientRect();
+  zoomAt(e.clientX-r.left, e.clientY-r.top, e.deltaY<0 ? 1.12 : 0.89);
+}, {passive:false});
+
+/* pointer drag + pinch */
+const pts = new Map(); let pinchStart=0, pinchScale=1;
+stage.addEventListener("pointerdown", e=>{
+  stage.setPointerCapture(e.pointerId);
+  pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  stage.classList.add("drag");
+});
+stage.addEventListener("pointermove", e=>{
+  if(!pts.has(e.pointerId)) return;
+  const prev = pts.get(e.pointerId);
+  pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===1){ tx += e.clientX-prev.x; ty += e.clientY-prev.y; apply(); }
+  else if(pts.size===2){
+    const a=[...pts.values()], d=Math.hypot(a[0].x-a[1].x, a[0].y-a[1].y);
+    if(!pinchStart){ pinchStart=d; pinchScale=scale; }
+    const r = stage.getBoundingClientRect();
+    const mx = (a[0].x+a[1].x)/2 - r.left, my = (a[0].y+a[1].y)/2 - r.top;
+    const target = clampZoom(pinchScale*(d/pinchStart));
+    zoomAt(mx, my, target/scale);
+  }
+});
+function up(e){ pts.delete(e.pointerId); if(pts.size<2) pinchStart=0; if(!pts.size) stage.classList.remove("drag"); }
+stage.addEventListener("pointerup", up);
+stage.addEventListener("pointercancel", up);
+
+$("#zin").addEventListener("click", ()=> zoomAt(stage.clientWidth/2, stage.clientHeight/2, 1.25));
+$("#zout").addEventListener("click", ()=> zoomAt(stage.clientWidth/2, stage.clientHeight/2, 0.8));
+$("#fit").addEventListener("click", fit);
+stage.addEventListener("dblclick", e=>{
+  const r = stage.getBoundingClientRect();
+  zoomAt(e.clientX-r.left, e.clientY-r.top, scale < 1 ? 2 : 0.5);
+});
+</script>
+<script>if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("../sw.js").catch(function(){});});}</script>
+</body>
+</html>

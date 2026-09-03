@@ -22,7 +22,7 @@
      · Google Fonts        -> cache-first (they never change)
    Bump CACHE to drop every old copy at once.
    ============================================================ */
-const CACHE = "cotg-offline-v4";
+const CACHE = "cotg-offline-v5";
 
 /* Core files, relative to this worker's scope (the site root). */
 const CORE = [
@@ -32,12 +32,14 @@ const CORE = [
   "./display/", "./display/index.html",
   "./tracker/", "./tracker/index.html",
   "./map/", "./map/index.html", "./map/montero-deck-a.png",
+  "./blueprint/", "./blueprint/index.html",
   "./scan/", "./scan/index.html",
   "./control/", "./control/index.html",
   "./cards/access-cards.html",
   "./assets/rollbus.js",
   "./assets/initiative.js",
   "./assets/gmdata.js",
+  "./assets/deckplans.js",
   "./assets/jsqr.js"
 ];
 

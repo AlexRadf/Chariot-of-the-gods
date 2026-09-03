@@ -28,7 +28,8 @@ https://alexradf.github.io/Chariot-of-the-gods/
 | **Front page** | `/` | Anyone | A way in to every screen below. The link to bookmark and to share. |
 | **Access Terminal** | `/?id=` | Players, at "consoles" | Boots up as a Cronus crew member from a card `?id=`. Shows that crew member's inbox and clearance-gated ship systems. This is how the derelict's story is discovered. |
 | **Crew Sheets** | `/sheet/` | Each player | The players' own Montero characters — stats, talent, per-Act agenda, condition trackers, their initiative card, and a full ALIEN dice roller. |
-| **Main Display** | `/display/` | Middle of the table (iPad) | The MU/TH/UR 6500 ship computer: two ship states (Montero / Cronus), ambient systems and registry, an on-screen motion-detector tab, and a self-destruct takeover. |
+| **Main Display** | `/display/` | Middle of the table (iPad) | The MU/TH/UR 6500 ship computer: two ship states (Montero / Cronus), ambient systems and registry, an on-screen motion-detector tab, the Cronus deck plans, and a self-destruct takeover. |
+| **Deck Plans** | `/blueprint/` | Middle of the table, or anyone | The Cronus schematic, decks A–D, flat or isometric. The blueprint only — none of the security overlay's colour-coding or notes. |
 | **GM Control** | `/control/` | The Game Mother (phone) | An off-fiction remote that pairs to the display: rolls for the NPCs, deals the initiative deck, and drives the self-destruct sequence (arm → countdown → signal-lost). |
 | **Motion Tracker** | `/tracker/` | The Game Mother (phone) | The M314 scope for the reveal moments — you hand-place the blips and walk them in; players watch them close. |
 
@@ -120,9 +121,9 @@ https://alexradf.github.io/Chariot-of-the-gods/
 ```
 
 The bare site URL — no crew card on it — opens a plain way in to the kit: one
-tile per screen (Crew Sheets, Main Display, Scan Access Card, Ship Map, and the
-two marked **GM**, Control and Motion Tracker), plus a link to the printable
-access cards. It's the link to bookmark and the one to send a player who just
+tile per screen (Crew Sheets, Main Display, Scan Access Card, Ship Map, Cronus
+Deck Plans, and the two marked **GM**, Control and Motion Tracker), plus a link
+to the printable access cards. It's the link to bookmark and the one to send a player who just
 needs their sheet.
 
 Add a crew card's `?id=` and the same page becomes that crew member's terminal;
@@ -269,13 +270,26 @@ glance.
 
 Everything on this screen is **spoiler-free** — the scenario's mysteries stay
 behind the terminal's clearance-gated modules. There is **no ship radar**;
-instead the top bar carries a visible **`SHIP | ◎ TRACKER`** button that turns the
-whole screen into the **M314 motion detector** (and back). Open the display with a
+instead the top bar carries a visible **`SHIP | ◎ TRACKER | ▦ DECK PLANS`** row of
+tabs. **`◎ TRACKER`** turns the whole screen into the **M314 motion detector**
+(and back). Open the display with a
 `?room=` code and that on-iPad scope **mirrors the GM's tracker** — blips placed
 on the [GM Control](#screen-4--gm-control--self-destruct-phone-portrait) console
 show up on the table screen live. The embedded scope is **muted**, and the ship's
 own reactor hum **drops out while the tracker tab is open** so it doesn't play
 underneath. A stardate ticks and the readouts drift slowly.
+
+**Deck plans.** **`▦ DECK PLANS`** puts the **Cronus schematic** on the table —
+decks A–D as a flat plan or the four-deck isometric stack, drag to pan, pinch or
+wheel to zoom. It is the **blueprint only**: the shape of the ship and the names
+of the compartments, so the party can point at where they're going. The security
+overlay's status colours, its legend and its tap-to-read annotations stay where
+they belong, behind `SECURITY` clearance on the
+[Access Terminal](#screen-1--access-terminal-the-mystery) — nothing on this tab
+tells the players which compartments are compromised or what was found in them.
+The plans follow the display's phosphor, so they turn cold blue with the rest of
+the screen when you flip it to the Cronus. The same page stands alone at
+`/blueprint/` if you'd rather keep it open on a second device.
 
 The screen is a **2×2 panel grid**: **Ship Systems** (top-left) and **Vessel
 Registry** (top-right) up top, **Notices** (bottom-left, the rotating MU/TH/UR
@@ -578,9 +592,12 @@ live automatically. `.nojekyll` tells Pages to serve the files as-is.
 | [`display/`](display/) | The **MU/TH/UR 6500 main display** — the ambient bridge screen for an iPad, with two ship states, an on-screen motion-detector tab, and the self-destruct takeover. |
 | [`control/`](control/) | The **GM Control** remote — a phone page that pairs to the display, rolls for the scenario's cast, deals the initiative deck, and drives the self-destruct sequence. |
 | [`tracker/`](tracker/) | The **M314 motion tracker** — the mobile scope with hand-placed contacts and a synthesized proximity ping. |
+| [`blueprint/`](blueprint/) | The **Cronus deck plans** — the bare schematic for the table, standalone or embedded in the main display's `▦ DECK PLANS` tab. Draws only geometry and room names; never the security annotations. |
+| [`map/`](map/) | The **Montero deck plan** — a pan/zoom viewer for the crew's own ship. |
 | [`assets/rollbus.js`](assets/rollbus.js) | The shared **roll bus** — makes a dice roll on one device show up on every screen in the room, and carries the initiative traffic with it. |
 | [`assets/initiative.js`](assets/initiative.js) | The **initiative deck** — the ten cards, dealt on the GM console and mirrored to the sheets and the table display. |
 | [`assets/gmdata.js`](assets/gmdata.js) | The **GM data** — the scenario's NPCs, creatures, signature-attack tables, Act events and dice pools, shared by the GM console and the tracker's quick roller. |
+| [`assets/deckplans.js`](assets/deckplans.js) | The **Cronus deck plans** — hull, corridors and compartments for decks A–D, plus each room's security status and note. Shared by the terminal's SECURITY module and the display's blueprint tab. |
 | [`qr/`](qr/) | Per-crew access-card QR codes, PNG **and** SVG (e.g. `qr/reynolds-8654.png`). |
 | [`cards/access-cards.html`](cards/access-cards.html) | Print-ready sheet of all nine terminal cards. |
 | [`scripts/generate_qr.py`](scripts/generate_qr.py) | Regenerates the codes and card sheet for any site URL. |
@@ -640,7 +657,7 @@ the logic below it.
 | Object | Controls |
 |--------|----------|
 | `CREW_DATA` | Each Cronus crew member's identity, clearance, and inbox, keyed by card ID. |
-| `SECURITY_DATA` | The deck maps: room positions, status colours, and security notes. |
+| `SECURITY_DATA` | The deck maps — but the decks themselves live in [`assets/deckplans.js`](assets/deckplans.js) (room positions, status colours and security notes), because the display's blueprint tab draws the same plans. Edit them there. |
 | `SCIENCE_DOCS` | The SCIENCE archive documents. |
 | `COMPANY_DOCS` | The COMPANY (Special Projects) documents. |
 | `COMMAND_DOCS` | The COMMAND flight-recorder and MU/TH/UR logs. |

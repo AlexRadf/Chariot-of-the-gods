@@ -119,9 +119,11 @@ body,body::before,body::after{ transition:background-color .8s ease; }
   font-family:inherit; text-shadow:var(--glow); font-size:clamp(10px,1.5vw,13px);
   letter-spacing:.1em; padding:.35em .85em; text-transform:uppercase; cursor:pointer; }
 .viewtabs button.on{ background:var(--faint); color:var(--amber); border-color:var(--amber); }
-#trackerView{ display:none; flex:1; width:100%; border:0; min-height:0; background:var(--crt); }
-#scrn.trk .grid, #scrn.trk .cmd{ display:none; }
+#trackerView, #planView{ display:none; flex:1; width:100%; border:0; min-height:0; background:var(--crt); }
+#scrn.trk .grid, #scrn.trk .cmd,
+#scrn.plans .grid, #scrn.plans .cmd{ display:none; }
 #scrn.trk #trackerView{ display:block; }
+#scrn.plans #planView{ display:block; }
 
 .grid{ flex:1; display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:minmax(0,1fr);
   gap:10px; min-height:0; padding-top:8px; }
@@ -287,6 +289,7 @@ body.cronus #rolls .rl{ background:rgba(6,13,22,.6); }
     <span class="viewtabs" id="viewtabs">
       <button type="button" data-view="ship" class="on">SHIP</button>
       <button type="button" data-view="tracker">◎ TRACKER</button>
+      <button type="button" data-view="plans">▦ DECK PLANS</button>
     </span>
     <span class="clk" id="clk">----.--.-- · --:--:--</span>
   </div>
@@ -314,6 +317,7 @@ body.cronus #rolls .rl{ background:rgba(6,13,22,.6); }
   </div>
 
   <iframe id="trackerView" title="M314 Motion Tracker" allow="fullscreen"></iframe>
+  <iframe id="planView" title="Cronus deck plans"></iframe>
 
   <!-- initiative order, dealt from the GM console -->
   <div id="initbar">
@@ -324,7 +328,7 @@ body.cronus #rolls .rl{ background:rgba(6,13,22,.6); }
   <div class="cmd" id="cmd"></div>
   <div class="foot">
     <span>WEYLAND-YUTANI CORP — BUILDING BETTER WORLDS</span>
-    <span><span class="dot" id="pair" title="controller link"></span> <a href="../sheet/">◆ CREW SHEETS</a> · <a href="../map/">▦ SHIP MAP</a> · <a href="../control/">◇ GM CONTROL</a> · <a href="../tracker/">▲ MOTION TRACKER</a> · <a href="../scan/">◫ SCAN CARD</a></span>
+    <span><span class="dot" id="pair" title="controller link"></span> <a href="../sheet/">◆ CREW SHEETS</a> · <a href="../map/">▦ SHIP MAP</a> · <a href="../blueprint/">▤ DECK PLANS</a> · <a href="../control/">◇ GM CONTROL</a> · <a href="../tracker/">▲ MOTION TRACKER</a> · <a href="../scan/">◫ SCAN CARD</a></span>
   </div>
 </div>
 
@@ -595,7 +599,7 @@ function blipSoft(){ const n=performance.now(); if(n-softAt>90){ softAt=n; blip(
 function switchShip(key){
   if(key && SHIPS[key]) shipKey = key;
   else shipKey = (shipKey==="montero") ? "cronus" : "montero";
-  renderShip(); cmdI=0; blip(shipKey==="cronus"?300:640,0.09,0.05);
+  renderShip(); syncPlanShip(); cmdI=0; blip(shipKey==="cronus"?300:640,0.09,0.05);
 }
 (function(){
   let taps=[], t0=0;
@@ -608,20 +612,31 @@ function switchShip(key){
   });
 })();
 
-/* ---------------- visible SHIP / TRACKER view toggle ---------------- */
+/* ---------------- visible SHIP / TRACKER / DECK PLANS view toggle ---------------- */
 function setView(v){
   $("#scrn").classList.toggle("trk", v==="tracker");
+  $("#scrn").classList.toggle("plans", v==="plans");
   $("#viewtabs").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.view===v));
   onTracker = (v==="tracker"); refreshAudio();          // silence the ship's ambient audio on the scope
   if(v==="tracker" && !$("#trackerView").src){          // lazy-load the M314 scope on first switch
     const q = ROOM ? ("&room="+encodeURIComponent(ROOM)) : "";
     $("#trackerView").src = "../tracker/?embed=1"+q;
   }
+  if(v==="plans" && !$("#planView").src){               // lazy-load the deck plans on first switch
+    $("#planView").src = "../blueprint/?embed=1&ship="+shipKey;
+  }
 }
 $("#viewtabs").addEventListener("click", e=>{
   const b=e.target.closest("button[data-view]"); if(!b) return;
-  setView(b.dataset.view); blip(b.dataset.view==="tracker"?520:660,0.05,0.04);
+  const v=b.dataset.view;
+  setView(v); blip(v==="tracker"?520:v==="plans"?580:660,0.05,0.04);
 });
+/* the plans follow the display's phosphor when the ship state flips */
+function syncPlanShip(){
+  const f=$("#planView");
+  if(f.src && f.contentWindow) f.contentWindow.postMessage({cotg:"ship", ship:shipKey}, "*");
+}
+$("#planView").addEventListener("load", syncPlanShip);   // and once it's actually up
 
 /* ---------------- self-destruct takeover ---------------- */
 let destState="hidden", destLeft=0, destTotal=0, destTimer=null;
